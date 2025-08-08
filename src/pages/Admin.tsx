@@ -259,9 +259,9 @@ const Admin = () => {
   const createCategoria = async () => {
     if (!catNome.trim()) { toast({ title: 'Nome é obrigatório' }); return; }
     setCatLoading(true);
-    const { error } = await supabase.from('categorias').insert({ nome: catNome.trim(), descricao: catDesc.trim() || null } as any);
+    const { error } = await supabase.from('categorias').insert({ nome: catNome.trim() } as any);
     if (error) toast({ title: 'Erro ao criar categoria', description: error.message });
-    else { setCatNome(''); setCatDesc(''); await loadCategorias(); }
+    else { setCatNome(''); await loadCategorias(); }
     setCatLoading(false);
   };
   const startEditCategoria = (c: Categoria) => {
@@ -273,7 +273,7 @@ const Admin = () => {
   const saveCategoria = async () => {
     if (!editingCatId) return;
     setCatLoading(true);
-    const { error } = await supabase.from('categorias').update({ nome: editCatNome.trim(), descricao: editCatDesc.trim() || null } as any).eq('id', editingCatId);
+    const { error } = await supabase.from('categorias').update({ nome: editCatNome.trim() } as any).eq('id', editingCatId);
     if (error) toast({ title: 'Erro ao salvar categoria', description: error.message });
     else { await loadCategorias(); cancelEditCategoria(); }
     setCatLoading(false);
@@ -646,46 +646,53 @@ const Admin = () => {
                 <Label htmlFor="catnome">Nome</Label>
                 <Input id="catnome" value={catNome} onChange={(e) => setCatNome(e.target.value)} placeholder="Nome da categoria" />
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="catdesc">Descrição</Label>
-                <Textarea id="catdesc" value={catDesc} onChange={(e) => setCatDesc(e.target.value)} placeholder="Descrição (opcional)" />
-              </div>
               <div className="md:col-span-3">
                 <Button onClick={createCategoria} disabled={catLoading}>Criar categoria</Button>
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categorias.map((c) => (
-                <Card key={c.id} className="hover:shadow-md transition">
-                  <CardHeader>
-                    <CardTitle className="text-base">{editingCatId === c.id ? 'Editar categoria' : c.nome}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {editingCatId === c.id ? (
-                      <div className="space-y-2">
-                        <Input value={editCatNome} onChange={(e) => setEditCatNome(e.target.value)} placeholder="Nome" />
-                        <Textarea value={editCatDesc} onChange={(e) => setEditCatDesc(e.target.value)} placeholder="Descrição" />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={saveCategoria} disabled={catLoading}>Salvar</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEditCategoria}>Cancelar</Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="w-[180px] text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categorias.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        {editingCatId === c.id ? (
+                          <Input value={editCatNome} onChange={(e) => setEditCatNome(e.target.value)} placeholder="Nome" />
+                        ) : (
+                          <span className="font-medium">{c.nome}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          {editingCatId === c.id ? (
+                            <>
+                              <Button size="sm" onClick={saveCategoria} disabled={catLoading}>Salvar</Button>
+                              <Button size="sm" variant="outline" onClick={cancelEditCategoria}>Cancelar</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="secondary" onClick={() => startEditCategoria(c)}>Editar</Button>
+                              <Button size="sm" variant="destructive" onClick={() => deleteCategoria(c)}>Excluir</Button>
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm text-muted-foreground line-clamp-3">{c.descricao}</p>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="secondary" onClick={() => startEditCategoria(c)}>Editar</Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteCategoria(c)}>Excluir</Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-              {categorias.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</p>
-              )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {categorias.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
