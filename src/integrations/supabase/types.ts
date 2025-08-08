@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           categoria_arquivo: string
           created_at: string
+          descricao: string | null
           downloads: number
           id: string
           link_url: string
@@ -28,6 +29,7 @@ export type Database = {
         Insert: {
           categoria_arquivo: string
           created_at?: string
+          descricao?: string | null
           downloads?: number
           id?: string
           link_url: string
@@ -38,6 +40,7 @@ export type Database = {
         Update: {
           categoria_arquivo?: string
           created_at?: string
+          descricao?: string | null
           downloads?: number
           id?: string
           link_url?: string

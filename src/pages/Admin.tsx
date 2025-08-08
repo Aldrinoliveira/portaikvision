@@ -19,7 +19,7 @@ const Admin = () => {
   type Categoria = { id: string; nome: string; descricao: string | null };
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
-  type Arquivo = { id: string; produto_id: string; nome_arquivo: string; categoria_arquivo: string; link_url: string; downloads: number; created_at: string; listado: boolean };
+  type Arquivo = { id: string; produto_id: string; nome_arquivo: string; descricao: string | null; categoria_arquivo: string; link_url: string; downloads: number; created_at: string; listado: boolean };
   type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
   // State
   const [productId, setProductId] = useState("");
@@ -71,6 +71,7 @@ const Admin = () => {
   const [aProd, setAProd] = useState<string>("");
   const [aNome, setANome] = useState("");
   const [aTipo, setATipo] = useState<string>("");
+  const [aDesc, setADesc] = useState("");
   const [aLink, setALink] = useState("");
   const [aNaoListado, setANaoListado] = useState(false);
   const [aLoading, setALoading] = useState(false);
@@ -83,6 +84,7 @@ const Admin = () => {
   const [editATipo, setEditATipo] = useState<string>("");
   const [editALink, setEditALink] = useState("");
   const [arqLoading, setArqLoading] = useState(false);
+  const [editADesc, setEditADesc] = useState("");
 
   // Números de Série form/lista
   const [nsProduto, setNsProduto] = useState<string>("");
@@ -372,7 +374,7 @@ const Admin = () => {
     setArqListLoading(true);
     const { data, error } = await supabase
       .from('arquivos')
-      .select('id, produto_id, nome_arquivo, categoria_arquivo, link_url, downloads, created_at, listado')
+      .select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, created_at, listado')
       .order('created_at', { ascending: false })
       .limit(30);
     if (error) {
@@ -428,6 +430,7 @@ const Admin = () => {
     setEditANome(a.nome_arquivo);
     setEditATipo(a.categoria_arquivo);
     setEditALink(a.link_url);
+    setEditADesc(a.descricao || '');
   };
   const cancelEditArquivo = () => {
     setEditingArqId(null);
@@ -435,6 +438,7 @@ const Admin = () => {
     setEditANome('');
     setEditATipo('');
     setEditALink('');
+    setEditADesc('');
   };
   const saveArquivo = async () => {
     if (!editingArqId) return;
@@ -447,6 +451,7 @@ const Admin = () => {
       produto_id: editAProd,
       categoria_arquivo: editATipo,
       nome_arquivo: editANome.trim(),
+      descricao: editADesc.trim() || null,
       link_url: editALink.trim(),
     } as any;
     const { error } = await supabase.from('arquivos').update(payload).eq('id', editingArqId);
@@ -489,6 +494,7 @@ const Admin = () => {
       produto_id: aProd,
       categoria_arquivo: aTipo,
       nome_arquivo: aNome.trim(),
+      descricao: aDesc.trim() || null,
       link_url: aLink.trim(),
       listado: !aNaoListado,
     } as any;
@@ -500,6 +506,7 @@ const Admin = () => {
       setAProd('');
       setATipo('');
       setANome('');
+      setADesc('');
       setALink('');
       setANaoListado(false);
       await loadArquivos();
@@ -986,6 +993,7 @@ const Admin = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nome</TableHead>
+                        <TableHead>Descrição</TableHead>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Produto</TableHead>
                         <TableHead>Link</TableHead>
@@ -1005,6 +1013,13 @@ const Admin = () => {
                                 <Input value={editANome} onChange={(e) => setEditANome(e.target.value)} />
                               ) : (
                                 a.nome_arquivo
+                              )}
+                            </TableCell>
+                            <TableCell className="min-w-[200px]">
+                              {isEditing ? (
+                                <Input value={editADesc} onChange={(e) => setEditADesc(e.target.value)} placeholder="Descrição (opcional)" />
+                              ) : (
+                                <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
                               )}
                             </TableCell>
                             <TableCell className="capitalize">
