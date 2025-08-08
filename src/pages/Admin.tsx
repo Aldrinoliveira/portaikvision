@@ -196,6 +196,12 @@ const Admin = () => {
                 <Label htmlFor="bfile">Upload imagem</Label>
                 <Input id="bfile" type="file" accept="image/*" onChange={onSelectBannerFile} />
               </div>
+              {bImagemUrl && (
+                <div className="md:col-span-5">
+                  <Label>Pré-visualização</Label>
+                  <img src={bImagemUrl} alt="Pré-visualização do banner" className="w-full h-40 object-cover rounded" loading="lazy" />
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Switch id="bativo" checked={bAtivo} onCheckedChange={setBAtivo} />
                 <Label htmlFor="bativo">Ativo</Label>
