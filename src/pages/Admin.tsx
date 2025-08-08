@@ -75,6 +75,12 @@ const Admin = () => {
   const [allProds, setAllProds] = useState<{ id: string; partnumber: string }[]>([]);
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
   const [arqListLoading, setArqListLoading] = useState(false);
+  const [editingArqId, setEditingArqId] = useState<string | null>(null);
+  const [editAProd, setEditAProd] = useState<string>("");
+  const [editANome, setEditANome] = useState("");
+  const [editATipo, setEditATipo] = useState<string>("");
+  const [editALink, setEditALink] = useState("");
+  const [arqLoading, setArqLoading] = useState(false);
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -366,6 +372,54 @@ const Admin = () => {
       setArquivos((data as any) || []);
     }
     setArqListLoading(false);
+  };
+
+  // Arquivos - edição e exclusão
+  const startEditArquivo = (a: Arquivo) => {
+    setEditingArqId(a.id);
+    setEditAProd(a.produto_id);
+    setEditANome(a.nome_arquivo);
+    setEditATipo(a.categoria_arquivo);
+    setEditALink(a.link_url);
+  };
+  const cancelEditArquivo = () => {
+    setEditingArqId(null);
+    setEditAProd('');
+    setEditANome('');
+    setEditATipo('');
+    setEditALink('');
+  };
+  const saveArquivo = async () => {
+    if (!editingArqId) return;
+    if (!editAProd || !editATipo || !editANome.trim() || !editALink.trim()) {
+      toast({ title: 'Preencha os campos obrigatórios', description: 'Produto, Tipo, Nome e Link são obrigatórios.' });
+      return;
+    }
+    setArqLoading(true);
+    const payload = {
+      produto_id: editAProd,
+      categoria_arquivo: editATipo,
+      nome_arquivo: editANome.trim(),
+      link_url: editALink.trim(),
+    } as any;
+    const { error } = await supabase.from('arquivos').update(payload).eq('id', editingArqId);
+    if (error) {
+      toast({ title: 'Erro ao salvar arquivo', description: error.message });
+    } else {
+      toast({ title: 'Arquivo atualizado' });
+      await loadArquivos();
+      cancelEditArquivo();
+    }
+    setArqLoading(false);
+  };
+  const deleteArquivo = async (a: Arquivo) => {
+    if (!confirm('Excluir este arquivo?')) return;
+    const { error } = await supabase.from('arquivos').delete().eq('id', a.id);
+    if (error) toast({ title: 'Erro ao excluir arquivo', description: error.message });
+    else {
+      toast({ title: 'Arquivo excluído' });
+      setArquivos((prev) => prev.filter((x) => x.id !== a.id));
+    }
   };
 
   // Arquivos CRUD (create)
@@ -777,6 +831,7 @@ const Admin = () => {
                         <TableHead>Nome</TableHead>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Produto</TableHead>
+                        <TableHead>Link</TableHead>
                         <TableHead className="text-right">Downloads</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
@@ -784,16 +839,67 @@ const Admin = () => {
                     <TableBody>
                       {arquivos.map((a) => {
                         const prod = allProds.find((p) => p.id === a.produto_id);
+                        const isEditing = editingArqId === a.id;
                         return (
                           <TableRow key={a.id}>
-                            <TableCell className="font-medium">{a.nome_arquivo}</TableCell>
-                            <TableCell className="capitalize">{a.categoria_arquivo}</TableCell>
-                            <TableCell>{prod?.partnumber || a.produto_id}</TableCell>
+                            <TableCell className="font-medium">
+                              {isEditing ? (
+                                <Input value={editANome} onChange={(e) => setEditANome(e.target.value)} />
+                              ) : (
+                                a.nome_arquivo
+                              )}
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {isEditing ? (
+                                <Select value={editATipo} onValueChange={setEditATipo}>
+                                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="firmware">Firmware</SelectItem>
+                                    <SelectItem value="documento">Documento</SelectItem>
+                                    <SelectItem value="video">Vídeo</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                a.categoria_arquivo
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {isEditing ? (
+                                <Select value={editAProd} onValueChange={setEditAProd}>
+                                  <SelectTrigger><SelectValue placeholder="Produto" /></SelectTrigger>
+                                  <SelectContent>
+                                    {allProds.map((p) => (
+                                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                prod?.partnumber || a.produto_id
+                              )}
+                            </TableCell>
+                            <TableCell className="max-w-[220px]">
+                              {isEditing ? (
+                                <Input value={editALink} onChange={(e) => setEditALink(e.target.value)} placeholder="https://..." />
+                              ) : (
+                                <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{a.link_url}</a>
+                              )}
+                            </TableCell>
                             <TableCell className="text-right">{a.downloads}</TableCell>
-                            <TableCell className="text-right">
-                              <Button asChild size="sm" variant="secondary">
-                                <a href={a.link_url} target="_blank" rel="noopener noreferrer">Abrir</a>
-                              </Button>
+                            <TableCell className="text-right space-x-2">
+                              {isEditing ? (
+                                <>
+                                  <Button size="sm" onClick={saveArquivo} disabled={arqLoading || !editANome.trim() || !editALink.trim() || !editATipo || !editAProd}>Salvar</Button>
+                                  <Button size="sm" variant="outline" onClick={cancelEditArquivo}>Cancelar</Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button asChild size="sm" variant="secondary">
+                                    <a href={a.link_url} target="_blank" rel="noopener noreferrer">Abrir</a>
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => startEditArquivo(a)}>Editar</Button>
+                                  <Button size="sm" variant="destructive" onClick={() => deleteArquivo(a)}>Excluir</Button>
+                                </>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
