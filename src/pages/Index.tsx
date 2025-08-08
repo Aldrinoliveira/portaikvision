@@ -17,9 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
-    document.title = "Portal de Arquivos – Firmware, Documentos e Vídeos";
+    document.title = "Hikvision – Firmware, Documentos e Vídeos";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Busque por número de série ou part number e baixe firmwares, documentos e vídeos de produtos.");
+    if (meta) meta.setAttribute("content", "Busque por número de série ou part number e baixe firmwares, documentos e vídeos de produtos Hikvision.");
   }, []);
 };
 
@@ -222,7 +222,9 @@ useEffect(() => {
   const TopBar = useMemo(() => (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="font-semibold text-lg">Portal de Arquivos</Link>
+        <Link to="/" className="font-semibold text-lg" aria-label="Hikvision Home">
+          <img src="/images/hikvision-logo.svg" alt="Hikvision – logo" className="h-6 w-auto" width={100} height={18} loading="eager" />
+        </Link>
         <nav className="flex items-center gap-4 text-sm">
           <a href="#produtos" className="hover:underline">Produtos</a>
           <a href="#software" className="hover:underline">Software</a>

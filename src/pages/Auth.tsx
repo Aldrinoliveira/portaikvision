@@ -9,9 +9,9 @@ import { toast } from "@/hooks/use-toast";
 
 const useSEO = () => {
   useEffect(() => {
-    document.title = "Entrar ou Cadastrar – Portal de Arquivos";
+    document.title = "Entrar ou Cadastrar – Hikvision";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Faça login ou crie sua conta para administrar o portal.");
+    if (meta) meta.setAttribute("content", "Faça login ou crie sua conta para administrar o conteúdo.");
   }, []);
 };
 
