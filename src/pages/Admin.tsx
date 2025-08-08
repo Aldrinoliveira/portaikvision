@@ -167,6 +167,40 @@ const Admin = () => {
     setBLoading(false);
   };
 
+  const onSelectProdutoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProdLoading(true);
+    const filePath = `produto-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('produtos').upload(filePath, file, { contentType: file.type });
+    if (error) {
+      toast({ title: 'Erro ao enviar imagem', description: error.message });
+      setProdLoading(false);
+      return;
+    }
+    const { data } = supabase.storage.from('produtos').getPublicUrl(filePath);
+    setPImg(data.publicUrl);
+    toast({ title: 'Imagem enviada', description: 'URL preenchida automaticamente.' });
+    setProdLoading(false);
+  };
+
+  const onSelectProdutoFileEdit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProdLoading(true);
+    const filePath = `produto-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('produtos').upload(filePath, file, { contentType: file.type });
+    if (error) {
+      toast({ title: 'Erro ao enviar imagem', description: error.message });
+      setProdLoading(false);
+      return;
+    }
+    const { data } = supabase.storage.from('produtos').getPublicUrl(filePath);
+    setEditPImg(data.publicUrl);
+    toast({ title: 'Imagem enviada', description: 'URL preenchida automaticamente.' });
+    setProdLoading(false);
+  };
+
   // Categorias CRUD
   const loadCategorias = async () => {
     const { data, error } = await supabase.from('categorias').select('id, nome, descricao').order('created_at', { ascending: false });
@@ -437,6 +471,16 @@ const Admin = () => {
                 <Label htmlFor="pimg">Imagem URL</Label>
                 <Input id="pimg" value={pImg} onChange={(e) => setPImg(e.target.value)} placeholder="https://... (opcional)" />
               </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="pfile">Upload imagem</Label>
+                <Input id="pfile" type="file" accept="image/*" onChange={onSelectProdutoFile} />
+              </div>
+              {pImg && (
+                <div className="md:col-span-5">
+                  <Label>Pré-visualização</Label>
+                  <img src={pImg} alt="Pré-visualização do produto" className="w-full h-32 object-cover rounded" loading="lazy" />
+                </div>
+              )}
               <div>
                 <Label>Categoria</Label>
                 <Select value={pCat} onValueChange={(v) => { setPCat(v); setPSub(''); }}>
@@ -474,6 +518,10 @@ const Admin = () => {
                         <Input value={editPPart} onChange={(e) => setEditPPart(e.target.value)} placeholder="Part number" />
                         <Textarea value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
                         <Input value={editPImg} onChange={(e) => setEditPImg(e.target.value)} placeholder="Imagem URL" />
+                        <Input id="epfile" type="file" accept="image/*" onChange={onSelectProdutoFileEdit} />
+                        {editPImg && (
+                          <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-full h-32 object-cover rounded" loading="lazy" />
+                        )}
                         <div className="grid md:grid-cols-2 gap-2">
                           <div>
                             <Label>Categoria</Label>
