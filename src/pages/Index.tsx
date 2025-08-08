@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 import { toast } from "@/hooks/use-toast";
 import { QrCode, HelpCircle, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
@@ -37,7 +38,10 @@ const Index = () => {
   const RESULTS_PAGE_SIZE = 6;
   const [page, setPage] = useState(1);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [catFilter, setCatFilter] = useState("");
+const [catFilter, setCatFilter] = useState("");
+  const [embla, setEmbla] = useState<CarouselApi | null>(null);
+  const [selected, setSelected] = useState(0);
+  const [snapCount, setSnapCount] = useState(0);
 
   // Solicitação de firmware modal
   const [openRequest, setOpenRequest] = useState(false);
@@ -156,6 +160,23 @@ const Index = () => {
     }
   };
 
+useEffect(() => {
+    if (!embla) return;
+    const onSelect = () => setSelected(embla.selectedScrollSnap());
+    const onReInit = () => {
+      setSnapCount(embla.scrollSnapList().length);
+      onSelect();
+    };
+    setSnapCount(embla.scrollSnapList().length);
+    onSelect();
+    embla.on('select', onSelect);
+    embla.on('reInit', onReInit);
+    return () => {
+      embla.off('select', onSelect);
+      embla.off('reInit', onReInit);
+    };
+  }, [embla]);
+
   const TopBar = useMemo(() => (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -186,7 +207,7 @@ const Index = () => {
         {/* Banner Carousel */}
         {banners.length > 0 && (
           <section aria-label="Banner" className="animate-fade-in">
-            <Carousel className="w-full" plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}>
+            <Carousel className="w-full" plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]} setApi={setEmbla}>
               <CarouselContent>
                 {banners.map((b) => (
                   <CarouselItem key={b.id}>
@@ -231,6 +252,18 @@ const Index = () => {
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
+            <div className="mt-3 flex justify-center gap-2">
+              {Array.from({ length: snapCount }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Ir para banner ${i + 1}`}
+                  data-active={selected === i}
+                  onClick={() => embla?.scrollTo(i)}
+                  className="h-2.5 w-2.5 rounded-full bg-foreground/30 data-[active=true]:bg-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              ))}
+            </div>
           </section>
         )}
 
