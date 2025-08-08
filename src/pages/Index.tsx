@@ -149,6 +149,7 @@ const Index = () => {
           <a href="#software" className="hover:underline">Software</a>
           <a href="#ferramentas" className="hover:underline">Ferramentas</a>
           <Link to="/auth" className="hover:underline">Entrar</Link>
+          <Link to="/admin" className="hover:underline">Admin</Link>
         </nav>
       </div>
     </header>
@@ -257,11 +258,8 @@ const Index = () => {
           </section>
         )}
 
-        {/* Top Downloads - placeholder até termos dados reais */}
-        <section aria-label="Top Downloads" className="space-y-3">
-          <h2 className="text-xl font-semibold">Top Downloads</h2>
-          <p className="text-sm text-muted-foreground">Os produtos mais baixados aparecerão aqui automaticamente.</p>
-        </section>
+        {/* Top Downloads - agora dinâmico */}
+        <TopDownloads />
       </main>
 
       {/* Dialog QR */}
@@ -317,6 +315,46 @@ const AsyncCounts = ({ produtoId, getCounts }: { produtoId: string; getCounts: (
     <div className="text-xs text-muted-foreground">
       {counts.firmware} firmware • {counts.documento} documentos • {counts.video} vídeos
     </div>
+  );
+};
+
+const TopDownloads = () => {
+  const [items, setItems] = useState<Array<{ produto_id: string; total_downloads: number; partnumber: string; descricao: string | null; imagem_url: string | null }>>([]);
+  useEffect(() => {
+    const run = async () => {
+      const { data: tops } = await supabase.from('vw_top_downloads').select('produto_id, total_downloads').limit(10);
+      const ids = (tops || []).map((t: any) => t.produto_id);
+      if (!ids.length) { setItems([]); return; }
+      const { data: prods } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url').in('id', ids);
+      const merged = (tops || []).map((t: any) => {
+        const p = (prods || []).find((x: any) => x.id === t.produto_id);
+        return { produto_id: t.produto_id, total_downloads: Number(t.total_downloads), partnumber: p?.partnumber, descricao: p?.descricao, imagem_url: p?.imagem_url };
+      });
+      setItems(merged);
+    };
+    run();
+  }, []);
+  if (!items.length) return null;
+  return (
+    <section aria-label="Top Downloads" className="space-y-3">
+      <h2 className="text-xl font-semibold">Top Downloads</h2>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map((it) => (
+          <Card key={it.produto_id} className="hover:shadow-md transition">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>{it.partnumber}</span>
+                <span className="text-xs text-muted-foreground">{it.total_downloads} downloads</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex gap-3 items-center">
+              {it.imagem_url && <img src={it.imagem_url} alt={`Produto ${it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
+              <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
   );
 };
 

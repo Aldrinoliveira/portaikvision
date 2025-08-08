@@ -256,7 +256,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_top_downloads: {
+        Row: {
+          produto_id: string | null
+          total_downloads: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
@@ -265,6 +279,13 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      increment_downloads: {
+        Args: { _arquivo_id: string }
+        Returns: {
+          link_url: string
+          downloads: number
+        }[]
       }
     }
     Enums: {

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
 interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; link_url: string; downloads: number; }
@@ -39,6 +40,17 @@ const Product = () => {
     return g;
   }, [arquivos]);
 
+  const handleDownload = async (a: Arquivo) => {
+    const { data, error } = await supabase.rpc('increment_downloads', { _arquivo_id: a.id });
+    if (error) {
+      toast({ title: 'Erro ao contabilizar download', description: error.message });
+      window.open(a.link_url, '_blank', 'noopener');
+      return;
+    }
+    const link = Array.isArray(data) ? data[0]?.link_url : (data as any)?.link_url;
+    window.open(link || a.link_url, '_blank', 'noopener');
+  };
+
   if (!produto) return <div className="container mx-auto px-4 py-10">Carregando...</div>;
 
   return (
@@ -63,9 +75,7 @@ const Product = () => {
                   <CardTitle className="text-base">{a.nome_arquivo}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between">
-                  <a href={a.link_url} target="_blank" rel="noreferrer">
-                    <Button>Download</Button>
-                  </a>
+                  <Button onClick={() => handleDownload(a)}>Download</Button>
                   <span className="text-xs text-muted-foreground">{a.downloads} downloads</span>
                 </CardContent>
               </Card>
