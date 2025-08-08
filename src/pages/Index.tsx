@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { toast } from "@/hooks/use-toast";
-import { QrCode, HelpCircle, Search } from "lucide-react";
+import { QrCode, HelpCircle, Search, Cpu, FileText, Video } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -481,10 +481,18 @@ const AsyncCounts = ({ produtoId, getCounts }: { produtoId: string; getCounts: (
   useEffect(() => {
     getCounts(produtoId).then(setCounts);
   }, [produtoId]);
-  if (!counts) return <div className="text-xs text-muted-foreground">Carregando contagens...</div>;
+  if (!counts) return <div className="text-xs text-muted-foreground">Carregando...</div>;
   return (
-    <div className="text-xs text-muted-foreground">
-      {counts.firmware} firmware • {counts.documento} documentos • {counts.video} vídeos
+    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <span className="inline-flex items-center gap-1" title={`${counts.firmware} firmware`} aria-label={`${counts.firmware} firmware`}>
+        <Cpu className="h-3.5 w-3.5" /> {counts.firmware}
+      </span>
+      <span className="inline-flex items-center gap-1" title={`${counts.documento} documentos`} aria-label={`${counts.documento} documentos`}>
+        <FileText className="h-3.5 w-3.5" /> {counts.documento}
+      </span>
+      <span className="inline-flex items-center gap-1" title={`${counts.video} vídeos`} aria-label={`${counts.video} vídeos`}>
+        <Video className="h-3.5 w-3.5" /> {counts.video}
+      </span>
     </div>
   );
 };
