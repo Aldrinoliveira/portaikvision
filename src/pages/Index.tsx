@@ -56,12 +56,14 @@ const [catFilter, setCatFilter] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const [bRes, cRes] = await Promise.all([
+      const [bRes, cRes, pRes] = await Promise.all([
         supabase.from("banners").select("*").eq("ativo", true).order("created_at", { ascending: false }),
         supabase.from("categorias").select("id,nome,descricao").order("nome"),
+        supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id").order("created_at", { ascending: false }).limit(1000),
       ]);
       setBanners(bRes.data || []);
       setCategorias(cRes.data || []);
+      setResults(pRes.data || []);
     };
     load();
   }, []);
