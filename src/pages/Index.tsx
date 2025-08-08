@@ -174,7 +174,8 @@ const [catFilter, setCatFilter] = useState("");
     const { data: files } = await supabase
       .from("arquivos")
       .select("categoria_arquivo")
-      .eq("produto_id", produtoId);
+      .eq("produto_id", produtoId)
+      .eq("listado", true);
     const c = { firmware: 0, documento: 0, video: 0 };
     (files || []).forEach((f: any) => {
       if (f.categoria_arquivo === "firmware") c.firmware++;
@@ -504,8 +505,19 @@ const TopDownloads = () => {
       const { data: tops } = await supabase.from('vw_top_downloads').select('produto_id, total_downloads').order('total_downloads', { ascending: false }).limit(10);
       const ids = (tops || []).map((t: any) => t.produto_id);
       if (!ids.length) { setItems([]); return; }
-      const { data: prods } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url').in('id', ids);
-      const merged = (tops || []).map((t: any) => {
+
+      // Apenas produtos que possuem arquivos listados
+      const { data: allowed } = await supabase
+        .from('arquivos')
+        .select('produto_id')
+        .eq('listado', true)
+        .in('produto_id', ids);
+      const allowedIds = Array.from(new Set((allowed || []).map((a: any) => a.produto_id)));
+      const filteredTops = (tops || []).filter((t: any) => allowedIds.includes(t.produto_id));
+      if (!filteredTops.length) { setItems([]); return; }
+
+      const { data: prods } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url').in('id', filteredTops.map((t: any) => t.produto_id));
+      const merged = filteredTops.map((t: any) => {
         const p = (prods || []).find((x: any) => x.id === t.produto_id);
         return { produto_id: t.produto_id, total_downloads: Number(t.total_downloads), partnumber: p?.partnumber, descricao: p?.descricao, imagem_url: p?.imagem_url };
       });
