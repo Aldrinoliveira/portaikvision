@@ -397,7 +397,7 @@ const Admin = () => {
               {bImagemUrl && (
                 <div className="md:col-span-5">
                   <Label>Pré-visualização</Label>
-                  <img src={bImagemUrl} alt="Pré-visualização do banner" className="w-full h-40 object-cover rounded" loading="lazy" />
+                  <img src={bImagemUrl} alt="Pré-visualização do banner" className="w-full h-32 object-cover rounded" loading="lazy" />
                 </div>
               )}
               <div className="flex items-center gap-2">
@@ -409,14 +409,14 @@ const Admin = () => {
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {banners.map((b) => (
                 <Card key={b.id} className="hover:shadow-md transition">
-                  <CardHeader>
+                  <CardHeader className="p-4">
                     <CardTitle className="text-base">{b.tamanho || 'Banner'}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <img src={b.imagem_url} alt={`Banner ${b.tamanho || 'padrão'}`} className="w-full h-40 object-cover rounded" loading="lazy" />
+                  <CardContent className="space-y-2 p-4 pt-0">
+                    <img src={b.imagem_url} alt={`Banner ${b.tamanho || 'padrão'}`} className="w-full h-32 object-cover rounded" loading="lazy" />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Switch checked={b.ativo} onCheckedChange={() => toggleAtivo(b)} id={`ativo-${b.id}`} />
