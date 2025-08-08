@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { ArrowLeft } from "lucide-react";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
 interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; link_url: string; downloads: number; }
@@ -19,9 +20,10 @@ const useSEO = (title: string, description: string) => {
 
 const Product = () => {
   const { id } = useParams();
-const [produto, setProduto] = useState<Produto | null>(null);
-const [arquivos, setArquivos] = useState<Arquivo[]>([]);
-const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
+  const navigate = useNavigate();
+  const [produto, setProduto] = useState<Produto | null>(null);
+  const [arquivos, setArquivos] = useState<Arquivo[]>([]);
+  const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
 
   useSEO("Produto – Arquivos", "Veja firmwares, documentos e vídeos para o produto.");
 
@@ -73,9 +75,14 @@ const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
 
   return (
     <main className="container mx-auto px-4 py-8 space-y-8">
+      <div>
+        <Button variant="outline" onClick={() => navigate(-1)} aria-label="Voltar" className="mb-2">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+        </Button>
+      </div>
       <section className="grid md:grid-cols-2 gap-6 items-start">
         {produto.imagem_url && (
-          <img src={produto.imagem_url} alt={`Imagem do produto ${produto.partnumber}`} className="w-full rounded-md object-cover max-h-80" loading="lazy" />
+          <img src={produto.imagem_url} alt={`Imagem do produto ${produto.partnumber}`} className="w-28 h-28 md:w-40 md:h-40 rounded-md object-cover" loading="lazy" />
         )}
         <div>
           <h1 className="text-2xl font-semibold">{produto.partnumber}</h1>
