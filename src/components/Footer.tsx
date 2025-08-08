@@ -1,8 +1,6 @@
 import { Facebook, Instagram, Linkedin, Youtube, Globe, Headphones, Phone, Mail, Clock } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-footer text-footer-foreground">
+  return <footer className="bg-footer text-footer-foreground">
       <div className="container mx-auto px-4 py-8 grid gap-8 md:grid-cols-2">
         <section aria-label="Redes sociais" className="space-y-3">
           <div className="flex items-center gap-3">
@@ -45,7 +43,7 @@ const Footer = () => {
             </li>
             <li className="flex items-start gap-2">
               <Phone className="h-4 w-4 mt-0.5" />
-              <span>0800 025 4458 para demais localidades</span>
+              <span className="font-medium">0800 025 4458 para demais localidades</span>
             </li>
             <li className="flex items-start gap-2">
               <Mail className="h-4 w-4 mt-0.5" />
@@ -59,8 +57,6 @@ const Footer = () => {
           © {new Date().getFullYear()} Hikvision. Todos os direitos reservados.
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
