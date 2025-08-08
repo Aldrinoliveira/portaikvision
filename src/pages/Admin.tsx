@@ -14,7 +14,7 @@ const Admin = () => {
 
   // Types
   type DriveFile = { id: string; name: string; publicUrl: string; mimeType: string };
-  type Banner = { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean };
+  type Banner = { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean; titulo?: string | null; descricao?: string | null };
   type Categoria = { id: string; nome: string; descricao: string | null };
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
@@ -28,6 +28,8 @@ const Admin = () => {
   const [bImagemUrl, setBImagemUrl] = useState("");
   const [bLink, setBLink] = useState("");
   const [bTamanho, setBTamanho] = useState("");
+  const [bTitulo, setBTitulo] = useState("");
+  const [bDescricao, setBDescricao] = useState("");
   const [bAtivo, setBAtivo] = useState(true);
   const [bLoading, setBLoading] = useState(false);
   // Categorias/Subcategorias/Produtos
@@ -124,6 +126,8 @@ const Admin = () => {
       imagem_url: bImagemUrl.trim(),
       link_redirecionamento: bLink.trim() || null,
       tamanho: bTamanho.trim() || null,
+      titulo: bTitulo.trim() || null,
+      descricao: bDescricao.trim() || null,
       ativo: bAtivo,
     };
     const { error } = await supabase.from('banners').insert(payload as any);
@@ -131,7 +135,7 @@ const Admin = () => {
       toast({ title: 'Erro ao criar', description: error.message });
     } else {
       toast({ title: 'Banner criado' });
-      setBImagemUrl(''); setBLink(''); setBTamanho(''); setBAtivo(true);
+      setBImagemUrl(''); setBLink(''); setBTamanho(''); setBTitulo(''); setBDescricao(''); setBAtivo(true);
       await loadBanners();
     }
     setBLoading(false);
@@ -377,6 +381,14 @@ const Admin = () => {
               <div>
                 <Label htmlFor="btam">Tamanho (ex: 1200x400)</Label>
                 <Input id="btam" placeholder="ex: 1200x400" value={bTamanho} onChange={(e) => setBTamanho(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="btitulo">Título (opcional)</Label>
+                <Input id="btitulo" placeholder="Título do banner" value={bTitulo} onChange={(e) => setBTitulo(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="bdesc">Descrição (opcional)</Label>
+                <Input id="bdesc" placeholder="Texto adicional" value={bDescricao} onChange={(e) => setBDescricao(e.target.value)} />
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="bfile">Upload imagem</Label>

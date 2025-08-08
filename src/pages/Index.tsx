@@ -22,7 +22,7 @@ const useSEO = () => {
   }, []);
 };
 
-interface Banner { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean; }
+interface Banner { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean; titulo?: string | null; descricao?: string | null; }
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id?: string | null; }
 interface Categoria { id: string; nome: string; descricao: string | null; }
 
@@ -192,21 +192,37 @@ const Index = () => {
                   <CarouselItem key={b.id}>
                     {b.link_redirecionamento?.startsWith('/') ? (
                       <Link to={b.link_redirecionamento}>
-                        <img
-                          src={b.imagem_url}
-                          alt={`Banner ${b.tamanho || "padrão"}`}
-                          loading="lazy"
-                          className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
-                        />
+                        <div className="relative">
+                          <img
+                            src={b.imagem_url}
+                            alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`}
+                            loading="lazy"
+                            className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
+                          />
+                          {(b.titulo || b.descricao) && (
+                            <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
+                              {b.titulo && <h2 className="text-lg md:text-2xl font-semibold">{b.titulo}</h2>}
+                              {b.descricao && <p className="text-sm md:text-base text-muted-foreground">{b.descricao}</p>}
+                            </div>
+                          )}
+                        </div>
                       </Link>
                     ) : (
                       <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
-                        <img
-                          src={b.imagem_url}
-                          alt={`Banner ${b.tamanho || "padrão"}`}
-                          loading="lazy"
-                          className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
-                        />
+                        <div className="relative">
+                          <img
+                            src={b.imagem_url}
+                            alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`}
+                            loading="lazy"
+                            className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
+                          />
+                          {(b.titulo || b.descricao) && (
+                            <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
+                              {b.titulo && <h2 className="text-lg md:text-2xl font-semibold">{b.titulo}</h2>}
+                              {b.descricao && <p className="text-sm md:text-base text-muted-foreground">{b.descricao}</p>}
+                            </div>
+                          )}
+                        </div>
                       </a>
                     )}
                   </CarouselItem>
