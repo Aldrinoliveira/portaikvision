@@ -387,25 +387,35 @@ useEffect(() => {
 
         {!loading && results.length > 0 && (
           <section aria-label="Resultados" className="space-y-4">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {visibleResults.map((p) => (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition hover-scale animate-fade-in">
-                  {p.imagem_url && (
-                    <img src={p.imagem_url} alt={`Produto ${p.partnumber}`} loading="lazy" className="w-full h-40 object-cover" />
-                  )}
-                  <CardHeader>
-                    <CardTitle className="text-base">{p.partnumber}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <p className="text-sm text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate(`/produto/${p.id}`)}
-                    >
-                      Ver arquivos
-                    </Button>
-                    <AsyncCounts produtoId={p.id} getCounts={getCounts} />
-                  </CardContent>
+                <Card key={p.id} className="hover:shadow-md transition animate-fade-in p-3">
+                  <div className="flex items-center gap-3">
+                    {p.imagem_url ? (
+                      <img
+                        src={p.imagem_url}
+                        alt={`Produto ${p.partnumber}`}
+                        loading="lazy"
+                        className="w-20 h-20 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-md bg-muted" aria-hidden="true" />
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <h3 className="text-sm font-medium leading-none">{p.partnumber}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Button size="sm" variant="secondary" onClick={() => navigate(`/produto/${p.id}`)}>
+                          Ver arquivos
+                        </Button>
+                        <div className="text-[11px] text-muted-foreground">
+                          <AsyncCounts produtoId={p.id} getCounts={getCounts} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>
