@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Copy, ListFilter } from "lucide-react";
 const Admin = () => {
   const navigate = useNavigate();
@@ -117,37 +117,6 @@ const Admin = () => {
   const [showNumerosSerie, setShowNumerosSerie] = useState(true);
   const [showArquivos, setShowArquivos] = useState(true);
   const [showDrive, setShowDrive] = useState(true);
-
-  // Colapsar/expandir por seção
-  const [bannerCollapsed, setBannerCollapsed] = useState(false);
-  const [catCollapsed, setCatCollapsed] = useState(false);
-  const [prodCollapsed, setProdCollapsed] = useState(false);
-  const [nsCollapsed, setNsCollapsed] = useState(false);
-  const [arqCollapsed, setArqCollapsed] = useState(false);
-  const [driveCollapsed, setDriveCollapsed] = useState(false);
-
-  // Refs para navegação
-  const bannersRef = useRef<HTMLDivElement>(null);
-  const categoriasRef = useRef<HTMLDivElement>(null);
-  const produtosRef = useRef<HTMLDivElement>(null);
-  const numerosRef = useRef<HTMLDivElement>(null);
-  const arquivosRef = useRef<HTMLDivElement>(null);
-  const driveRef = useRef<HTMLDivElement>(null);
-
-  const scrollTo = (ref: React.RefObject<HTMLDivElement>) => {
-    setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
-  };
-
-  const gotoSection = (key: 'banners' | 'categorias' | 'produtos' | 'numeros' | 'arquivos' | 'drive') => {
-    switch (key) {
-      case 'banners': setShowBanners(true); setBannerCollapsed(false); scrollTo(bannersRef); break;
-      case 'categorias': setShowCategorias(true); setCatCollapsed(false); scrollTo(categoriasRef); break;
-      case 'produtos': setShowProdutos(true); setProdCollapsed(false); scrollTo(produtosRef); break;
-      case 'numeros': setShowNumerosSerie(true); setNsCollapsed(false); scrollTo(numerosRef); break;
-      case 'arquivos': setShowArquivos(true); setArqCollapsed(false); scrollTo(arquivosRef); break;
-      case 'drive': setShowDrive(true); setDriveCollapsed(false); scrollTo(driveRef); break;
-    }
-  };
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -649,15 +618,7 @@ const Admin = () => {
               Seções
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-56 bg-popover">
-            <DropdownMenuLabel>Navegar</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => gotoSection('banners')}>Banners</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => gotoSection('categorias')}>Categorias</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => gotoSection('produtos')}>Produtos</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => gotoSection('numeros')}>Números de Série</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => gotoSection('arquivos')}>Arquivos</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => gotoSection('drive')}>Google Drive</DropdownMenuItem>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="z-50 w-56">
             <DropdownMenuLabel>Seções visíveis</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem checked={showBanners} onCheckedChange={setShowBanners}>Banners</DropdownMenuCheckboxItem>
@@ -672,110 +633,86 @@ const Admin = () => {
 
       {showBanners && (
       /* Banners */
-      <div ref={bannersRef}>
       <section className="space-y-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Banners</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setBannerCollapsed((v) => !v)}>{bannerCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!bannerCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
 
       {showCategorias && (
       /* Categorias */
-      <div ref={categoriasRef}>
       <section className="space-y-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Categorias</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setCatCollapsed((v) => !v)}>{catCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!catCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
 
       {showProdutos && (
       /* Produtos */
-      <div ref={produtosRef}>
       <section className="space-y-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Produtos</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setProdCollapsed((v) => !v)}>{prodCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!prodCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
 
       {showNumerosSerie && (
       /* Números de Série */
-      <div ref={numerosRef}>
       <section className="space-y-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Números de Série</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setNsCollapsed((v) => !v)}>{nsCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!nsCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
 
       {showArquivos && (
       /* Arquivos */
-      <div ref={arquivosRef}>
       <section className="space-y-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Arquivos</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setArqCollapsed((v) => !v)}>{arqCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!arqCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
 
       {showDrive && (
       /* Google Drive */
-      <div ref={driveRef}>
       <section>
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Arquivos do Google Drive</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setDriveCollapsed((v) => !v)}>{driveCollapsed ? 'Expandir' : 'Ocultar'}</Button>
           </CardHeader>
-          {!driveCollapsed && (<CardContent className="space-y-4">
+          <CardContent className="space-y-4">
 ...
           </CardContent>
-          )}
         </Card>
       </section>
-      </div>
       )}
     </main>
   );
