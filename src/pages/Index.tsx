@@ -69,25 +69,64 @@ const [catFilter, setCatFilter] = useState("");
   }, []);
 
   useEffect(() => {
-    if (openQR) {
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-      codeReader
-        .decodeFromVideoDevice(undefined, videoRef.current as any, (result, err) => {
+    if (!openQR) return;
+
+    let unsub: (() => void) | null = null;
+    const init = async () => {
+      try {
+        // Aguarda o <video> montar
+        for (let i = 0; i < 10 && !videoRef.current; i++) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
+        if (!videoRef.current) throw new Error("Falha ao inicializar a câmera (vídeo não montado)");
+
+        // Solicita permissão rapidamente (melhora UX no iOS/Safari)
+        if (navigator.mediaDevices?.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            (videoRef.current as any).srcObject = stream;
+          } catch (e) {
+            // Ignora aqui; ZXing tentará novamente. Apenas segue para iniciar o leitor.
+          }
+        }
+
+        const codeReader = new BrowserMultiFormatReader();
+        codeReaderRef.current = codeReader;
+
+        // Tenta escolher a câmera traseira quando disponível
+        let deviceId: string | undefined = undefined;
+        try {
+          const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+          if (devices?.length) {
+            const back = devices.find((d) => /back|rear|environment/i.test(d.label));
+            deviceId = (back || devices[devices.length - 1]).deviceId;
+          }
+        } catch {}
+
+        await codeReader.decodeFromVideoDevice(deviceId, videoRef.current as any, (result) => {
           if (result) {
             const text = result.getText();
             setQuery(text.slice(0, 9));
             setOpenQR(false);
             toast({ title: "QR lido", description: `Número: ${text}` });
           }
-        })
-        .catch(() => {});
-    }
+        });
+
+        unsub = () => {};
+      } catch (err: any) {
+        const msg = err?.message || "Não foi possível acessar a câmera. Verifique as permissões do navegador.";
+        toast({ title: "Erro ao abrir câmera", description: msg });
+      }
+    };
+
+    init();
+
     return () => {
       try {
         const mediaStream = (videoRef.current as any)?.srcObject as MediaStream | undefined;
         mediaStream?.getTracks()?.forEach((t) => t.stop());
       } catch {}
+      try { unsub?.(); } catch {}
       codeReaderRef.current = null;
     };
   }, [openQR]);
