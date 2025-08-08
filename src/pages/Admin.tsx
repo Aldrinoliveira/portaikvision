@@ -717,7 +717,7 @@ const Admin = () => {
               {pImg && (
                 <div className="md:col-span-5">
                   <Label>Pré-visualização</Label>
-                  <img src={pImg} alt="Pré-visualização do produto" className="w-full h-32 object-cover rounded" loading="lazy" />
+                  <img src={pImg} alt="Pré-visualização do produto" className="w-full h-16 object-cover rounded" loading="lazy" />
                 </div>
               )}
               <div>
@@ -769,12 +769,12 @@ const Admin = () => {
                               <Input value={editPImg} onChange={(e) => setEditPImg(e.target.value)} placeholder="Imagem URL" />
                               <Input id="epfile" type="file" accept="image/*" onChange={onSelectProdutoFileEdit} />
                               {editPImg && (
-                                <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-28 h-20 object-cover rounded" loading="lazy" />
+                                <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-14 h-10 object-cover rounded" loading="lazy" />
                               )}
                             </div>
                           ) : (
                             p.imagem_url ? (
-                              <img src={p.imagem_url} alt={`Imagem ${p.partnumber}`} className="w-28 h-20 object-cover rounded" loading="lazy" />
+                              <img src={p.imagem_url} alt={`Imagem ${p.partnumber}`} className="w-14 h-10 object-cover rounded" loading="lazy" />
                             ) : null
                           )}
                         </TableCell>
