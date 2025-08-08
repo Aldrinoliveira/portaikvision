@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Copy, ListFilter } from "lucide-react";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -108,6 +109,14 @@ const Admin = () => {
   const [stTitleSize, setStTitleSize] = useState<string>("");
   const [stDescSize, setStDescSize] = useState<string>("");
   const [stLoading, setStLoading] = useState(false);
+
+  // Visibilidade das seções
+  const [showBanners, setShowBanners] = useState(true);
+  const [showCategorias, setShowCategorias] = useState(true);
+  const [showProdutos, setShowProdutos] = useState(true);
+  const [showNumerosSerie, setShowNumerosSerie] = useState(true);
+  const [showArquivos, setShowArquivos] = useState(true);
+  const [showDrive, setShowDrive] = useState(true);
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -601,597 +610,110 @@ const Admin = () => {
       <h1 className="text-2xl font-semibold">Painel Admin</h1>
       <p className="text-muted-foreground">Em breve: gerenciamento de Banners, Categorias, Produtos, Arquivos e Solicitações.</p>
 
-      {/* Banners */}
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <ListFilter className="h-4 w-4 mr-2" />
+              Seções
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-56">
+            <DropdownMenuLabel>Seções visíveis</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem checked={showBanners} onCheckedChange={setShowBanners}>Banners</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked={showCategorias} onCheckedChange={setShowCategorias}>Categorias</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked={showProdutos} onCheckedChange={setShowProdutos}>Produtos</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked={showNumerosSerie} onCheckedChange={setShowNumerosSerie}>Números de Série</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked={showArquivos} onCheckedChange={setShowArquivos}>Arquivos</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked={showDrive} onCheckedChange={setShowDrive}>Google Drive</DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {showBanners && (
+      /* Banners */
       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Banners</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-5 gap-3">
-              <div className="md:col-span-2">
-                <Label htmlFor="bimg">Imagem URL</Label>
-                <Input id="bimg" placeholder="https://..." value={bImagemUrl} onChange={(e) => setBImagemUrl(e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="blink">Link de redirecionamento (opcional)</Label>
-                <Input id="blink" placeholder="https://..." value={bLink} onChange={(e) => setBLink(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="btam">Tamanho (ex: 1200x400)</Label>
-                <Input id="btam" placeholder="ex: 1200x400" value={bTamanho} onChange={(e) => setBTamanho(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="btitulo">Título (opcional)</Label>
-                <Input id="btitulo" placeholder="Título do banner" value={bTitulo} onChange={(e) => setBTitulo(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="bdesc">Descrição (opcional)</Label>
-                <Input id="bdesc" placeholder="Texto adicional" value={bDescricao} onChange={(e) => setBDescricao(e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="bfile">Upload imagem</Label>
-                <Input id="bfile" type="file" accept="image/*" onChange={onSelectBannerFile} />
-              </div>
-              {bImagemUrl && (
-                <div className="md:col-span-5">
-                  <Label>Pré-visualização</Label>
-                  <img src={bImagemUrl} alt="Pré-visualização do banner" className="w-full h-32 object-cover rounded" loading="lazy" />
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Switch id="bativo" checked={bAtivo} onCheckedChange={setBAtivo} />
-                <Label htmlFor="bativo">Ativo</Label>
-              </div>
-              <div className="md:col-span-5">
-                <Button onClick={createBanner} disabled={bLoading}>Criar banner</Button>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {banners.map((b) => (
-                <Card key={b.id} className="hover:shadow-md transition">
-                  <CardHeader className="p-4">
-                    <CardTitle className="text-base">{b.tamanho || 'Banner'}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 p-4 pt-0">
-                    <img src={b.imagem_url} alt={`Banner ${b.tamanho || 'padrão'}`} className="w-full h-32 object-cover rounded" loading="lazy" />
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Switch checked={b.ativo} onCheckedChange={() => toggleAtivo(b)} id={`ativo-${b.id}`} />
-                        <Label htmlFor={`ativo-${b.id}`} className="text-sm">Ativo</Label>
-                      </div>
-                      <div className="flex gap-2">
-                        {b.link_redirecionamento && (
-                          <Button asChild variant="secondary" size="sm">
-                            <a href={b.link_redirecionamento} target="_blank" rel="noopener noreferrer">Abrir</a>
-                          </Button>
-                        )}
-                        <Button variant="destructive" size="sm" onClick={() => deleteBanner(b)}>Excluir</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {banners.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum banner cadastrado.</p>
-              )}
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
 
-      {/* Categorias */}
+      {showCategorias && (
+      /* Categorias */
       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Categorias</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-3">
-              <div>
-                <Label htmlFor="catnome">Nome</Label>
-                <Input id="catnome" value={catNome} onChange={(e) => setCatNome(e.target.value)} placeholder="Nome da categoria" />
-              </div>
-              <div className="md:col-span-3">
-                <Button onClick={createCategoria} disabled={catLoading}>Criar categoria</Button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="w-[180px] text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categorias.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell>
-                        {editingCatId === c.id ? (
-                          <Input value={editCatNome} onChange={(e) => setEditCatNome(e.target.value)} placeholder="Nome" />
-                        ) : (
-                          <span className="font-medium">{c.nome}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          {editingCatId === c.id ? (
-                            <>
-                              <Button size="sm" onClick={saveCategoria} disabled={catLoading}>Salvar</Button>
-                              <Button size="sm" variant="outline" onClick={cancelEditCategoria}>Cancelar</Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button size="sm" variant="secondary" onClick={() => startEditCategoria(c)}>Editar</Button>
-                              <Button size="sm" variant="destructive" onClick={() => deleteCategoria(c)}>Excluir</Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {categorias.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
 
-      {/* Produtos */}
+      {showProdutos && (
+      /* Produtos */
       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Produtos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-5 gap-3">
-              <div className="md:col-span-2">
-                <Label htmlFor="psearch">Buscar (part number)</Label>
-                <Input id="psearch" value={pSearch} onChange={(e) => { setPSearch(e.target.value); setProdPage(1); }} placeholder="Ex: ABC" />
-              </div>
-              <div>
-                <Label>Filtrar por categoria</Label>
-                <Select value={pCatFilter || 'all'} onValueChange={(v) => { setPCatFilter(v === 'all' ? '' : v); setProdPage(1); }}>
-                  <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2 flex items-end justify-end gap-2">
-                <Button variant="outline" onClick={() => { setPSearch(''); setPCatFilter(''); setProdPage(1); }}>Limpar</Button>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-5 gap-3">
-              <div>
-                <Label htmlFor="ppart">Part number</Label>
-                <Input id="ppart" value={pPart} onChange={(e) => setPPart(e.target.value)} placeholder="Ex: ABC-123" />
-              </div>
-              <div>
-                <Label htmlFor="pdesc">Descrição</Label>
-                <Textarea id="pdesc" rows={1} className="h-10 resize-none" value={pDesc} onChange={(e) => setPDesc(e.target.value)} placeholder="Descrição do produto" />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="pimg">Imagem URL</Label>
-                <Input id="pimg" value={pImg} onChange={(e) => setPImg(e.target.value)} placeholder="https://... (opcional)" />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="pfile">Upload imagem</Label>
-                <Input id="pfile" type="file" accept="image/*" onChange={onSelectProdutoFile} />
-              </div>
-              {pImg && (
-                <div className="md:col-span-5">
-                  <Label>Pré-visualização</Label>
-                  <img src={pImg} alt="Pré-visualização do produto" className="w-full h-16 object-cover rounded" loading="lazy" />
-                </div>
-              )}
-              <div>
-                <Label>Categoria</Label>
-                <Select value={pCat} onValueChange={(v) => { setPCat(v); setPSub(''); }}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Subcategoria</Label>
-                <Select value={pSub} onValueChange={setPSub} disabled={!pCat}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {subcategorias.filter((s) => s.categoria_id === pCat).map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-5">
-                <Button onClick={createProduto} disabled={prodLoading || !pPart.trim() || !pCat}>Criar produto</Button>
-              </div>
-            </div>
-
-            {prodListLoading && (<p className="text-sm text-muted-foreground">Carregando produtos...</p>)}
-            <div className="w-full overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Imagem</TableHead>
-                    <TableHead>Part number</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Subcategoria</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {produtos.map((p) => {
-                    const isEditing = editingProdId === p.id;
-                    return (
-                      <TableRow key={p.id}>
-                        <TableCell className="align-top">
-                          {isEditing ? (
-                            <div className="space-y-2 max-w-[220px]">
-                              <Input value={editPImg} onChange={(e) => setEditPImg(e.target.value)} placeholder="Imagem URL" />
-                              <Input id="epfile" type="file" accept="image/*" onChange={onSelectProdutoFileEdit} />
-                              {editPImg && (
-                                <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-14 h-10 object-cover rounded" loading="lazy" />
-                              )}
-                            </div>
-                          ) : (
-                            p.imagem_url ? (
-                              <img src={p.imagem_url} alt={`Imagem ${p.partnumber}`} className="w-14 h-10 object-cover rounded" loading="lazy" />
-                            ) : null
-                          )}
-                        </TableCell>
-                        <TableCell className="align-top">
-                          {isEditing ? (
-                            <Input value={editPPart} onChange={(e) => setEditPPart(e.target.value)} placeholder="Part number" />
-                          ) : (
-                            <span className="font-medium">{p.partnumber}</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="align-top min-w-[240px]">
-                          {isEditing ? (
-                            <Textarea rows={1} className="h-10 resize-none" value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
-                          ) : (
-                            <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>
-                          )}
-                        </TableCell>
-                        <TableCell className="align-top min-w-[180px]">
-                          {isEditing ? (
-                            <Select value={editPCat} onValueChange={(v) => { setEditPCat(v); setEditPSub(''); }}>
-                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                              <SelectContent>
-                                {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            categorias.find(c => c.id === p.categoria_id)?.nome || '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="align-top min-w-[180px]">
-                          {isEditing ? (
-                            <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
-                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                              <SelectContent>
-                                {subcategorias.filter((s) => s.categoria_id === editPCat).map((s) => (
-                                  <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right align-top space-x-2 min-w-[200px]">
-                          {isEditing ? (
-                            <>
-                              <Button size="sm" onClick={saveProduto} disabled={prodLoading || !editPPart.trim() || !editPCat}>Salvar</Button>
-                              <Button size="sm" variant="outline" onClick={cancelEditProduto}>Cancelar</Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button size="sm" variant="secondary" onClick={() => startEditProduto(p)}>Editar</Button>
-                              <Button size="sm" variant="destructive" onClick={() => deleteProduto(p)}>Excluir</Button>
-                            </>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {produtos.length === 0 && !prodListLoading && (
-                <p className="text-sm text-muted-foreground mt-2">Nenhum produto cadastrado.</p>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Página {prodPage} de {Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setProdPage((p) => Math.max(1, p - 1))} disabled={prodPage <= 1}>Anterior</Button>
-                <Button variant="outline" size="sm" onClick={() => setProdPage((p) => p + 1)} disabled={prodPage >= Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}>Próxima</Button>
-              </div>
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
 
-      {/* Números de Série */}
+      {showNumerosSerie && (
+      /* Números de Série */
       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Números de Série</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-4 gap-3">
-              <div>
-                <Label>Produto</Label>
-                <Select value={nsProduto} onValueChange={setNsProduto}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                  <SelectContent>
-                    {allProds.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="nsnumero">Número de série</Label>
-                <Input id="nsnumero" value={nsNumero} onChange={(e) => setNsNumero(e.target.value)} placeholder="Máx. 9 dígitos" maxLength={9} />
-              </div>
-              <div className="md:col-span-4">
-                <Button onClick={createNumeroSerie} disabled={nsLoading || !nsProduto || !nsNumero.trim()}>Cadastrar número de série</Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">Últimos cadastrados</h3>
-              {nsListLoading ? (
-                <p className="text-sm text-muted-foreground">Carregando...</p>
-              ) : numerosSerie.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum número cadastrado.</p>
-              ) : (
-                <div className="w-full overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Número</TableHead>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Data</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {numerosSerie.map((ns) => {
-                        const prod = allProds.find((p) => p.id === ns.produto_id);
-                        return (
-                          <TableRow key={ns.id}>
-                            <TableCell className="font-medium">{ns.numero_serie}</TableCell>
-                            <TableCell>{prod?.partnumber || ns.produto_id}</TableCell>
-                            <TableCell>{new Date(ns.created_at).toLocaleString()}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
 
-      {/* Arquivos */}
+      {showArquivos && (
+      /* Arquivos */
       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Arquivos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-4 gap-3">
-              <div>
-                <Label>Produto</Label>
-                <Select value={aProd} onValueChange={setAProd}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                  <SelectContent>
-                    {allProds.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="anome">Nome do arquivo</Label>
-                <Input id="anome" value={aNome} onChange={(e) => setANome(e.target.value)} placeholder="Ex: Manual v1.0" />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="adesc">Descrição (opcional)</Label>
-                <Textarea id="adesc" value={aDesc} onChange={(e) => setADesc(e.target.value)} placeholder="Breve descrição do arquivo" />
-              </div>
-              <div>
-                <Label>Tipo</Label>
-                <Select value={aTipo} onValueChange={setATipo}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="firmware">Firmware</SelectItem>
-                    <SelectItem value="documento">Documento</SelectItem
-                    ><SelectItem value="video">Vídeo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="alink">Link URL</Label>
-                <Input id="alink" value={aLink} onChange={(e) => setALink(e.target.value)} placeholder="https://..." />
-              </div>
-              <div className="flex items-center gap-2 md:col-span-2">
-                <Switch id="anaolistado" checked={aNaoListado} onCheckedChange={setANaoListado} />
-                <Label htmlFor="anaolistado">Não listado</Label>
-              </div>
-              <div className="md:col-span-4">
-                <Button onClick={createArquivo} disabled={aLoading || !aProd || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">Arquivos adicionados</h3>
-              {arqListLoading ? (
-                <p className="text-sm text-muted-foreground">Carregando arquivos...</p>
-              ) : arquivos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum arquivo cadastrado.</p>
-              ) : (
-                <div className="w-full overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Link</TableHead>
-                        <TableHead className="text-center">Não listado</TableHead>
-                        <TableHead className="text-right">Downloads</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {arquivos.map((a) => {
-                        const prod = allProds.find((p) => p.id === a.produto_id);
-                        const isEditing = editingArqId === a.id;
-                        return (
-                          <TableRow key={a.id}>
-                            <TableCell className="font-medium">
-                              {isEditing ? (
-                                <Input value={editANome} onChange={(e) => setEditANome(e.target.value)} />
-                              ) : (
-                                a.nome_arquivo
-                              )}
-                            </TableCell>
-                            <TableCell className="min-w-[200px]">
-                              {isEditing ? (
-                                <Input value={editADesc} onChange={(e) => setEditADesc(e.target.value)} placeholder="Descrição (opcional)" />
-                              ) : (
-                                <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
-                              )}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {isEditing ? (
-                                <Select value={editATipo} onValueChange={setEditATipo}>
-                                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="firmware">Firmware</SelectItem>
-                                    <SelectItem value="documento">Documento</SelectItem>
-                                    <SelectItem value="video">Vídeo</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                a.categoria_arquivo
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {isEditing ? (
-                                <Select value={editAProd} onValueChange={setEditAProd}>
-                                  <SelectTrigger><SelectValue placeholder="Produto" /></SelectTrigger>
-                                  <SelectContent>
-                                    {allProds.map((p) => (
-                                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                prod?.partnumber || a.produto_id
-                              )}
-                            </TableCell>
-                            <TableCell className="max-w-[220px]">
-                              {isEditing ? (
-                                <Input value={editALink} onChange={(e) => setEditALink(e.target.value)} placeholder="https://..." />
-                              ) : (
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  aria-label="Copiar link"
-                                  onClick={() => { navigator.clipboard.writeText(a.link_url); toast({ title: 'Link copiado' }); }}
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={!a.listado} onCheckedChange={() => toggleArquivoListado(a)} aria-label="Marcar como não listado" />
-                            </TableCell>
-                            <TableCell className="text-right">{a.downloads}</TableCell>
-                            <TableCell className="text-right space-x-2">
-                              {isEditing ? (
-                                <>
-                                  <Button size="sm" onClick={saveArquivo} disabled={arqLoading || !editANome.trim() || !editALink.trim() || !editATipo || !editAProd}>Salvar</Button>
-                                  <Button size="sm" variant="outline" onClick={cancelEditArquivo}>Cancelar</Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button asChild size="sm" variant="secondary">
-                                    <a href={a.link_url} target="_blank" rel="noopener noreferrer">Abrir</a>
-                                  </Button>
-                                  <Button size="sm" variant="outline" onClick={() => startEditArquivo(a)}>Editar</Button>
-                                  <Button size="sm" variant="destructive" onClick={() => deleteArquivo(a)}>Excluir</Button>
-                                </>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
 
-      {/* Google Drive */}
+      {showDrive && (
+      /* Google Drive */
       <section>
         <Card>
           <CardHeader>
             <CardTitle>Arquivos do Google Drive</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Input placeholder="Produto ID" value={productId} onChange={(e) => setProductId(e.target.value)} />
-              <Input type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
-              <div className="flex gap-2">
-                <Button onClick={listFiles} disabled={!productId || loading}>Listar</Button>
-                <Button onClick={upload} disabled={!productId || !selectedFile || loading}>Upload</Button>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {files.map((f) => (
-                <Card key={f.id} className="hover:shadow-md transition">
-                  <CardHeader>
-                    <CardTitle className="text-base">{f.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex items-center justify-between">
-                    <Button asChild>
-                      <a href={f.publicUrl} target="_blank" rel="noopener noreferrer">Abrir</a>
-                    </Button>
-                    <span className="text-xs text-muted-foreground">{f.mimeType}</span>
-                  </CardContent>
-                </Card>
-              ))}
-              {files.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum arquivo listado.</p>
-              )}
-            </div>
+...
           </CardContent>
         </Card>
       </section>
+      )}
     </main>
   );
 };
