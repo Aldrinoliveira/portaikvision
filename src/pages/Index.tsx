@@ -493,6 +493,7 @@ useEffect(() => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };
