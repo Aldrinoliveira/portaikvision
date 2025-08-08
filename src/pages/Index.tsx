@@ -15,6 +15,7 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
 import TopBar from "@/components/TopBar";
+import Footer from "@/components/Footer";
 // Home SEO
 const useSEO = () => {
   useEffect(() => {

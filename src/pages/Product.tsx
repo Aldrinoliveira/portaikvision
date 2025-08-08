@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import TopBar from "@/components/TopBar";
+import Footer from "@/components/Footer";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
 interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; descricao: string | null; link_url: string; downloads: number; created_at: string; }
@@ -146,6 +147,7 @@ const Product = () => {
       </section>
 
     </main>
+      <Footer />
     </div>
   );
 };
