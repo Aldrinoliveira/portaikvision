@@ -618,9 +618,17 @@ const TopDownloads = () => {
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url); }}
           >
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                {it.imagem_url && (
+                  <img
+                    src={it.imagem_url}
+                    alt={`Produto ${it.partnumber}`}
+                    className="w-16 h-16 object-cover rounded"
+                    loading="lazy"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
                   <CardTitle className="text-base">{it.partnumber}</CardTitle>
                   {it.descricao && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{it.descricao}</p>
@@ -631,24 +639,18 @@ const TopDownloads = () => {
                 </span>
               </div>
             </CardHeader>
-            <CardContent className="flex gap-3">
-              {it.imagem_url && (
-                <img
-                  src={it.imagem_url}
-                  alt={`Produto ${it.partnumber}`}
-                  className="w-24 h-16 object-cover rounded"
-                  loading="lazy"
-                />
-              )}
+            <CardContent>
               <div className="min-w-0 space-y-1">
-                
                 {it.file && (
                   <div className="text-sm">
                     <p className="font-medium truncate" title={it.file.nome_arquivo}>{it.file.nome_arquivo}</p>
                     {it.file.descricao && (
                       <p className="text-muted-foreground line-clamp-2" title={it.file.descricao}>{it.file.descricao}</p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">Tipo: {it.file.categoria_arquivo}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                      {it.file.categoria_arquivo === 'firmware' ? <Cpu className="h-4 w-4" /> : it.file.categoria_arquivo === 'documento' ? <FileText className="h-4 w-4" /> : it.file.categoria_arquivo === 'video' ? <Video className="h-4 w-4" /> : null}
+                      <span className="capitalize">{it.file.categoria_arquivo}</span>
+                    </div>
                   </div>
                 )}
               </div>
