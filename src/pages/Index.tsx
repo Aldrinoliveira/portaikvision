@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { toast } from "@/hooks/use-toast";
-import { QrCode, HelpCircle, Search, Cpu, FileText, Video } from "lucide-react";
+import { QrCode, HelpCircle, Search, Cpu, FileText, Video, X } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +34,7 @@ const Index = () => {
   const [mode, setMode] = useState<"serie" | "part">("part");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Produto[]>([]);
+  const [allProducts, setAllProducts] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
   const RESULTS_PAGE_SIZE = 6;
   const [page, setPage] = useState(1);
@@ -65,6 +66,7 @@ const [catFilter, setCatFilter] = useState("");
       setBanners(bRes.data || []);
       setCategorias(cRes.data || []);
       setResults(pRes.data || []);
+      setAllProducts(pRes.data || []);
     };
     load();
   }, []);
@@ -133,7 +135,12 @@ const [catFilter, setCatFilter] = useState("");
   }, [openQR]);
 
   const onSearch = async () => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setSearched(false);
+      setResults(allProducts);
+      setPage(1);
+      return;
+    }
     setLoading(true);
     setSearched(true);
     setPage(1);
@@ -220,6 +227,14 @@ useEffect(() => {
       embla.off('reInit', onReInit);
     };
   }, [embla]);
+
+  useEffect(() => {
+    if (query.trim() === '') {
+      setResults(allProducts);
+      setSearched(false);
+      setPage(1);
+    }
+  }, [query, allProducts]);
 
   const TopBar = useMemo(() => (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -347,6 +362,15 @@ useEffect(() => {
                     onChange={(e) => setQuery(e.target.value)}
                   />
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Limpar pesquisa"
+                  onClick={() => { setQuery(''); setSearched(false); setResults(allProducts); setPage(1); }}
+                  disabled={!query}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
                 {mode === "serie" && (
                   <Button variant="secondary" onClick={() => setOpenQR(true)}>
                     <QrCode className="h-4 w-4 mr-2" /> Ler QR Code
