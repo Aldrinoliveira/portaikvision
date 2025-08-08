@@ -23,7 +23,8 @@ const useSEO = () => {
 };
 
 interface Banner { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean; }
-interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
+interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id?: string | null; }
+interface Categoria { id: string; nome: string; descricao: string | null; }
 
 const Index = () => {
   useSEO();
@@ -35,6 +36,8 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const RESULTS_PAGE_SIZE = 6;
   const [page, setPage] = useState(1);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [catFilter, setCatFilter] = useState("");
 
   // Solicitação de firmware modal
   const [openRequest, setOpenRequest] = useState(false);
@@ -48,11 +51,15 @@ const Index = () => {
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
-    const loadBanners = async () => {
-      const { data } = await supabase.from("banners").select("*").eq("ativo", true).order("created_at", { ascending: false });
-      setBanners(data || []);
+    const load = async () => {
+      const [bRes, cRes] = await Promise.all([
+        supabase.from("banners").select("*").eq("ativo", true).order("created_at", { ascending: false }),
+        supabase.from("categorias").select("id,nome,descricao").order("nome"),
+      ]);
+      setBanners(bRes.data || []);
+      setCategorias(cRes.data || []);
     };
-    loadBanners();
+    load();
   }, []);
 
   useEffect(() => {
@@ -94,20 +101,20 @@ const Index = () => {
           // Fallback: tentar por partnumber quando não achar por série
           const { data: prods } = await supabase
             .from("produtos")
-            .select("id, partnumber, descricao, imagem_url")
+            .select("id, partnumber, descricao, imagem_url, categoria_id")
             .ilike("partnumber", `%${query.trim()}%`);
           setResults(prods || []);
         } else {
           const { data: prods } = await supabase
             .from("produtos")
-            .select("id, partnumber, descricao, imagem_url")
+            .select("id, partnumber, descricao, imagem_url, categoria_id")
             .in("id", ids);
           setResults(prods || []);
         }
       } else {
         const { data: prods } = await supabase
           .from("produtos")
-          .select("id, partnumber, descricao, imagem_url")
+          .select("id, partnumber, descricao, imagem_url, categoria_id")
           .ilike("partnumber", `%${query.trim()}%`);
         setResults(prods || []);
       }
@@ -150,7 +157,7 @@ const Index = () => {
   };
 
   const TopBar = useMemo(() => (
-    <header className="w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="font-semibold text-lg">Portal de Arquivos</Link>
         <nav className="flex items-center gap-4 text-sm">
@@ -164,11 +171,12 @@ const Index = () => {
     </header>
   ), []);
 
-  const totalPages = Math.max(1, Math.ceil(results.length / RESULTS_PAGE_SIZE));
+  const filtered = useMemo(() => (catFilter ? results.filter((p) => p.categoria_id === catFilter) : results), [results, catFilter]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
   const visibleResults = useMemo(() => {
     const start = (page - 1) * RESULTS_PAGE_SIZE;
-    return results.slice(start, start + RESULTS_PAGE_SIZE);
-  }, [results, page]);
+    return filtered.slice(start, start + RESULTS_PAGE_SIZE);
+  }, [filtered, page]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -177,19 +185,30 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Banner Carousel */}
         {banners.length > 0 && (
-          <section aria-label="Banner">
+          <section aria-label="Banner" className="animate-fade-in">
             <Carousel className="w-full">
               <CarouselContent>
                 {banners.map((b) => (
                   <CarouselItem key={b.id}>
-                    <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
-                      <img
-                        src={b.imagem_url}
-                        alt={`Banner ${b.tamanho || "padrão"}`}
-                        loading="lazy"
-                        className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
-                      />
-                    </a>
+                    {b.link_redirecionamento?.startsWith('/') ? (
+                      <Link to={b.link_redirecionamento}>
+                        <img
+                          src={b.imagem_url}
+                          alt={`Banner ${b.tamanho || "padrão"}`}
+                          loading="lazy"
+                          className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
+                        />
+                      </Link>
+                    ) : (
+                      <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
+                        <img
+                          src={b.imagem_url}
+                          alt={`Banner ${b.tamanho || "padrão"}`}
+                          loading="lazy"
+                          className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md shadow"
+                        />
+                      </a>
+                    )}
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -246,6 +265,20 @@ const Index = () => {
             </CardContent>
           </Card>
         </section>
+
+        {/* Filtros por categoria */}
+        {categorias.length > 0 && (
+          <section aria-label="Filtros" className="animate-fade-in">
+            <div className="flex flex-wrap gap-2">
+              <Button variant={catFilter === "" ? "default" : "outline"} size="sm" onClick={() => { setCatFilter(""); setPage(1); }}>Todas</Button>
+              {categorias.map((c) => (
+                <Button key={c.id} variant={catFilter === c.id ? "default" : "outline"} size="sm" onClick={() => { setCatFilter(c.id); setPage(1); }}>
+                  {c.nome}
+                </Button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Resultados */}
         {loading && (
