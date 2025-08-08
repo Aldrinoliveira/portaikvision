@@ -104,6 +104,22 @@ All colors MUST be HSL.
   }
 }
 
+/* Banner text tokens (customizable) */
+@layer base {
+  :root {
+    --banner-title-color: var(--foreground);
+    --banner-desc-color: var(--muted-foreground);
+    --banner-title-size: 1.125rem; /* ~text-lg */
+    --banner-desc-size: 0.875rem;  /* ~text-sm */
+  }
+  @media (min-width: 768px) {
+    :root {
+      --banner-title-size: 1.5rem; /* ~text-2xl */
+      --banner-desc-size: 1rem;    /* ~text-base */
+    }
+  }
+}
+
 @layer utilities {
   .story-link {
     @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
