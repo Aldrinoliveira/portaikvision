@@ -117,6 +117,23 @@ const Admin = () => {
     }
   };
 
+  const onSelectBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBLoading(true);
+    const filePath = `banner-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('banners').upload(filePath, file, { contentType: file.type });
+    if (error) {
+      toast({ title: 'Erro ao enviar imagem', description: error.message });
+      setBLoading(false);
+      return;
+    }
+    const { data } = supabase.storage.from('banners').getPublicUrl(filePath);
+    setBImagemUrl(data.publicUrl);
+    toast({ title: 'Imagem enviada', description: 'URL preenchida automaticamente.' });
+    setBLoading(false);
+  };
+
   const listFiles = async () => {
     if (!productId) return;
     setLoading(true);
@@ -174,6 +191,10 @@ const Admin = () => {
               <div>
                 <Label htmlFor="btam">Tamanho (ex: 1200x400)</Label>
                 <Input id="btam" placeholder="ex: 1200x400" value={bTamanho} onChange={(e) => setBTamanho(e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="bfile">Upload imagem</Label>
+                <Input id="bfile" type="file" accept="image/*" onChange={onSelectBannerFile} />
               </div>
               <div className="flex items-center gap-2">
                 <Switch id="bativo" checked={bAtivo} onCheckedChange={setBAtivo} />
