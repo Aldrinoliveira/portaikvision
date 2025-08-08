@@ -28,7 +28,7 @@ const Index = () => {
   useSEO();
   const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [mode, setMode] = useState<"serie" | "part">("serie");
+  const [mode, setMode] = useState<"serie" | "part">("part");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,7 +87,12 @@ const Index = () => {
           .eq("numero_serie", query.trim());
         const ids = (nums || []).map((n: any) => n.produto_id);
         if (ids.length === 0) {
-          setResults([]);
+          // Fallback: tentar por partnumber quando não achar por série
+          const { data: prods } = await supabase
+            .from("produtos")
+            .select("id, partnumber, descricao, imagem_url")
+            .ilike("partnumber", `%${query.trim()}%`);
+          setResults(prods || []);
         } else {
           const { data: prods } = await supabase
             .from("produtos")
