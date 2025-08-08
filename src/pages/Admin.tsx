@@ -63,6 +63,14 @@ const Admin = () => {
   const [prodPage, setProdPage] = useState(1);
   const [prodTotal, setProdTotal] = useState(0);
   const [prodListLoading, setProdListLoading] = useState(false);
+  
+  // Arquivos form
+  const [aProd, setAProd] = useState<string>("");
+  const [aNome, setANome] = useState("");
+  const [aTipo, setATipo] = useState<string>("");
+  const [aLink, setALink] = useState("");
+  const [aLoading, setALoading] = useState(false);
+  const [allProds, setAllProds] = useState<{ id: string; partnumber: string }[]>([]);
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -91,6 +99,7 @@ const Admin = () => {
         loadCategorias(),
         loadSubcategorias(),
         loadProdutos(),
+        loadAllProds(),
       ]);
     };
     init();
@@ -322,6 +331,46 @@ const Admin = () => {
   };
 
   useEffect(() => { loadProdutos(); }, [pSearch, pCatFilter, prodPage]);
+
+  // Produtos (lista para seleção em Arquivos)
+  const loadAllProds = async () => {
+    const { data, error } = await supabase
+      .from('produtos')
+      .select('id, partnumber')
+      .order('partnumber', { ascending: true })
+      .limit(1000);
+    if (error) {
+      toast({ title: 'Erro ao carregar produtos (seleção)', description: error.message });
+      return;
+    }
+    setAllProds((data as any) || []);
+  };
+
+  // Arquivos CRUD (create)
+  const createArquivo = async () => {
+    if (!aProd || !aTipo || !aNome.trim() || !aLink.trim()) {
+      toast({ title: 'Preencha os campos obrigatórios', description: 'Produto, Tipo, Nome e Link são obrigatórios.' });
+      return;
+    }
+    setALoading(true);
+    const payload = {
+      produto_id: aProd,
+      categoria_arquivo: aTipo,
+      nome_arquivo: aNome.trim(),
+      link_url: aLink.trim(),
+    } as any;
+    const { error } = await supabase.from('arquivos').insert(payload);
+    if (error) {
+      toast({ title: 'Erro ao cadastrar arquivo', description: error.message });
+    } else {
+      toast({ title: 'Arquivo cadastrado' });
+      setAProd('');
+      setATipo('');
+      setANome('');
+      setALink('');
+    }
+    setALoading(false);
+  };
 
   // Google Drive
   const listFiles = async () => {
@@ -642,6 +691,52 @@ const Admin = () => {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setProdPage((p) => Math.max(1, p - 1))} disabled={prodPage <= 1}>Anterior</Button>
                 <Button variant="outline" size="sm" onClick={() => setProdPage((p) => p + 1)} disabled={prodPage >= Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}>Próxima</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Arquivos */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Arquivos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-4 gap-3">
+              <div>
+                <Label>Produto</Label>
+                <Select value={aProd} onValueChange={setAProd}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
+                  <SelectContent>
+                    {allProds.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="anome">Nome do arquivo</Label>
+                <Input id="anome" value={aNome} onChange={(e) => setANome(e.target.value)} placeholder="Ex: Manual v1.0" />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={aTipo} onValueChange={setATipo}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="firmware">Firmware</SelectItem>
+                    <SelectItem value="documento">Documento</SelectItem>
+                    <SelectItem value="video">Vídeo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="alink">Link URL</Label>
+                <Input id="alink" value={aLink} onChange={(e) => setALink(e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="md:col-span-4">
+                <Button onClick={createArquivo} disabled={aLoading || !aProd || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
               </div>
             </div>
           </CardContent>
