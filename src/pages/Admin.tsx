@@ -19,7 +19,7 @@ const Admin = () => {
   type Categoria = { id: string; nome: string; descricao: string | null };
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
-  type Arquivo = { id: string; produto_id: string; nome_arquivo: string; categoria_arquivo: string; link_url: string; downloads: number; created_at: string };
+  type Arquivo = { id: string; produto_id: string; nome_arquivo: string; categoria_arquivo: string; link_url: string; downloads: number; created_at: string; listado: boolean };
   type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
   // State
   const [productId, setProductId] = useState("");
@@ -72,6 +72,7 @@ const Admin = () => {
   const [aNome, setANome] = useState("");
   const [aTipo, setATipo] = useState<string>("");
   const [aLink, setALink] = useState("");
+  const [aNaoListado, setANaoListado] = useState(false);
   const [aLoading, setALoading] = useState(false);
   const [allProds, setAllProds] = useState<{ id: string; partnumber: string }[]>([]);
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
@@ -371,7 +372,7 @@ const Admin = () => {
     setArqListLoading(true);
     const { data, error } = await supabase
       .from('arquivos')
-      .select('id, produto_id, nome_arquivo, categoria_arquivo, link_url, downloads, created_at')
+      .select('id, produto_id, nome_arquivo, categoria_arquivo, link_url, downloads, created_at, listado')
       .order('created_at', { ascending: false })
       .limit(30);
     if (error) {
@@ -468,6 +469,15 @@ const Admin = () => {
     }
   };
 
+  const toggleArquivoListado = async (a: Arquivo) => {
+    const { error } = await supabase.from('arquivos').update({ listado: !a.listado }).eq('id', a.id);
+    if (error) {
+      toast({ title: 'Erro ao atualizar listagem', description: error.message });
+    } else {
+      setArquivos((prev) => prev.map((x) => (x.id === a.id ? { ...x, listado: !a.listado } : x)));
+    }
+  };
+
   // Arquivos CRUD (create)
   const createArquivo = async () => {
     if (!aProd || !aTipo || !aNome.trim() || !aLink.trim()) {
@@ -480,6 +490,7 @@ const Admin = () => {
       categoria_arquivo: aTipo,
       nome_arquivo: aNome.trim(),
       link_url: aLink.trim(),
+      listado: !aNaoListado,
     } as any;
     const { error } = await supabase.from('arquivos').insert(payload);
     if (error) {
@@ -490,6 +501,7 @@ const Admin = () => {
       setATipo('');
       setANome('');
       setALink('');
+      setANaoListado(false);
       await loadArquivos();
     }
     setALoading(false);
@@ -953,6 +965,10 @@ const Admin = () => {
                 <Label htmlFor="alink">Link URL</Label>
                 <Input id="alink" value={aLink} onChange={(e) => setALink(e.target.value)} placeholder="https://..." />
               </div>
+              <div className="flex items-center gap-2 md:col-span-2">
+                <Switch id="anaolistado" checked={aNaoListado} onCheckedChange={setANaoListado} />
+                <Label htmlFor="anaolistado">Não listado</Label>
+              </div>
               <div className="md:col-span-4">
                 <Button onClick={createArquivo} disabled={aLoading || !aProd || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
               </div>
@@ -973,6 +989,7 @@ const Admin = () => {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Produto</TableHead>
                         <TableHead>Link</TableHead>
+                        <TableHead className="text-center">Não listado</TableHead>
                         <TableHead className="text-right">Downloads</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
@@ -1024,6 +1041,9 @@ const Admin = () => {
                               ) : (
                                 <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{a.link_url}</a>
                               )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch checked={!a.listado} onCheckedChange={() => toggleArquivoListado(a)} aria-label="Marcar como não listado" />
                             </TableCell>
                             <TableCell className="text-right">{a.downloads}</TableCell>
                             <TableCell className="text-right space-x-2">

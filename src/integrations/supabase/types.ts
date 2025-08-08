@@ -21,6 +21,7 @@ export type Database = {
           downloads: number
           id: string
           link_url: string
+          listado: boolean
           nome_arquivo: string
           produto_id: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           downloads?: number
           id?: string
           link_url: string
+          listado?: boolean
           nome_arquivo: string
           produto_id: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           downloads?: number
           id?: string
           link_url?: string
+          listado?: boolean
           nome_arquivo?: string
           produto_id?: string
         }
@@ -56,26 +59,32 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          descricao: string | null
           id: string
           imagem_url: string
           link_redirecionamento: string | null
           tamanho: string | null
+          titulo: string | null
         }
         Insert: {
           ativo?: boolean
           created_at?: string
+          descricao?: string | null
           id?: string
           imagem_url: string
           link_redirecionamento?: string | null
           tamanho?: string | null
+          titulo?: string | null
         }
         Update: {
           ativo?: boolean
           created_at?: string
+          descricao?: string | null
           id?: string
           imagem_url?: string
           link_redirecionamento?: string | null
           tamanho?: string | null
+          titulo?: string | null
         }
         Relationships: []
       }
