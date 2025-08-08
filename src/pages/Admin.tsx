@@ -778,7 +778,7 @@ const Admin = () => {
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="pdesc">Descrição</Label>
-                <Textarea id="pdesc" value={pDesc} onChange={(e) => setPDesc(e.target.value)} placeholder="Descrição do produto" />
+                <Textarea id="pdesc" rows={1} className="h-10 resize-none" value={pDesc} onChange={(e) => setPDesc(e.target.value)} placeholder="Descrição do produto" />
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="pimg">Imagem URL</Label>
@@ -861,7 +861,7 @@ const Admin = () => {
                         </TableCell>
                         <TableCell className="align-top min-w-[240px]">
                           {isEditing ? (
-                            <Textarea value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
+                            <Textarea rows={1} className="h-10 resize-none" value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
                           ) : (
                             <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>
                           )}
