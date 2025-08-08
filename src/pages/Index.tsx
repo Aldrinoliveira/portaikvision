@@ -481,17 +481,17 @@ const AsyncCounts = ({ produtoId, getCounts }: { produtoId: string; getCounts: (
   useEffect(() => {
     getCounts(produtoId).then(setCounts);
   }, [produtoId]);
-  if (!counts) return <div className="text-xs text-muted-foreground">Carregando...</div>;
+  if (!counts) return <div className="text-[11px] text-muted-foreground">Carregando...</div>;
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center gap-2 text-[11px] text-muted-foreground leading-none">
       <span className="inline-flex items-center gap-1" title={`${counts.firmware} firmware`} aria-label={`${counts.firmware} firmware`}>
-        <Cpu className="h-[1.05rem] w-[1.05rem]" /> {counts.firmware} firmware
+        <Cpu className="h-5 w-5" /> {counts.firmware} firmware
       </span>
       <span className="inline-flex items-center gap-1" title={`${counts.documento} documentos`} aria-label={`${counts.documento} documentos`}>
-        <FileText className="h-[1.05rem] w-[1.05rem]" /> {counts.documento} documentos
+        <FileText className="h-5 w-5" /> {counts.documento} documentos
       </span>
       <span className="inline-flex items-center gap-1" title={`${counts.video} vídeos`} aria-label={`${counts.video} vídeos`}>
-        <Video className="h-[1.05rem] w-[1.05rem]" /> {counts.video} vídeos
+        <Video className="h-5 w-5" /> {counts.video} vídeos
       </span>
     </div>
   );
