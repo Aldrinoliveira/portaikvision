@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
-interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; link_url: string; downloads: number; }
+interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; descricao: string | null; link_url: string; downloads: number; created_at: string; }
 interface DriveFile { id: string; name: string; mimeType: string; createdTime?: string; modifiedTime?: string; size?: string; webViewLink?: string; webContentLink?: string; publicUrl: string; }
 
 const useSEO = (title: string, description: string) => {
@@ -32,7 +32,7 @@ const Product = () => {
     const load = async () => {
       const { data: p } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url").eq("id", id).maybeSingle();
       setProduto(p as any);
-      const { data: f } = await supabase.from("arquivos").select("id, categoria_arquivo, nome_arquivo, link_url, downloads").eq("produto_id", id).order("created_at", { ascending: false });
+      const { data: f } = await supabase.from("arquivos").select("id, categoria_arquivo, nome_arquivo, descricao, link_url, downloads, created_at").eq("produto_id", id).order("created_at", { ascending: false });
       setArquivos(f || []);
     };
     load();
@@ -99,9 +99,17 @@ const Product = () => {
                 <CardHeader>
                   <CardTitle className="text-base">{a.nome_arquivo}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex items-center justify-between">
-                  <Button onClick={() => handleDownload(a)}>Download</Button>
-                  <span className="text-xs text-muted-foreground">{a.downloads} downloads</span>
+                <CardContent className="space-y-2">
+                  {a.descricao && (
+                    <p className="text-sm text-muted-foreground">{a.descricao}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <Button onClick={() => handleDownload(a)}>Download</Button>
+                    <div className="text-right">
+                      <span className="block text-xs text-muted-foreground">{a.downloads} downloads</span>
+                      <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
