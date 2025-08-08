@@ -30,9 +30,12 @@ const Ferramentas = () => {
       try {
         const { data: categorias, error: catErr } = await supabase.from('categorias').select('id, nome');
         if (catErr) throw catErr;
-        const cat = (categorias || []).find((c: Categoria) => c.nome.toLowerCase() === 'ferramentas');
+        const cat = (categorias || []).find((c: Categoria) => {
+          const n = (c.nome || '').toLowerCase().trim();
+          return n === 'ferramenta' || n === 'ferramentas';
+        });
         if (!cat) {
-          setError("Categoria 'Ferramentas' não encontrada.");
+          setError("Categoria 'Ferramenta' não encontrada.");
           setProdutos([]);
           return;
         }

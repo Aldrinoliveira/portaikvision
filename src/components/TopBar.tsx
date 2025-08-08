@@ -9,7 +9,7 @@ const TopBar = () => (
       <nav className="flex items-center gap-4 text-sm">
         <Link to="/#produtos" className="hover:underline">Produtos</Link>
         <Link to="/software" className="hover:underline">Software</Link>
-        <Link to="/ferramentas" className="hover:underline">Ferramentas</Link>
+        <Link to="/ferramenta" className="hover:underline">Ferramentas</Link>
         <Link to="/auth" className="hover:underline">Entrar</Link>
         <Link to="/admin" className="hover:underline">Admin</Link>
       </nav>
