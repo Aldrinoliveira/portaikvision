@@ -11,8 +11,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { toast } from "@/hooks/use-toast";
 import { QrCode, HelpCircle, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
-
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
@@ -186,7 +186,7 @@ const Index = () => {
         {/* Banner Carousel */}
         {banners.length > 0 && (
           <section aria-label="Banner" className="animate-fade-in">
-            <Carousel className="w-full">
+            <Carousel className="w-full" plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}>
               <CarouselContent>
                 {banners.map((b) => (
                   <CarouselItem key={b.id}>
