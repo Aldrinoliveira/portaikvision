@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Copy } from "lucide-react";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -957,14 +958,18 @@ const Admin = () => {
                 <Label htmlFor="anome">Nome do arquivo</Label>
                 <Input id="anome" value={aNome} onChange={(e) => setANome(e.target.value)} placeholder="Ex: Manual v1.0" />
               </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="adesc">Descrição (opcional)</Label>
+                <Textarea id="adesc" value={aDesc} onChange={(e) => setADesc(e.target.value)} placeholder="Breve descrição do arquivo" />
+              </div>
               <div>
                 <Label>Tipo</Label>
                 <Select value={aTipo} onValueChange={setATipo}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="firmware">Firmware</SelectItem>
-                    <SelectItem value="documento">Documento</SelectItem>
-                    <SelectItem value="video">Vídeo</SelectItem>
+                    <SelectItem value="documento">Documento</SelectItem
+                    ><SelectItem value="video">Vídeo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1054,7 +1059,14 @@ const Admin = () => {
                               {isEditing ? (
                                 <Input value={editALink} onChange={(e) => setEditALink(e.target.value)} placeholder="https://..." />
                               ) : (
-                                <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{a.link_url}</a>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  aria-label="Copiar link"
+                                  onClick={() => { navigator.clipboard.writeText(a.link_url); toast({ title: 'Link copiado' }); }}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
                               )}
                             </TableCell>
                             <TableCell className="text-center">
