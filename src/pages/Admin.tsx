@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -18,6 +19,7 @@ const Admin = () => {
   type Categoria = { id: string; nome: string; descricao: string | null };
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
+  type Arquivo = { id: string; produto_id: string; nome_arquivo: string; categoria_arquivo: string; link_url: string; downloads: number; created_at: string };
   // State
   const [productId, setProductId] = useState("");
   const [files, setFiles] = useState<DriveFile[]>([]);
@@ -71,6 +73,8 @@ const Admin = () => {
   const [aLink, setALink] = useState("");
   const [aLoading, setALoading] = useState(false);
   const [allProds, setAllProds] = useState<{ id: string; partnumber: string }[]>([]);
+  const [arquivos, setArquivos] = useState<Arquivo[]>([]);
+  const [arqListLoading, setArqListLoading] = useState(false);
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -100,6 +104,7 @@ const Admin = () => {
         loadSubcategorias(),
         loadProdutos(),
         loadAllProds(),
+        loadArquivos(),
       ]);
     };
     init();
@@ -346,6 +351,23 @@ const Admin = () => {
     setAllProds((data as any) || []);
   };
 
+  // Arquivos (listagem)
+  const loadArquivos = async () => {
+    setArqListLoading(true);
+    const { data, error } = await supabase
+      .from('arquivos')
+      .select('id, produto_id, nome_arquivo, categoria_arquivo, link_url, downloads, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (error) {
+      toast({ title: 'Erro ao carregar arquivos', description: error.message });
+      setArquivos([]);
+    } else {
+      setArquivos((data as any) || []);
+    }
+    setArqListLoading(false);
+  };
+
   // Arquivos CRUD (create)
   const createArquivo = async () => {
     if (!aProd || !aTipo || !aNome.trim() || !aLink.trim()) {
@@ -368,6 +390,7 @@ const Admin = () => {
       setATipo('');
       setANome('');
       setALink('');
+      await loadArquivos();
     }
     setALoading(false);
   };
@@ -738,6 +761,47 @@ const Admin = () => {
               <div className="md:col-span-4">
                 <Button onClick={createArquivo} disabled={aLoading || !aProd || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-base font-medium">Arquivos adicionados</h3>
+              {arqListLoading ? (
+                <p className="text-sm text-muted-foreground">Carregando arquivos...</p>
+              ) : arquivos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum arquivo cadastrado.</p>
+              ) : (
+                <div className="w-full overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Produto</TableHead>
+                        <TableHead className="text-right">Downloads</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {arquivos.map((a) => {
+                        const prod = allProds.find((p) => p.id === a.produto_id);
+                        return (
+                          <TableRow key={a.id}>
+                            <TableCell className="font-medium">{a.nome_arquivo}</TableCell>
+                            <TableCell className="capitalize">{a.categoria_arquivo}</TableCell>
+                            <TableCell>{prod?.partnumber || a.produto_id}</TableCell>
+                            <TableCell className="text-right">{a.downloads}</TableCell>
+                            <TableCell className="text-right">
+                              <Button asChild size="sm" variant="secondary">
+                                <a href={a.link_url} target="_blank" rel="noopener noreferrer">Abrir</a>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
