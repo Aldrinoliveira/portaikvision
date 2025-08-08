@@ -299,7 +299,7 @@ const Index = () => {
           <section aria-label="Resultados" className="space-y-4">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {visibleResults.map((p) => (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition">
+                <Card key={p.id} className="overflow-hidden hover:shadow-md transition hover-scale animate-fade-in">
                   {p.imagem_url && (
                     <img src={p.imagem_url} alt={`Produto ${p.partnumber}`} loading="lazy" className="w-full h-40 object-cover" />
                   )}
@@ -411,7 +411,7 @@ const TopDownloads = () => {
       <h2 className="text-xl font-semibold">Top Downloads</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((it) => (
-          <Card key={it.produto_id} className="hover:shadow-md transition">
+          <Card key={it.produto_id} className="hover:shadow-md transition hover-scale animate-fade-in">
             <CardHeader>
               <CardTitle className="text-base flex items-center justify-between">
                 <span>{it.partnumber}</span>
@@ -419,7 +419,7 @@ const TopDownloads = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex gap-3 items-center">
-              {it.imagem_url && <img src={it.imagem_url} alt={`Produto ${it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
+              {it.imagem_url && <img src={it.imagem_url} alt={`Produto {it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
               <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
             </CardContent>
           </Card>
