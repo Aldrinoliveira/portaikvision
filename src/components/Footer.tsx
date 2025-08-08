@@ -35,9 +35,9 @@ const Footer = () => {
             </li>
             <li className="flex items-start gap-2">
               <Clock className="h-4 w-4 mt-0.5" />
-              <span>De segunda a sexta das 8h às 20h, aos sábados das 8h às 18h.</span>
+              <span className="rounded-md">De segunda a sexta das 8h às 20h, aos sábados das 8h às 18h.</span>
             </li>
-            <li className="flex items-start gap-2">
+            <li className="flex items-start gap-2 font-medium">
               <Phone className="h-4 w-4 mt-0.5" />
               <span>4020-4458 para capitais e regiões metropolitanas (telefone e WhatsApp)</span>
             </li>
