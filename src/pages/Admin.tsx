@@ -20,6 +20,7 @@ const Admin = () => {
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
   type Arquivo = { id: string; produto_id: string; nome_arquivo: string; categoria_arquivo: string; link_url: string; downloads: number; created_at: string };
+  type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
   // State
   const [productId, setProductId] = useState("");
   const [files, setFiles] = useState<DriveFile[]>([]);
@@ -82,6 +83,13 @@ const Admin = () => {
   const [editALink, setEditALink] = useState("");
   const [arqLoading, setArqLoading] = useState(false);
 
+  // Números de Série form/lista
+  const [nsProduto, setNsProduto] = useState<string>("");
+  const [nsNumero, setNsNumero] = useState("");
+  const [nsLoading, setNsLoading] = useState(false);
+  const [numerosSerie, setNumerosSerie] = useState<NumeroSerie[]>([]);
+  const [nsListLoading, setNsListLoading] = useState(false);
+
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
     const meta = document.querySelector('meta[name="description"]');
@@ -111,6 +119,7 @@ const Admin = () => {
         loadProdutos(),
         loadAllProds(),
         loadArquivos(),
+        loadNumerosSerie(),
       ]);
     };
     init();
@@ -372,6 +381,43 @@ const Admin = () => {
       setArquivos((data as any) || []);
     }
     setArqListLoading(false);
+  };
+
+  // Números de Série (listagem)
+  const loadNumerosSerie = async () => {
+    setNsListLoading(true);
+    const { data, error } = await supabase
+      .from('numeros_serie')
+      .select('id, produto_id, numero_serie, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) {
+      toast({ title: 'Erro ao carregar números de série', description: error.message });
+      setNumerosSerie([]);
+    } else {
+      setNumerosSerie((data as any) || []);
+    }
+    setNsListLoading(false);
+  };
+
+  // Números de Série (create)
+  const createNumeroSerie = async () => {
+    if (!nsProduto || !nsNumero.trim()) {
+      toast({ title: 'Preencha os campos', description: 'Produto e Número de Série são obrigatórios.' });
+      return;
+    }
+    setNsLoading(true);
+    const payload = { produto_id: nsProduto, numero_serie: nsNumero.trim() } as any;
+    const { error } = await supabase.from('numeros_serie').insert(payload);
+    if (error) {
+      toast({ title: 'Erro ao cadastrar número', description: error.message });
+    } else {
+      toast({ title: 'Número de série cadastrado' });
+      setNsProduto('');
+      setNsNumero('');
+      await loadNumerosSerie();
+    }
+    setNsLoading(false);
   };
 
   // Arquivos - edição e exclusão
@@ -769,6 +815,70 @@ const Admin = () => {
                 <Button variant="outline" size="sm" onClick={() => setProdPage((p) => Math.max(1, p - 1))} disabled={prodPage <= 1}>Anterior</Button>
                 <Button variant="outline" size="sm" onClick={() => setProdPage((p) => p + 1)} disabled={prodPage >= Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}>Próxima</Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Números de Série */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Números de Série</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-4 gap-3">
+              <div>
+                <Label>Produto</Label>
+                <Select value={nsProduto} onValueChange={setNsProduto}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
+                  <SelectContent>
+                    {allProds.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="nsnumero">Número de série</Label>
+                <Input id="nsnumero" value={nsNumero} onChange={(e) => setNsNumero(e.target.value)} placeholder="Máx. 9 dígitos" maxLength={9} />
+              </div>
+              <div className="md:col-span-4">
+                <Button onClick={createNumeroSerie} disabled={nsLoading || !nsProduto || !nsNumero.trim()}>Cadastrar número de série</Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-base font-medium">Últimos cadastrados</h3>
+              {nsListLoading ? (
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              ) : numerosSerie.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum número cadastrado.</p>
+              ) : (
+                <div className="w-full overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Número</TableHead>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Data</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {numerosSerie.map((ns) => {
+                        const prod = allProds.find((p) => p.id === ns.produto_id);
+                        return (
+                          <TableRow key={ns.id}>
+                            <TableCell className="font-medium">{ns.numero_serie}</TableCell>
+                            <TableCell>{prod?.partnumber || ns.produto_id}</TableCell>
+                            <TableCell>{new Date(ns.created_at).toLocaleString()}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
