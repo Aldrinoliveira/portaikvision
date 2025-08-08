@@ -250,7 +250,7 @@ const Admin = () => {
 
   // Produtos CRUD
   const loadProdutos = async () => {
-    setProdListLoading(true);
+    if (!prodTotal && produtos.length === 0 && !prodListLoading) setProdListLoading(true);
     try {
       let query = supabase
         .from('produtos')
@@ -275,6 +275,8 @@ const Admin = () => {
       }
       setProdutos((data as any) || []);
       setProdTotal(count || 0);
+    } catch (error) {
+      console.log('loadProdutos error:', error);
     } finally {
       setProdListLoading(false);
     }
