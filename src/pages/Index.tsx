@@ -244,7 +244,7 @@ useEffect(() => {
         </Link>
         <nav className="flex items-center gap-4 text-sm">
           <a href="#produtos" className="hover:underline">Produtos</a>
-          <a href="#software" className="hover:underline">Software</a>
+          <Link to="/software" className="hover:underline">Software</Link>
           <a href="#ferramentas" className="hover:underline">Ferramentas</a>
           <Link to="/auth" className="hover:underline">Entrar</Link>
           <Link to="/admin" className="hover:underline">Admin</Link>
