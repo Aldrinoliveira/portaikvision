@@ -54,6 +54,13 @@ const Admin = () => {
   const [editPCat, setEditPCat] = useState<string>("");
   const [editPSub, setEditPSub] = useState<string>("");
   const [prodLoading, setProdLoading] = useState(false);
+  // Produtos list filters/pagination
+  const [pSearch, setPSearch] = useState("");
+  const [pCatFilter, setPCatFilter] = useState<string>("");
+  const PROD_PAGE_SIZE = 9;
+  const [prodPage, setProdPage] = useState(1);
+  const [prodTotal, setProdTotal] = useState(0);
+  const [prodListLoading, setProdListLoading] = useState(false);
 
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
@@ -243,9 +250,34 @@ const Admin = () => {
 
   // Produtos CRUD
   const loadProdutos = async () => {
-    const { data, error } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id').order('created_at', { ascending: false });
-    if (error) { toast({ title: 'Erro ao carregar produtos', description: error.message }); return; }
-    setProdutos((data as any) || []);
+    setProdListLoading(true);
+    try {
+      let query = supabase
+        .from('produtos')
+        .select('id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      if (pCatFilter) {
+        query = query.eq('categoria_id', pCatFilter);
+      }
+      if (pSearch.trim()) {
+        query = query.ilike('partnumber', `%${pSearch.trim()}%`);
+      }
+
+      const from = (prodPage - 1) * PROD_PAGE_SIZE;
+      const to = from + PROD_PAGE_SIZE - 1;
+      const { data, count, error } = await query.range(from, to);
+      if (error) {
+        toast({ title: 'Erro ao carregar produtos', description: error.message });
+        setProdutos([]);
+        setProdTotal(0);
+        return;
+      }
+      setProdutos((data as any) || []);
+      setProdTotal(count || 0);
+    } finally {
+      setProdListLoading(false);
+    }
   };
   const createProduto = async () => {
     if (!pPart.trim() || !pCat) { toast({ title: 'Part number e categoria são obrigatórios' }); return; }
@@ -282,6 +314,8 @@ const Admin = () => {
     if (error) toast({ title: 'Erro ao excluir produto', description: error.message });
     else setProdutos((prev) => prev.filter((x) => x.id !== p.id));
   };
+
+  useEffect(() => { loadProdutos(); }, [pSearch, pCatFilter, prodPage]);
 
   // Google Drive
   const listFiles = async () => {
@@ -459,6 +493,25 @@ const Admin = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-5 gap-3">
+              <div className="md:col-span-2">
+                <Label htmlFor="psearch">Buscar (part number)</Label>
+                <Input id="psearch" value={pSearch} onChange={(e) => { setPSearch(e.target.value); setProdPage(1); }} placeholder="Ex: ABC" />
+              </div>
+              <div>
+                <Label>Filtrar por categoria</Label>
+                <Select value={pCatFilter} onValueChange={(v) => { setPCatFilter(v); setProdPage(1); }}>
+                  <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2 flex items-end justify-end gap-2">
+                <Button variant="outline" onClick={() => { setPSearch(''); setPCatFilter(''); setProdPage(1); }}>Limpar</Button>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-5 gap-3">
               <div>
                 <Label htmlFor="ppart">Part number</Label>
                 <Input id="ppart" value={pPart} onChange={(e) => setPPart(e.target.value)} placeholder="Ex: ABC-123" />
@@ -502,10 +555,11 @@ const Admin = () => {
                 </Select>
               </div>
               <div className="md:col-span-5">
-                <Button onClick={createProduto} disabled={prodLoading}>Criar produto</Button>
+                <Button onClick={createProduto} disabled={prodLoading || !pPart.trim() || !pCat}>Criar produto</Button>
               </div>
             </div>
 
+            {prodListLoading && (<p className="text-sm text-muted-foreground">Carregando produtos...</p>)}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {produtos.map((p) => (
                 <Card key={p.id} className="hover:shadow-md transition">
@@ -545,7 +599,7 @@ const Admin = () => {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={saveProduto} disabled={prodLoading}>Salvar</Button>
+                          <Button size="sm" onClick={saveProduto} disabled={prodLoading || !editPPart.trim() || !editPCat}>Salvar</Button>
                           <Button size="sm" variant="outline" onClick={cancelEditProduto}>Cancelar</Button>
                         </div>
                       </div>
@@ -568,6 +622,13 @@ const Admin = () => {
               {produtos.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum produto cadastrado.</p>
               )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Página {prodPage} de {Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}</span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setProdPage((p) => Math.max(1, p - 1))} disabled={prodPage <= 1}>Anterior</Button>
+                <Button variant="outline" size="sm" onClick={() => setProdPage((p) => p + 1)} disabled={prodPage >= Math.max(1, Math.ceil(prodTotal / PROD_PAGE_SIZE))}>Próxima</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
