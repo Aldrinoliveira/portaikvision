@@ -352,7 +352,7 @@ useEffect(() => {
                 <Button variant={mode === "part" ? "default" : "outline"} onClick={() => setMode("part")}>Part Number</Button>
               </div>
               <div className="flex flex-col md:flex-row items-stretch gap-3">
-                <div className="flex-1">
+                <div className="flex-1 relative">
                   <Label htmlFor="q" className="sr-only">{mode === "serie" ? "Número de Série" : "Part Number"}</Label>
                   <Input
                     id="q"
@@ -360,17 +360,19 @@ useEffect(() => {
                     value={query}
                     maxLength={mode === "serie" ? 9 : undefined}
                     onChange={(e) => setQuery(e.target.value)}
+                    className="pr-10"
                   />
+                  {query && (
+                    <button
+                      type="button"
+                      aria-label="Limpar pesquisa"
+                      onClick={() => { setQuery(''); setSearched(false); setResults(allProducts); setPage(1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Limpar pesquisa"
-                  onClick={() => { setQuery(''); setSearched(false); setResults(allProducts); setPage(1); }}
-                  disabled={!query}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
                 {mode === "serie" && (
                   <Button variant="secondary" onClick={() => setOpenQR(true)}>
                     <QrCode className="h-4 w-4 mr-2" /> Ler QR Code
