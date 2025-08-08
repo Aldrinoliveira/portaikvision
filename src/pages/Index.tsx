@@ -389,7 +389,7 @@ useEffect(() => {
           <section aria-label="Resultados" className="space-y-4">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {visibleResults.map((p) => (
-                <Card key={p.id} className="hover:shadow-md transition animate-fade-in p-3">
+                <Card key={p.id} className="hover:shadow-md transition animate-fade-in p-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => navigate(`/produto/${p.id}`)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/produto/${p.id}`); }}>
                   <div className="flex items-center gap-3">
                     {p.imagem_url ? (
                       <img
@@ -407,7 +407,7 @@ useEffect(() => {
                         <p className="text-xs text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <Button size="sm" variant="secondary" onClick={() => navigate(`/produto/${p.id}`)}>
+                        <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/produto/${p.id}`); }}>
                           Ver arquivos
                         </Button>
                         <div className="text-[11px] text-muted-foreground">
