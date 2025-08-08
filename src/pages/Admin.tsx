@@ -440,6 +440,37 @@ const Admin = () => {
     setNsLoading(false);
   };
 
+  // Site Settings (carregar)
+  const loadSiteSettings = async () => {
+    try {
+      setStLoading(true);
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('id,banner_title_color,banner_desc_color,banner_title_size,banner_desc_size')
+        .limit(1);
+      if (error) {
+        toast({ title: 'Erro ao carregar configurações', description: error.message });
+        return;
+      }
+      const s = (data && data[0]) as SiteSettings | undefined;
+      if (s) {
+        setStId(s.id);
+        setStTitleColor(s.banner_title_color || '');
+        setStDescColor(s.banner_desc_color || '');
+        setStTitleSize(s.banner_title_size || '');
+        setStDescSize(s.banner_desc_size || '');
+        // Aplica imediatamente no tema para pré-visualização
+        const root = document.documentElement;
+        if (s.banner_title_color) root.style.setProperty('--banner-title-color', s.banner_title_color);
+        if (s.banner_desc_color) root.style.setProperty('--banner-desc-color', s.banner_desc_color);
+        if (s.banner_title_size) root.style.setProperty('--banner-title-size', s.banner_title_size);
+        if (s.banner_desc_size) root.style.setProperty('--banner-desc-size', s.banner_desc_size);
+      }
+    } finally {
+      setStLoading(false);
+    }
+  };
+
   // Arquivos - edição e exclusão
   const startEditArquivo = (a: Arquivo) => {
     setEditingArqId(a.id);
