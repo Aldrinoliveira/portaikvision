@@ -518,10 +518,33 @@ const AsyncCounts = ({ produtoId, getCounts }: { produtoId: string; getCounts: (
 };
 
 const TopDownloads = () => {
-  const [items, setItems] = useState<Array<{ produto_id: string; total_downloads: number; partnumber: string; descricao: string | null; imagem_url: string | null }>>([]);
+  type FileInfo = {
+    id: string;
+    produto_id: string;
+    nome_arquivo: string;
+    descricao: string | null;
+    link_url: string;
+    categoria_arquivo: string;
+    downloads: number;
+  };
+  type Item = {
+    produto_id: string;
+    total_downloads: number;
+    partnumber?: string;
+    descricao?: string | null;
+    imagem_url?: string | null;
+    file?: FileInfo;
+  };
+
+  const [items, setItems] = useState<Item[]>([]);
+
   useEffect(() => {
     const run = async () => {
-      const { data: tops } = await supabase.from('vw_top_downloads').select('produto_id, total_downloads').order('total_downloads', { ascending: false }).limit(10);
+      const { data: tops } = await supabase
+        .from('vw_top_downloads')
+        .select('produto_id, total_downloads')
+        .order('total_downloads', { ascending: false })
+        .limit(10);
       const ids = (tops || []).map((t: any) => t.produto_id);
       if (!ids.length) { setItems([]); return; }
 
@@ -535,31 +558,95 @@ const TopDownloads = () => {
       const filteredTops = (tops || []).filter((t: any) => allowedIds.includes(t.produto_id));
       if (!filteredTops.length) { setItems([]); return; }
 
-      const { data: prods } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url').in('id', filteredTops.map((t: any) => t.produto_id));
-      const merged = filteredTops.map((t: any) => {
-        const p = (prods || []).find((x: any) => x.id === t.produto_id);
-        return { produto_id: t.produto_id, total_downloads: Number(t.total_downloads), partnumber: p?.partnumber, descricao: p?.descricao, imagem_url: p?.imagem_url };
+      // Dados dos produtos
+      const { data: prods } = await supabase
+        .from('produtos')
+        .select('id, partnumber, descricao, imagem_url')
+        .in('id', filteredTops.map((t: any) => t.produto_id));
+
+      // Buscar o arquivo mais baixado de cada produto (listado=true)
+      const { data: arqs } = await supabase
+        .from('arquivos')
+        .select('id, produto_id, nome_arquivo, descricao, link_url, categoria_arquivo, downloads')
+        .eq('listado', true)
+        .in('produto_id', filteredTops.map((t: any) => t.produto_id))
+        .order('produto_id', { ascending: true })
+        .order('downloads', { ascending: false });
+
+      const topByProduto: Record<string, FileInfo> = {};
+      (arqs || []).forEach((a: any) => {
+        if (!topByProduto[a.produto_id]) topByProduto[a.produto_id] = a as FileInfo;
       });
+
+      const merged: Item[] = filteredTops.map((t: any) => {
+        const p = (prods || []).find((x: any) => x.id === t.produto_id);
+        return {
+          produto_id: t.produto_id,
+          total_downloads: Number(t.total_downloads),
+          partnumber: p?.partnumber,
+          descricao: p?.descricao ?? null,
+          imagem_url: p?.imagem_url ?? null,
+          file: topByProduto[t.produto_id],
+        };
+      });
+
       setItems(merged);
     };
     run();
   }, []);
+
   if (!items.length) return null;
+
+  const openFile = (url?: string) => {
+    if (!url) {
+      toast({ title: 'Arquivo indisponível', description: 'Nenhum arquivo listado para este produto.' });
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
+  };
+
   return (
     <section aria-label="Top Downloads" className="space-y-3">
       <h2 className="text-xl font-semibold">Top Downloads</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((it) => (
-          <Card key={it.produto_id} className="hover:shadow-md transition hover-scale animate-fade-in">
+          <Card
+            key={it.produto_id}
+            className="hover:shadow-md transition hover-scale animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => openFile(it.file?.link_url)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url); }}
+          >
             <CardHeader>
               <CardTitle className="text-base flex items-center justify-between">
                 <span>{it.partnumber}</span>
-                <span className="text-xs text-muted-foreground" aria-label={`${it.total_downloads} downloads`}>{it.total_downloads} downloads</span>
+                <span className="text-xs text-muted-foreground" aria-label={`${it.total_downloads} downloads`}>
+                  {it.total_downloads} downloads
+                </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex gap-3 items-center">
-              {it.imagem_url && <img src={it.imagem_url} alt={`Produto ${it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
-              <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
+            <CardContent className="flex gap-3">
+              {it.imagem_url && (
+                <img
+                  src={it.imagem_url}
+                  alt={`Produto ${it.partnumber}`}
+                  className="w-24 h-16 object-cover rounded"
+                  loading="lazy"
+                />
+              )}
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
+                {it.file && (
+                  <div className="text-sm">
+                    <p className="font-medium truncate" title={it.file.nome_arquivo}>{it.file.nome_arquivo}</p>
+                    {it.file.descricao && (
+                      <p className="text-muted-foreground line-clamp-2" title={it.file.descricao}>{it.file.descricao}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">Tipo: {it.file.categoria_arquivo}</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
