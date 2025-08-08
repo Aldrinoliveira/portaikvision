@@ -277,12 +277,6 @@ useEffect(() => {
                             loading="lazy"
                             className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md"
                           />
-                          {(b.titulo || b.descricao) && (
-                            <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
-                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[var(--banner-title-color)]">{b.titulo}</h2>}
-                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[var(--banner-desc-color)]">{b.descricao}</p>}
-                            </div>
-                          )}
                         </div>
                       </Link>
                     ) : (
@@ -294,12 +288,6 @@ useEffect(() => {
                             loading="lazy"
                             className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md"
                           />
-                          {(b.titulo || b.descricao) && (
-                            <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
-                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[var(--banner-title-color)]">{b.titulo}</h2>}
-                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[var(--banner-desc-color)]">{b.descricao}</p>}
-                            </div>
-                          )}
                         </div>
                       </a>
                     )}
