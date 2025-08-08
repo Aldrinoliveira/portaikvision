@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Copy, ListFilter } from "lucide-react";
 const Admin = () => {
   const navigate = useNavigate();
@@ -675,21 +674,16 @@ const Admin = () => {
       /* Banners */
       <div ref={bannersRef}>
       <section className="space-y-4">
-        <Collapsible open={!bannerCollapsed} onOpenChange={(open) => setBannerCollapsed(!open)}>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Banners</CardTitle>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{bannerCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Banners</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setBannerCollapsed((v) => !v)}>{bannerCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!bannerCollapsed && (<CardContent className="space-y-4">
 ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
@@ -698,21 +692,16 @@ const Admin = () => {
       /* Categorias */
       <div ref={categoriasRef}>
       <section className="space-y-4">
-        <Collapsible open={!catCollapsed} onOpenChange={(open) => setCatCollapsed(!open)}>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Categorias</CardTitle>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{catCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
-              ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Categorias</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setCatCollapsed((v) => !v)}>{catCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!catCollapsed && (<CardContent className="space-y-4">
+...
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
@@ -721,20 +710,16 @@ const Admin = () => {
       /* Produtos */
       <div ref={produtosRef}>
       <section className="space-y-4">
-        <Collapsible open={!prodCollapsed} onOpenChange={(open) => setProdCollapsed(!open)}>
-          <Card>
-              
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{prodCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Produtos</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setProdCollapsed((v) => !v)}>{prodCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!prodCollapsed && (<CardContent className="space-y-4">
 ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
@@ -743,20 +728,16 @@ const Admin = () => {
       /* Números de Série */
       <div ref={numerosRef}>
       <section className="space-y-4">
-        <Collapsible open={!nsCollapsed} onOpenChange={(open) => setNsCollapsed(!open)}>
-          <Card>
-              
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{nsCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Números de Série</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setNsCollapsed((v) => !v)}>{nsCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!nsCollapsed && (<CardContent className="space-y-4">
 ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
@@ -765,20 +746,16 @@ const Admin = () => {
       /* Arquivos */
       <div ref={arquivosRef}>
       <section className="space-y-4">
-        <Collapsible open={!arqCollapsed} onOpenChange={(open) => setArqCollapsed(!open)}>
-          <Card>
-              
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{arqCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Arquivos</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setArqCollapsed((v) => !v)}>{arqCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!arqCollapsed && (<CardContent className="space-y-4">
 ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
@@ -787,20 +764,16 @@ const Admin = () => {
       /* Google Drive */
       <div ref={driveRef}>
       <section>
-        <Collapsible open={!driveCollapsed} onOpenChange={(open) => setDriveCollapsed(!open)}>
-          <Card>
-              
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">{driveCollapsed ? 'Expandir' : 'Ocultar'}</Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Arquivos do Google Drive</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setDriveCollapsed((v) => !v)}>{driveCollapsed ? 'Expandir' : 'Ocultar'}</Button>
+          </CardHeader>
+          {!driveCollapsed && (<CardContent className="space-y-4">
 ...
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          </CardContent>
+          )}
+        </Card>
       </section>
       </div>
       )}
