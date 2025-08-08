@@ -18,6 +18,12 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    document.title = 'Admin – Gerenciar Arquivos';
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', 'Painel Admin para gerenciar arquivos do Google Drive.');
+  }, []);
+
+  useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {

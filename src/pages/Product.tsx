@@ -40,7 +40,7 @@ const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
     if (!id) return;
     const fetchDrive = async () => {
       const { data, error } = await supabase.functions.invoke('gdrive-list', {
-        body: { action: 'list', productId: id, pageSize: 50 },
+        body: { productId: id, pageSize: 50 },
       });
       if (!error && (data as any)?.files) {
         setDriveFiles((data as any).files as DriveFile[]);
