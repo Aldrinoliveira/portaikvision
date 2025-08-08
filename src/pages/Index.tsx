@@ -377,11 +377,13 @@ useEffect(() => {
           <section aria-label="Filtros" className="animate-fade-in">
             <div className="flex flex-wrap gap-2">
               <Button variant={catFilter === "" ? "default" : "outline"} size="sm" onClick={() => { setCatFilter(""); setPage(1); }}>Todas</Button>
-              {categorias.map((c) => (
-                <Button key={c.id} variant={catFilter === c.id ? "default" : "outline"} size="sm" onClick={() => { setCatFilter(c.id); setPage(1); }}>
-                  {c.nome}
-                </Button>
-              ))}
+              {categorias
+                .filter((c) => !/^(software|ferramentas)$/i.test(c.nome.trim()))
+                .map((c) => (
+                  <Button key={c.id} variant={catFilter === c.id ? "default" : "outline"} size="sm" onClick={() => { setCatFilter(c.id); setPage(1); }}>
+                    {c.nome}
+                  </Button>
+                ))}
             </div>
           </section>
         )}
