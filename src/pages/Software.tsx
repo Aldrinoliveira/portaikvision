@@ -57,12 +57,13 @@ const Software = () => {
 
   return (<>
     <TopBar />
-    <div>
-      <Button variant="outline" onClick={() => navigate(-1)} aria-label="Voltar" className="mb-2">
-        <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-      </Button>
-    </div>
-    <header>
+    <main className="container mx-auto px-4 py-8 space-y-6">
+      <div>
+        <Button variant="outline" onClick={() => navigate(-1)} aria-label="Voltar" className="mb-2">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+        </Button>
+      </div>
+      <header>
       <h1 className="text-2xl font-semibold">Software</h1>
       <p className="text-muted-foreground mt-1">Downloads de softwares e ferramentas para produtos Hikvision.</p>
     </header>
