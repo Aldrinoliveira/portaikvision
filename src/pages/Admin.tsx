@@ -746,34 +746,66 @@ const Admin = () => {
             </div>
 
             {prodListLoading && (<p className="text-sm text-muted-foreground">Carregando produtos...</p>)}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {produtos.map((p) => (
-                <Card key={p.id} className="hover:shadow-md transition">
-                  <CardHeader>
-                    <CardTitle className="text-base">{editingProdId === p.id ? 'Editar produto' : p.partnumber}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {editingProdId === p.id ? (
-                      <div className="grid gap-2">
-                        <Input value={editPPart} onChange={(e) => setEditPPart(e.target.value)} placeholder="Part number" />
-                        <Textarea value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
-                        <Input value={editPImg} onChange={(e) => setEditPImg(e.target.value)} placeholder="Imagem URL" />
-                        <Input id="epfile" type="file" accept="image/*" onChange={onSelectProdutoFileEdit} />
-                        {editPImg && (
-                          <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-full h-32 object-cover rounded" loading="lazy" />
-                        )}
-                        <div className="grid md:grid-cols-2 gap-2">
-                          <div>
-                            <Label>Categoria</Label>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Imagem</TableHead>
+                    <TableHead>Part number</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Subcategoria</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {produtos.map((p) => {
+                    const isEditing = editingProdId === p.id;
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="align-top">
+                          {isEditing ? (
+                            <div className="space-y-2 max-w-[220px]">
+                              <Input value={editPImg} onChange={(e) => setEditPImg(e.target.value)} placeholder="Imagem URL" />
+                              <Input id="epfile" type="file" accept="image/*" onChange={onSelectProdutoFileEdit} />
+                              {editPImg && (
+                                <img src={editPImg} alt={`Pré-visualização ${editPPart || 'produto'}`} className="w-28 h-20 object-cover rounded" loading="lazy" />
+                              )}
+                            </div>
+                          ) : (
+                            p.imagem_url ? (
+                              <img src={p.imagem_url} alt={`Imagem ${p.partnumber}`} className="w-28 h-20 object-cover rounded" loading="lazy" />
+                            ) : null
+                          )}
+                        </TableCell>
+                        <TableCell className="align-top">
+                          {isEditing ? (
+                            <Input value={editPPart} onChange={(e) => setEditPPart(e.target.value)} placeholder="Part number" />
+                          ) : (
+                            <span className="font-medium">{p.partnumber}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="align-top min-w-[240px]">
+                          {isEditing ? (
+                            <Textarea value={editPDesc} onChange={(e) => setEditPDesc(e.target.value)} placeholder="Descrição" />
+                          ) : (
+                            <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>
+                          )}
+                        </TableCell>
+                        <TableCell className="align-top min-w-[180px]">
+                          {isEditing ? (
                             <Select value={editPCat} onValueChange={(v) => { setEditPCat(v); setEditPSub(''); }}>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                               <SelectContent>
                                 {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
                               </SelectContent>
                             </Select>
-                          </div>
-                          <div>
-                            <Label>Subcategoria</Label>
+                          ) : (
+                            categorias.find(c => c.id === p.categoria_id)?.nome || '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="align-top min-w-[180px]">
+                          {isEditing ? (
                             <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                               <SelectContent>
@@ -782,31 +814,30 @@ const Admin = () => {
                                 ))}
                               </SelectContent>
                             </Select>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={saveProduto} disabled={prodLoading || !editPPart.trim() || !editPCat}>Salvar</Button>
-                          <Button size="sm" variant="outline" onClick={cancelEditProduto}>Cancelar</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {p.imagem_url && <img src={p.imagem_url} alt={`Imagem ${p.partnumber}`} className="w-full h-32 object-cover rounded" loading="lazy" />}
-                        <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">Cat: {categorias.find(c => c.id === p.categoria_id)?.nome || '-'} / Sub: {subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'}</span>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => startEditProduto(p)}>Editar</Button>
-                            <Button size="sm" variant="destructive" onClick={() => deleteProduto(p)}>Excluir</Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-              {produtos.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum produto cadastrado.</p>
+                          ) : (
+                            subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right align-top space-x-2 min-w-[200px]">
+                          {isEditing ? (
+                            <>
+                              <Button size="sm" onClick={saveProduto} disabled={prodLoading || !editPPart.trim() || !editPCat}>Salvar</Button>
+                              <Button size="sm" variant="outline" onClick={cancelEditProduto}>Cancelar</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="secondary" onClick={() => startEditProduto(p)}>Editar</Button>
+                              <Button size="sm" variant="destructive" onClick={() => deleteProduto(p)}>Excluir</Button>
+                            </>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              {produtos.length === 0 && !prodListLoading && (
+                <p className="text-sm text-muted-foreground mt-2">Nenhum produto cadastrado.</p>
               )}
             </div>
             <div className="flex items-center justify-between">
