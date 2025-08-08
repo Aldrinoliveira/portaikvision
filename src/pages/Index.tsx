@@ -11,6 +11,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { toast } from "@/hooks/use-toast";
 import { QrCode, HelpCircle, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Home SEO
 const useSEO = () => {
