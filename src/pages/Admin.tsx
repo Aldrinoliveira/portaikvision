@@ -499,10 +499,10 @@ const Admin = () => {
               </div>
               <div>
                 <Label>Filtrar por categoria</Label>
-                <Select value={pCatFilter} onValueChange={(v) => { setPCatFilter(v); setProdPage(1); }}>
+                <Select value={pCatFilter || 'all'} onValueChange={(v) => { setPCatFilter(v === 'all' ? '' : v); setProdPage(1); }}>
                   <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     {categorias.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
                   </SelectContent>
                 </Select>
