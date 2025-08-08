@@ -776,7 +776,7 @@ const Admin = () => {
                 <Label htmlFor="ppart">Part number</Label>
                 <Input id="ppart" value={pPart} onChange={(e) => setPPart(e.target.value)} placeholder="Ex: ABC-123" />
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <Label htmlFor="pdesc">Descrição</Label>
                 <Textarea id="pdesc" rows={1} className="h-10 resize-none" value={pDesc} onChange={(e) => setPDesc(e.target.value)} placeholder="Descrição do produto" />
               </div>
