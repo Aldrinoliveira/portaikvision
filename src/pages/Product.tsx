@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import TopBar from "@/components/TopBar";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
 interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; descricao: string | null; link_url: string; downloads: number; created_at: string; }
@@ -74,6 +75,8 @@ const Product = () => {
   if (!produto) return <div className="container mx-auto px-4 py-10">Carregando...</div>;
 
   return (
+    <div className="min-h-screen bg-background text-foreground">
+      <TopBar />
     <main className="container mx-auto px-4 py-8 space-y-8">
       <div>
         <Button variant="outline" onClick={() => navigate(-1)} aria-label="Voltar" className="mb-2">
@@ -143,6 +146,7 @@ const Product = () => {
       </section>
 
     </main>
+    </div>
   );
 };
 
