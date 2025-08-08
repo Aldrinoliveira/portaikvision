@@ -619,12 +619,17 @@ const TopDownloads = () => {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url); }}
           >
             <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
-                <span>{it.partnumber}</span>
-                <span className="text-xs text-muted-foreground" aria-label={`${it.total_downloads} downloads`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <CardTitle className="text-base">{it.partnumber}</CardTitle>
+                  {it.descricao && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{it.descricao}</p>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap" aria-label={`${it.total_downloads} downloads`}>
                   {it.total_downloads} downloads
                 </span>
-              </CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="flex gap-3">
               {it.imagem_url && (
@@ -636,7 +641,7 @@ const TopDownloads = () => {
                 />
               )}
               <div className="min-w-0 space-y-1">
-                <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
+                
                 {it.file && (
                   <div className="text-sm">
                     <p className="font-medium truncate" title={it.file.nome_arquivo}>{it.file.nome_arquivo}</p>
