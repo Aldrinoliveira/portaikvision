@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; }
 interface Arquivo { id: string; categoria_arquivo: string; nome_arquivo: string; link_url: string; downloads: number; }
+interface DriveFile { id: string; name: string; mimeType: string; createdTime?: string; modifiedTime?: string; size?: string; webViewLink?: string; webContentLink?: string; publicUrl: string; }
 
 const useSEO = (title: string, description: string) => {
   useEffect(() => {
@@ -18,8 +19,9 @@ const useSEO = (title: string, description: string) => {
 
 const Product = () => {
   const { id } = useParams();
-  const [produto, setProduto] = useState<Produto | null>(null);
-  const [arquivos, setArquivos] = useState<Arquivo[]>([]);
+const [produto, setProduto] = useState<Produto | null>(null);
+const [arquivos, setArquivos] = useState<Arquivo[]>([]);
+const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
 
   useSEO("Produto – Arquivos", "Veja firmwares, documentos e vídeos para o produto.");
 
@@ -33,6 +35,22 @@ const Product = () => {
     };
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchDrive = async () => {
+      const { data, error } = await supabase.functions.invoke('gdrive-list', {
+        body: { action: 'list', productId: id, pageSize: 50 },
+      });
+      if (!error && (data as any)?.files) {
+        setDriveFiles((data as any).files as DriveFile[]);
+      } else if (error) {
+        console.warn('Erro ao listar arquivos do Drive:', error.message);
+      }
+    };
+    fetchDrive();
+  }, [id]);
+
 
   const grouped = useMemo(() => {
     const g: Record<string, Arquivo[]> = { firmware: [], documento: [], video: [] } as any;
@@ -86,6 +104,29 @@ const Product = () => {
           </div>
         </section>
       ))}
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-semibold">Arquivos (Google Drive)</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {driveFiles.map((f) => (
+            <Card key={f.id} className="hover:shadow-md transition">
+              <CardHeader>
+                <CardTitle className="text-base">{f.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                <Button asChild>
+                  <a href={f.publicUrl} target="_blank" rel="noopener noreferrer">Download</a>
+                </Button>
+                <span className="text-xs text-muted-foreground">{f.mimeType}</span>
+              </CardContent>
+            </Card>
+          ))}
+          {driveFiles.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum arquivo no Drive.</p>
+          )}
+        </div>
+      </section>
+
     </main>
   );
 };

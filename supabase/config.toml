@@ -1,1 +1,4 @@
 project_id = "vtafquzacrmemncgcjcc"
+
+[functions.gdrive-list]
+verify_jwt = false
