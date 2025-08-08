@@ -41,7 +41,8 @@ const Index = () => {
 const [catFilter, setCatFilter] = useState("");
   const [embla, setEmbla] = useState<CarouselApi | null>(null);
   const [selected, setSelected] = useState(0);
-  const [snapCount, setSnapCount] = useState(0);
+   const [snapCount, setSnapCount] = useState(0);
+   const [searched, setSearched] = useState(false);
 
   // Solicitação de firmware modal
   const [openRequest, setOpenRequest] = useState(false);
@@ -134,6 +135,7 @@ const [catFilter, setCatFilter] = useState("");
   const onSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
+    setSearched(true);
     setPage(1);
     try {
       if (mode === "serie") {
@@ -429,6 +431,12 @@ useEffect(() => {
                 <Button variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Próxima</Button>
               </div>
             </div>
+          </section>
+        )}
+
+        {!loading && searched && filtered.length === 0 && (
+          <section aria-label="Sem resultados" className="py-10 text-center">
+            <p className="text-sm text-muted-foreground">Sem resultados para essa pesquisa.</p>
           </section>
         )}
 
