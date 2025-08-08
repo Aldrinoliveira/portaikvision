@@ -279,8 +279,8 @@ useEffect(() => {
                           />
                           {(b.titulo || b.descricao) && (
                             <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
-                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[hsl(var(--banner-title-color))]">{b.titulo}</h2>}
-                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[hsl(var(--banner-desc-color))]">{b.descricao}</p>}
+                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[var(--banner-title-color)]">{b.titulo}</h2>}
+                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[var(--banner-desc-color)]">{b.descricao}</p>}
                             </div>
                           )}
                         </div>
@@ -296,8 +296,8 @@ useEffect(() => {
                           />
                           {(b.titulo || b.descricao) && (
                             <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-background/80 via-background/40 to-transparent rounded-b-md">
-                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[hsl(var(--banner-title-color))]">{b.titulo}</h2>}
-                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[hsl(var(--banner-desc-color))]">{b.descricao}</p>}
+                              {b.titulo && <h2 className="font-semibold text-[var(--banner-title-size)] text-[var(--banner-title-color)]">{b.titulo}</h2>}
+                              {b.descricao && <p className="text-[var(--banner-desc-size)] text-[var(--banner-desc-color)]">{b.descricao}</p>}
                             </div>
                           )}
                         </div>

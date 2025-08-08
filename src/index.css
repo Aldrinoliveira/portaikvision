@@ -107,8 +107,8 @@ All colors MUST be HSL.
 /* Banner text tokens (customizable) */
 @layer base {
   :root {
-    --banner-title-color: var(--foreground);
-    --banner-desc-color: var(--muted-foreground);
+    --banner-title-color: hsl(var(--foreground));
+    --banner-desc-color: hsl(var(--muted-foreground));
     --banner-title-size: 1.125rem; /* ~text-lg */
     --banner-desc-size: 0.875rem;  /* ~text-sm */
   }

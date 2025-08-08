@@ -94,6 +94,21 @@ const Admin = () => {
   const [numerosSerie, setNumerosSerie] = useState<NumeroSerie[]>([]);
   const [nsListLoading, setNsListLoading] = useState(false);
 
+  // Site Settings (banner textos)
+  type SiteSettings = {
+    id: string;
+    banner_title_color: string | null;
+    banner_desc_color: string | null;
+    banner_title_size: string | null;
+    banner_desc_size: string | null;
+  };
+  const [stId, setStId] = useState<string | null>(null);
+  const [stTitleColor, setStTitleColor] = useState<string>("");
+  const [stDescColor, setStDescColor] = useState<string>("");
+  const [stTitleSize, setStTitleSize] = useState<string>("");
+  const [stDescSize, setStDescSize] = useState<string>("");
+  const [stLoading, setStLoading] = useState(false);
+
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
     const meta = document.querySelector('meta[name="description"]');
@@ -124,6 +139,7 @@ const Admin = () => {
         loadAllProds(),
         loadArquivos(),
         loadNumerosSerie(),
+        loadSiteSettings(),
       ]);
     };
     init();
