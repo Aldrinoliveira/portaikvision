@@ -12,7 +12,7 @@ const TopBar = () => (
       <nav className="hidden md:flex items-center gap-4 text-sm">
         <Link to="/#produtos" className="hover:underline">Produtos</Link>
         <Link to="/software" className="hover:underline">Software</Link>
-        <Link to="/ferramenta" className="hover:underline">Ferramentas</Link>
+        <Link to="/ferramentas" className="hover:underline">Ferramentas</Link>
       </nav>
       <div className="md:hidden">
         <DropdownMenu>
@@ -29,7 +29,7 @@ const TopBar = () => (
               <Link to="/software" className="w-full">Software</Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link to="/ferramenta" className="w-full">Ferramentas</Link>
+              <Link to="/ferramentas" className="w-full">Ferramentas</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
