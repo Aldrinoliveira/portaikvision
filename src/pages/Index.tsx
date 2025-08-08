@@ -437,10 +437,7 @@ useEffect(() => {
                         <h3 className="text-sm font-medium leading-none">{p.partnumber}</h3>
                         <p className="text-xs text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/produto/${p.id}`); }}>
-                          Ver arquivos
-                        </Button>
+                      <div className="flex items-center justify-start">
                         <div className="text-[11px] text-muted-foreground">
                           <AsyncCounts produtoId={p.id} getCounts={getCounts} />
                         </div>
