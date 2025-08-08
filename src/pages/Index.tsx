@@ -238,7 +238,18 @@ useEffect(() => {
   }, [query, allProducts]);
 
 
-  const filtered = useMemo(() => (catFilter ? results.filter((p) => p.categoria_id === catFilter) : results), [results, catFilter]);
+  const excludedCategoryIds = useMemo(
+    () => categorias.filter((c) => /^(software|ferramentas)$/i.test((c.nome || '').trim())).map((c) => c.id),
+    [categorias]
+  );
+  const baseResults = useMemo(
+    () => results.filter((p) => !excludedCategoryIds.includes((p.categoria_id || '') as string)),
+    [results, excludedCategoryIds]
+  );
+  const filtered = useMemo(
+    () => (catFilter ? baseResults.filter((p) => p.categoria_id === catFilter) : baseResults),
+    [baseResults, catFilter]
+  );
   const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
   const visibleResults = useMemo(() => {
     const start = (page - 1) * RESULTS_PAGE_SIZE;
