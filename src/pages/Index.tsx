@@ -485,13 +485,13 @@ const AsyncCounts = ({ produtoId, getCounts }: { produtoId: string; getCounts: (
   return (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="inline-flex items-center gap-1" title={`${counts.firmware} firmware`} aria-label={`${counts.firmware} firmware`}>
-        <Cpu className="h-3.5 w-3.5" /> {counts.firmware}
+        <Cpu className="h-[1.05rem] w-[1.05rem]" /> {counts.firmware} firmware
       </span>
       <span className="inline-flex items-center gap-1" title={`${counts.documento} documentos`} aria-label={`${counts.documento} documentos`}>
-        <FileText className="h-3.5 w-3.5" /> {counts.documento}
+        <FileText className="h-[1.05rem] w-[1.05rem]" /> {counts.documento} documentos
       </span>
       <span className="inline-flex items-center gap-1" title={`${counts.video} vídeos`} aria-label={`${counts.video} vídeos`}>
-        <Video className="h-3.5 w-3.5" /> {counts.video}
+        <Video className="h-[1.05rem] w-[1.05rem]" /> {counts.video} vídeos
       </span>
     </div>
   );
