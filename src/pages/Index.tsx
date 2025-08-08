@@ -442,7 +442,7 @@ const TopDownloads = () => {
   const [items, setItems] = useState<Array<{ produto_id: string; total_downloads: number; partnumber: string; descricao: string | null; imagem_url: string | null }>>([]);
   useEffect(() => {
     const run = async () => {
-      const { data: tops } = await supabase.from('vw_top_downloads').select('produto_id, total_downloads').limit(10);
+      const { data: tops } = await supabase.from('vw_top_downloads').select('produto_id, total_downloads').order('total_downloads', { ascending: false }).limit(10);
       const ids = (tops || []).map((t: any) => t.produto_id);
       if (!ids.length) { setItems([]); return; }
       const { data: prods } = await supabase.from('produtos').select('id, partnumber, descricao, imagem_url').in('id', ids);
@@ -464,11 +464,11 @@ const TopDownloads = () => {
             <CardHeader>
               <CardTitle className="text-base flex items-center justify-between">
                 <span>{it.partnumber}</span>
-                <span className="text-xs text-muted-foreground">{it.total_downloads} downloads</span>
+                <span className="text-xs text-muted-foreground" aria-label={`${it.total_downloads} downloads`}>{it.total_downloads} downloads</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="flex gap-3 items-center">
-              {it.imagem_url && <img src={it.imagem_url} alt={`Produto {it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
+              {it.imagem_url && <img src={it.imagem_url} alt={`Produto ${it.partnumber}`} className="w-24 h-16 object-cover rounded" loading="lazy" />}
               <p className="text-sm text-muted-foreground line-clamp-3">{it.descricao}</p>
             </CardContent>
           </Card>
