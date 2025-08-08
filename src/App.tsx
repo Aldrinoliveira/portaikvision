@@ -9,6 +9,7 @@ import Product from "./pages/Product";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Software from "./pages/Software";
+import Ferramentas from "./pages/Ferramentas";
 
 const queryClient = new QueryClient();
 

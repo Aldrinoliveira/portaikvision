@@ -14,6 +14,7 @@ import { QrCode, HelpCircle, Search, Cpu, FileText, Video, X } from "lucide-reac
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
+import TopBar from "@/components/TopBar";
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
@@ -236,22 +237,6 @@ useEffect(() => {
     }
   }, [query, allProducts]);
 
-  const TopBar = useMemo(() => (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="font-semibold text-lg" aria-label="Hikvision Home">
-          <img src="/images/hikvision-logo.svg" alt="Hikvision – logo" className="h-6 w-auto" width={100} height={18} loading="eager" />
-        </Link>
-        <nav className="flex items-center gap-4 text-sm">
-          <a href="#produtos" className="hover:underline">Produtos</a>
-          <Link to="/software" className="hover:underline">Software</Link>
-          <a href="#ferramentas" className="hover:underline">Ferramentas</a>
-          <Link to="/auth" className="hover:underline">Entrar</Link>
-          <Link to="/admin" className="hover:underline">Admin</Link>
-        </nav>
-      </div>
-    </header>
-  ), []);
 
   const filtered = useMemo(() => (catFilter ? results.filter((p) => p.categoria_id === catFilter) : results), [results, catFilter]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
@@ -262,7 +247,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {TopBar}
+      <TopBar />
 
       <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Banner Carousel */}

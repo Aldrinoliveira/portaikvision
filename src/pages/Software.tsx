@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Cpu, FileText, Video } from "lucide-react";
+import { Cpu, FileText, Video, ArrowLeft } from "lucide-react";
+import TopBar from "@/components/TopBar";
+import { Button } from "@/components/ui/button";
 
 interface Produto { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id?: string | null; }
 interface Categoria { id: string; nome: string; }
@@ -53,12 +55,17 @@ const Software = () => {
     load();
   }, []);
 
-  return (
-    <main className="container mx-auto px-4 py-8 space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Software</h1>
-        <p className="text-muted-foreground mt-1">Downloads de softwares e ferramentas para produtos Hikvision.</p>
-      </header>
+  return (<>
+    <TopBar />
+    <div>
+      <Button variant="outline" onClick={() => navigate(-1)} aria-label="Voltar" className="mb-2">
+        <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+      </Button>
+    </div>
+    <header>
+      <h1 className="text-2xl font-semibold">Software</h1>
+      <p className="text-muted-foreground mt-1">Downloads de softwares e ferramentas para produtos Hikvision.</p>
+    </header>
 
       {/* Lista */}
       {loading && (
@@ -119,7 +126,7 @@ const Software = () => {
         </section>
       )}
     </main>
-  );
+  </>);
 };
 
 const AsyncCounts = ({ produtoId }: { produtoId: string }) => {
