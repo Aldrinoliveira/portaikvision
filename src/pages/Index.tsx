@@ -33,6 +33,8 @@ const Index = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
+  const RESULTS_PAGE_SIZE = 6;
+  const [page, setPage] = useState(1);
 
   // Solicitação de firmware modal
   const [openRequest, setOpenRequest] = useState(false);
@@ -80,6 +82,7 @@ const Index = () => {
   const onSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
+    setPage(1);
     try {
       if (mode === "serie") {
         const { data: nums } = await supabase
@@ -161,6 +164,12 @@ const Index = () => {
     </header>
   ), []);
 
+  const totalPages = Math.max(1, Math.ceil(results.length / RESULTS_PAGE_SIZE));
+  const visibleResults = useMemo(() => {
+    const start = (page - 1) * RESULTS_PAGE_SIZE;
+    return results.slice(start, start + RESULTS_PAGE_SIZE);
+  }, [results, page]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {TopBar}
@@ -239,28 +248,51 @@ const Index = () => {
         </section>
 
         {/* Resultados */}
-        {results.length > 0 && (
+        {loading && (
           <section aria-label="Resultados" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {results.map((p) => (
-              <Card key={p.id} className="overflow-hidden hover:shadow-md transition">
-                {p.imagem_url && (
-                  <img src={p.imagem_url} alt={`Produto ${p.partnumber}`} loading="lazy" className="w-full h-40 object-cover" />
-                )}
-                <CardHeader>
-                  <CardTitle className="text-base">{p.partnumber}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/produto/${p.id}`)}
-                  >
-                    Ver arquivos
-                  </Button>
-                  <AsyncCounts produtoId={p.id} getCounts={getCounts} />
+            {Array.from({ length: RESULTS_PAGE_SIZE }).map((_, i) => (
+              <Card key={`s-${i}`} className="overflow-hidden">
+                <Skeleton className="w-full h-40" />
+                <CardContent className="space-y-2 p-4">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-8 w-24" />
                 </CardContent>
               </Card>
             ))}
+          </section>
+        )}
+
+        {!loading && results.length > 0 && (
+          <section aria-label="Resultados" className="space-y-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleResults.map((p) => (
+                <Card key={p.id} className="overflow-hidden hover:shadow-md transition">
+                  {p.imagem_url && (
+                    <img src={p.imagem_url} alt={`Produto ${p.partnumber}`} loading="lazy" className="w-full h-40 object-cover" />
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-base">{p.partnumber}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/produto/${p.id}`)}
+                    >
+                      Ver arquivos
+                    </Button>
+                    <AsyncCounts produtoId={p.id} getCounts={getCounts} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Anterior</Button>
+                <Button variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Próxima</Button>
+              </div>
+            </div>
           </section>
         )}
 
