@@ -186,6 +186,36 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          banner_desc_color: string | null
+          banner_desc_size: string | null
+          banner_title_color: string | null
+          banner_title_size: string | null
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          banner_desc_color?: string | null
+          banner_desc_size?: string | null
+          banner_title_color?: string | null
+          banner_title_size?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          banner_desc_color?: string | null
+          banner_desc_size?: string | null
+          banner_title_color?: string | null
+          banner_title_size?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       solicitacoes_firmware: {
         Row: {
           created_at: string
