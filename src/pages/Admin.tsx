@@ -752,9 +752,9 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3">
         <Card>
-          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
             <CardTitle className="text-base">Downloads do dia</CardTitle>
-            <div className="w-[120px]">
+            <div className="w-[140px]">
               <Label htmlFor="daily-date" className="sr-only">Dia</Label>
               <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8" />
             </div>
@@ -765,9 +765,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
             <CardTitle className="text-base">Downloads do mês</CardTitle>
-            <div className="w-[120px]">
+            <div className="w-[140px]">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
               <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
@@ -778,9 +778,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
             <CardTitle className="text-base">Evolução diária do mês</CardTitle>
-            <div className="w-[140px]">
+            <div className="w-[160px]">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
               <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
