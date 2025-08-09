@@ -752,11 +752,11 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3">
         <Card>
-          <CardHeader className="py-2 flex items-center justify-between gap-2">
+          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
             <CardTitle className="text-base">Downloads do dia</CardTitle>
             <div className="w-[120px]">
-              <Label htmlFor="daily-date" className="text-xs">Dia</Label>
-              <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
+              <Label htmlFor="daily-date" className="sr-only">Dia</Label>
+              <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
@@ -765,11 +765,11 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2 flex items-center justify-between gap-2">
+          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
             <CardTitle className="text-base">Downloads do mês</CardTitle>
             <div className="w-[120px]">
-              <Label htmlFor="month-sel" className="text-xs">Mês</Label>
-              <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
+              <Label htmlFor="month-sel" className="sr-only">Mês</Label>
+              <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
@@ -778,11 +778,11 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2 flex items-center justify-between gap-2">
+          <CardHeader className="py-2 flex items-baseline justify-between gap-3">
             <CardTitle className="text-base">Evolução diária do mês</CardTitle>
             <div className="w-[140px]">
-              <Label htmlFor="month-sel-graph" className="text-xs">Mês</Label>
-              <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
+              <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
+              <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
           </CardHeader>
           <CardContent className="pt-2">
