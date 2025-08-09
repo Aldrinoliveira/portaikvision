@@ -1291,107 +1291,83 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
-          <CardHeader className="text-center pb-3 px-4 pt-4">
-            <CardTitle className="text-base font-medium mb-3">Downloads</CardTitle>
-            <div className="flex gap-2 justify-center">
-              <div className="flex-1 max-w-[120px]">
-                <Label htmlFor="daily-date" className="text-xs text-muted-foreground mb-1 block">Dia</Label>
-                <Input 
-                  id="daily-date" 
-                  type="date" 
-                  value={dailyDate} 
-                  onChange={e => setDailyDate(e.target.value)} 
-                  className="h-8 text-xs text-center" 
-                />
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads</CardTitle>
+            <div className="flex flex-col gap-1 w-full">
+              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
+                <Label htmlFor="daily-date" className="sr-only">Dia</Label>
+                <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm" />
               </div>
-              <div className="flex-1 max-w-[120px]">
-                <Label htmlFor="first-card-month" className="text-xs text-muted-foreground mb-1 block">Mês</Label>
-                <Input 
-                  id="first-card-month" 
-                  type="month" 
-                  value={firstCardMonth} 
-                  onChange={e => setFirstCardMonth(e.target.value)} 
-                  className="h-8 text-xs text-center" 
-                />
+              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
+                <Label htmlFor="first-card-month" className="sr-only">Mês</Label>
+                <Input id="first-card-month" type="month" aria-label="Selecionar mês" value={firstCardMonth} onChange={e => setFirstCardMonth(e.target.value)} className="h-8 text-sm" />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0 pb-4 px-4">
+          <CardContent className="py-3">
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center space-y-1">
-                <div className="text-2xl font-bold text-primary">{dailyCount}</div>
-                <p className="text-xs text-muted-foreground font-medium">Diário</p>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-semibold">{dailyCount}</div>
+                <p className="text-xs text-muted-foreground">Do dia</p>
               </div>
-              <div className="text-center space-y-1">
-                <div className={`text-2xl font-bold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : 'text-primary'}`}>
+              <div className="text-center">
+                <div className={`text-xl sm:text-2xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : ''}`}>
                   {firstCardMonthlyCount}
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">Mensal</p>
-                <div className="text-xs text-muted-foreground">
-                  <span className="text-sm font-bold text-foreground">/3000</span>
-                </div>
+                <p className="text-xs text-muted-foreground">Do mês</p>
                 {firstCardMonthlyCount > 3000 && (
-                  <p className="text-xs text-red-600 font-semibold">Limite ultrapassado</p>
+                  <p className="text-xs text-red-600 font-medium mt-1">Limite ultrapassado</p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  {firstCardMonthlyCount}<span className="text-base font-bold">/3000</span>
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="text-center pb-3 px-4 pt-4">
-            <CardTitle className="text-base font-medium">Cadastros</CardTitle>
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Arquivos e Produtos</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 pb-4 px-4">
-            <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <div className="text-3xl font-bold text-blue-600">{arquivosCount}</div>
-                <p className="text-xs text-muted-foreground font-medium">Arquivos</p>
+          <CardContent className="py-3">
+            <div className="space-y-3">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-semibold">{arquivosCount}</div>
+                <p className="text-xs text-muted-foreground">Arquivos cadastrados</p>
               </div>
-              <div className="w-full h-px bg-border"></div>
-              <div className="text-center space-y-1">
-                <div className="text-3xl font-bold text-green-600">{produtosCount}</div>
-                <p className="text-xs text-muted-foreground font-medium">Produtos</p>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-semibold">{produtosCount}</div>
+                <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="text-center pb-3 px-4 pt-4">
-            <CardTitle className="text-base font-medium mb-3">Evolução Diária</CardTitle>
-            <div className="flex justify-center">
-              <div className="max-w-[140px]">
-                <Label htmlFor="month-sel-graph" className="text-xs text-muted-foreground mb-1 block">Mês</Label>
-                <Input 
-                  id="month-sel-graph" 
-                  type="month" 
-                  value={monthSel} 
-                  onChange={e => setMonthSel(e.target.value)} 
-                  className="h-8 text-xs text-center" 
-                />
-              </div>
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
+            <div className="shrink-0 w-[141px] sm:w-[176px]">
+              <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
+              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={e => setMonthSel(e.target.value)} className="h-8 text-sm" />
             </div>
           </CardHeader>
-          <CardContent className="pt-0 pb-4 px-2">
-            {dailySeries.length > 0 ? (
-              <ChartContainer config={{
-                count: {
-                  label: 'Downloads',
-                  color: 'hsl(var(--primary))'
-                }
-              }} className="h-40 w-full">
-                <LineChart data={dailySeries} margin={{ left: 8, right: 8 }}>
+          <CardContent className="px-3 pt-2 overflow-hidden">
+            {dailySeries.length > 0 ? <ChartContainer config={{
+            count: {
+              label: 'Downloads',
+              color: 'hsl(var(--primary))'
+            }
+          }} className="h-40 sm:h-44 w-full">
+                <LineChart data={dailySeries} margin={{
+              left: 8,
+              right: 8
+            }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={10} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={10} width={28} />
+                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={11} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                 </LineChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-40 flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Sem dados no período</p>
-              </div>
-            )}
+              </ChartContainer> : <p className="text-sm text-muted-foreground">Sem dados no período.</p>}
           </CardContent>
         </Card>
       </section>
