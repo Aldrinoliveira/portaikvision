@@ -1,8 +1,11 @@
 // Supabase Edge Function: upload-to-drive
 // Uploads a file (sent as base64) to Google Drive and returns public links
 // Requires Supabase secrets:
-// - GOOGLE_SERVICE_ACCOUNT_EMAIL
-// - GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+// Supports either:
+// - Combined JSON in GOOGLE_SERVICE_ACCOUNT (raw JSON or base64-encoded)
+//   or
+// - Pair: GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+// Also requires:
 // - GOOGLE_DRIVE_FOLDER_ID
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -51,6 +54,8 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
 function extractCreds(emailEnv?: string | null, keyEnv?: string | null) {
   let email = emailEnv || undefined;
   let privateKey = keyEnv || undefined;
+
+  // If provided separately, try to parse variations
   if (privateKey) {
     const trimmed = privateKey.trim();
     if (trimmed.startsWith('{')) {
@@ -71,6 +76,31 @@ function extractCreds(emailEnv?: string | null, keyEnv?: string | null) {
       } catch (_) { /* ignore */ }
     }
   }
+
+  // Fallback: single GOOGLE_SERVICE_ACCOUNT secret (JSON or base64 of JSON)
+  if (!email || !privateKey) {
+    const single = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
+    if (single) {
+      const s = single.trim();
+      const tryParse = (txt: string) => {
+        if (txt.startsWith('{')) {
+          try {
+            const json = JSON.parse(txt);
+            if (!email && json.client_email) email = json.client_email;
+            if (!privateKey && json.private_key) privateKey = json.private_key;
+          } catch (_) { /* ignore */ }
+        }
+      };
+      tryParse(s);
+      if ((!email || !privateKey) && !s.startsWith('{')) {
+        try {
+          const decoded = atob(s);
+          tryParse(decoded);
+        } catch (_) { /* ignore */ }
+      }
+    }
+  }
+
   if (!privateKey) throw new Error("Missing Google Drive configuration secrets (private key).");
   if (!email) throw new Error("Missing Google Drive configuration secrets (service account email).");
   return { email, privateKey } as { email: string; privateKey: string };

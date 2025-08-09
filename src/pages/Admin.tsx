@@ -283,7 +283,8 @@ const Admin = () => {
       }
     } catch (err: any) {
       console.error('upload-to-drive error', err);
-      toast({ title: 'Erro ao enviar para o Drive', description: err?.message || 'Tente novamente.' });
+      const detail = (err?.context && (err.context.error || err.context.message)) || err?.message || 'Tente novamente.';
+      toast({ title: 'Erro ao enviar para o Drive', description: detail });
     } finally {
       setDriveUploading(false);
     }
