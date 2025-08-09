@@ -752,9 +752,9 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
-            <CardTitle className="text-base">Downloads do dia</CardTitle>
-            <div className="w-[140px]">
+          <CardHeader className="flex flex-wrap items-center gap-2 px-3 py-2">
+            <CardTitle className="text-base min-w-0 truncate">Downloads do dia</CardTitle>
+            <div className="ml-auto shrink-0 w-[120px] sm:w-[140px]">
               <Label htmlFor="daily-date" className="sr-only">Dia</Label>
               <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8" />
             </div>
@@ -765,9 +765,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
-            <CardTitle className="text-base">Downloads do mês</CardTitle>
-            <div className="w-[140px]">
+          <CardHeader className="flex flex-wrap items-center gap-2 px-3 py-2">
+            <CardTitle className="text-base min-w-0 truncate">Downloads do mês</CardTitle>
+            <div className="ml-auto shrink-0 w-[120px] sm:w-[140px]">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
               <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
@@ -778,9 +778,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 py-2">
-            <CardTitle className="text-base">Evolução diária do mês</CardTitle>
-            <div className="w-[160px]">
+          <CardHeader className="flex flex-wrap items-center gap-2 px-3 py-2">
+            <CardTitle className="text-base min-w-0 truncate">Evolução diária do mês</CardTitle>
+            <div className="ml-auto shrink-0 w-[120px] sm:w-[160px]">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
               <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8" />
             </div>
