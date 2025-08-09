@@ -15,7 +15,7 @@ const Admin = () => {
   const navigate = useNavigate();
 
   // Types
-  type DriveFile = { id: string; name: string; publicUrl: string; mimeType: string };
+  
   type Banner = { id: string; imagem_url: string; tamanho: string | null; link_redirecionamento: string | null; ativo: boolean; titulo?: string | null; descricao?: string | null };
   type Categoria = { id: string; nome: string; descricao: string | null };
   type Subcategoria = { id: string; nome: string; descricao: string | null; categoria_id: string };
@@ -23,10 +23,6 @@ const Admin = () => {
   type Arquivo = { id: string; produto_id: string; nome_arquivo: string; descricao: string | null; categoria_arquivo: string; link_url: string; downloads: number; created_at: string; listado: boolean };
   type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
   // State
-  const [productId, setProductId] = useState("");
-  const [files, setFiles] = useState<DriveFile[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   // Banners
   const [banners, setBanners] = useState<Banner[]>([]);
   const [bImagemUrl, setBImagemUrl] = useState("");
@@ -86,8 +82,6 @@ const Admin = () => {
   const [editALink, setEditALink] = useState("");
   const [arqLoading, setArqLoading] = useState(false);
   const [editADesc, setEditADesc] = useState("");
-  const [gArqFile, setGArqFile] = useState<File | null>(null);
-  const [gUploading, setGUploading] = useState(false);
 
   // Números de Série form/lista
   const [nsProduto, setNsProduto] = useState<string>("");
@@ -114,7 +108,7 @@ const Admin = () => {
   useEffect(() => {
     document.title = 'Admin – Banners e Arquivos';
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute('content', 'Painel Admin para gerenciar banners e arquivos (Google Drive).');
+    if (meta) meta.setAttribute('content', 'Painel Admin para gerenciar banners e arquivos.');
   }, []);
 
   useEffect(() => {
@@ -582,75 +576,7 @@ const Admin = () => {
     }
     setALoading(false);
   };
-  const uploadArquivoToDrive = async () => {
-    if (!aProd || !gArqFile) {
-      toast({ title: 'Selecione produto e arquivo', description: 'Escolha o produto e um arquivo para enviar ao Google Drive.' });
-      return;
-    }
-    try {
-      setGUploading(true);
-      const base64 = await fileToBase64(gArqFile);
-      const { data, error } = await supabase.functions.invoke('gdrive', {
-        body: {
-          action: 'upload',
-          productId: aProd,
-          fileName: gArqFile.name,
-          contentType: gArqFile.type || 'application/octet-stream',
-          fileBase64: base64,
-        },
-      });
-      if (error) {
-        toast({ title: 'Erro no upload', description: (error as any)?.message || 'Não foi possível enviar para o Drive.' });
-        return;
-      }
-      const publicUrl = (data as any)?.file?.publicUrl as string | undefined;
-      if (publicUrl) {
-        setALink(publicUrl);
-        if (!aNome) setANome(gArqFile.name);
-        toast({ title: 'Upload concluído', description: 'Link preenchido automaticamente.' });
-      } else {
-        toast({ title: 'Upload concluído', description: 'Arquivo enviado, mas não obtivemos o link público.' });
-      }
-    } catch (e: any) {
-      toast({ title: 'Erro inesperado', description: e?.message || String(e) });
-    } finally {
-      setGUploading(false);
-    }
-  };
 
-  // Google Drive
-  const listFiles = async () => {
-    if (!productId) return;
-    setLoading(true);
-    const { data, error } = await supabase.functions.invoke('gdrive-list', {
-      body: { productId, pageSize: 100 },
-    });
-    if (!error) setFiles((data as any)?.files || []);
-    setLoading(false);
-  };
-
-  const upload = async () => {
-    if (!productId || !selectedFile) return;
-    setLoading(true);
-    try {
-      const base64 = await fileToBase64(selectedFile);
-      const { error } = await supabase.functions.invoke('gdrive', {
-        body: {
-          action: 'upload',
-          productId,
-          fileName: selectedFile.name,
-          contentType: selectedFile.type || 'application/octet-stream',
-          fileBase64: base64,
-        },
-      });
-      if (!error) {
-        setSelectedFile(null);
-        await listFiles();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <main className="container mx-auto px-4 py-8 space-y-6">
@@ -1095,16 +1021,6 @@ const Admin = () => {
                 <Label htmlFor="alink">Link URL</Label>
                 <Input id="alink" value={aLink} onChange={(e) => setALink(e.target.value)} placeholder="https://..." />
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="gdupload">Upload para Google Drive</Label>
-                <div className="flex items-center gap-2">
-                  <Input id="gdupload" type="file" onChange={(e) => setGArqFile(e.target.files?.[0] || null)} />
-                  <Button variant="secondary" onClick={uploadArquivoToDrive} disabled={!aProd || !gArqFile || gUploading}>
-                    {gUploading ? 'Enviando...' : 'Enviar'}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">O link será preenchido automaticamente após o upload.</p>
-              </div>
               <div className="flex items-center gap-2 md:col-span-2">
                 <Switch id="anaolistado" checked={aNaoListado} onCheckedChange={setANaoListado} />
                 <Label htmlFor="anaolistado">Não listado</Label>
@@ -1229,43 +1145,6 @@ const Admin = () => {
         </Card>
       </section>
 
-      {/* Google Drive */}
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle>Arquivos do Google Drive</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Input placeholder="Produto ID" value={productId} onChange={(e) => setProductId(e.target.value)} />
-              <Input type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
-              <div className="flex gap-2">
-                <Button onClick={listFiles} disabled={!productId || loading}>Listar</Button>
-                <Button onClick={upload} disabled={!productId || !selectedFile || loading}>Upload</Button>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {files.map((f) => (
-                <Card key={f.id} className="hover:shadow-md transition">
-                  <CardHeader>
-                    <CardTitle className="text-base">{f.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex items-center justify-between">
-                    <Button asChild>
-                      <a href={f.publicUrl} target="_blank" rel="noopener noreferrer">Abrir</a>
-                    </Button>
-                    <span className="text-xs text-muted-foreground">{f.mimeType}</span>
-                  </CardContent>
-                </Card>
-              ))}
-              {files.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum arquivo listado.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </section>
     </main>
   );
 };
