@@ -752,44 +752,40 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3">
         <Card>
-          <CardHeader className="py-2">
+          <CardHeader className="py-2 flex items-center justify-between gap-2">
             <CardTitle className="text-base">Downloads do dia</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between gap-2 py-3">
-            <div>
-              <div className="text-2xl font-semibold">{dailyCount}</div>
-              <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
+            <div className="w-[120px]">
+              <Label htmlFor="daily-date" className="text-xs">Dia</Label>
+              <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
             </div>
-                <div className="w-[120px]">
-                  <Label htmlFor="daily-date" className="text-xs">Selecionar dia</Label>
-                  <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
-                </div>
+          </CardHeader>
+          <CardContent className="py-3">
+            <div className="text-2xl font-semibold">{dailyCount}</div>
+            <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2">
+          <CardHeader className="py-2 flex items-center justify-between gap-2">
             <CardTitle className="text-base">Downloads do mês</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between gap-2 py-3">
-            <div>
-              <div className="text-2xl font-semibold">{monthlyCount}</div>
-              <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
+            <div className="w-[120px]">
+              <Label htmlFor="month-sel" className="text-xs">Mês</Label>
+              <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
             </div>
-                <div className="w-[120px]">
-                  <Label htmlFor="month-sel" className="text-xs">Selecionar mês</Label>
-                  <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
-                </div>
+          </CardHeader>
+          <CardContent className="py-3">
+            <div className="text-2xl font-semibold">{monthlyCount}</div>
+            <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-2">
+          <CardHeader className="py-2 flex items-center justify-between gap-2">
             <CardTitle className="text-base">Evolução diária do mês</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
             <div className="w-[140px]">
-              <Label htmlFor="month-sel-graph" className="text-xs">Selecionar mês</Label>
+              <Label htmlFor="month-sel-graph" className="text-xs">Mês</Label>
               <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
             </div>
+          </CardHeader>
+          <CardContent className="pt-2">
             {dailySeries.length > 0 ? (
               <ChartContainer
                 config={{ count: { label: 'Downloads', color: 'hsl(var(--primary))' } }}
