@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QrCode, Camera, X } from "lucide-react";
+import { QrCode, Camera } from "lucide-react";
 
 interface HelpDialogProps {
   open: boolean;
@@ -131,11 +131,6 @@ const HelpDialog = ({ open, onOpenChange }: HelpDialogProps) => {
           <DialogTitle>Como procurar</DialogTitle>
         </DialogHeader>
 
-        <DialogClose asChild>
-          <Button variant="ghost" size="icon" className="absolute right-3 top-3" aria-label="Fechar ajuda">
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogClose>
 
         {view === "menu" ? (
           <div className="grid gap-4 sm:grid-cols-2">
