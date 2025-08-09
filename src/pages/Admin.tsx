@@ -1584,14 +1584,36 @@ const Admin = () => {
                         <TableCell className="align-top min-w-[240px]">
                           {isEditing ? <Textarea rows={1} className="h-10 resize-none" value={editPDesc} onChange={e => setEditPDesc(e.target.value)} placeholder="Descrição" /> : <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>}
                         </TableCell>
-                        
                         <TableCell className="align-top min-w-[180px]">
-                          {isEditing ? <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
+                          {isEditing ? (
+                            <Select value={editPCat} onValueChange={(v) => { setEditPCat(v); setEditPSub(''); }}>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                               <SelectContent>
-                                {subcategorias.filter(s => s.categoria_id === editPCat).map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
+                                {categorias.map(c => (
+                                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                                ))}
                               </SelectContent>
-                            </Select> : subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'}
+                            </Select>
+                          ) : (
+                            categorias.find(c => c.id === p.categoria_id)?.nome || '-'
+                          )}
+                        </TableCell>
+
+                        <TableCell className="align-top min-w-[180px]">
+                          {isEditing ? (
+                            <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
+                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                              <SelectContent>
+                                {subcategorias
+                                  .filter(s => s.categoria_id === editPCat)
+                                  .map(s => (
+                                    <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'
+                          )}
                         </TableCell>
                         <TableCell className="text-right align-top space-x-2 min-w-[200px]">
                           {isEditing ? <>
