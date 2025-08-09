@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Bell } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -121,12 +122,16 @@ const Admin = () => {
   const [editPSub, setEditPSub] = useState<string>("");
   const [prodLoading, setProdLoading] = useState(false);
   // Produtos list filters/pagination
-  const [pSearch, setPSearch] = useState("");
-  const [pCatFilter, setPCatFilter] = useState<string>("");
+  const [fPart, setFPart] = useState("");
+  const [fDesc, setFDesc] = useState("");
+  const [fCat, setFCat] = useState<string>("");
+  const [fSub, setFSub] = useState<string>("");
   const PROD_PAGE_SIZE = 9;
   const [prodPage, setProdPage] = useState(1);
   const [prodTotal, setProdTotal] = useState(0);
   const [prodListLoading, setProdListLoading] = useState(false);
+  const [prodFileCounts, setProdFileCounts] = useState<Record<string, number>>({});
+  const [prodFilesMap, setProdFilesMap] = useState<Record<string, Arquivo[]>>({});
 
   // Arquivos form
   const [aProd, setAProd] = useState<string>("");
@@ -614,11 +619,17 @@ const Admin = () => {
       }).order('created_at', {
         ascending: false
       });
-      if (pCatFilter) {
-        query = query.eq('categoria_id', pCatFilter);
+      if (fCat) {
+        query = query.eq('categoria_id', fCat);
       }
-      if (pSearch.trim()) {
-        query = query.ilike('partnumber', `%${pSearch.trim()}%`);
+      if (fSub) {
+        query = query.eq('subcategoria_id', fSub);
+      }
+      if (fPart.trim()) {
+        query = query.ilike('partnumber', `%${fPart.trim()}%`);
+      }
+      if (fDesc.trim()) {
+        query = query.ilike('descricao', `%${fDesc.trim()}%`);
       }
       const from = (prodPage - 1) * PROD_PAGE_SIZE;
       const to = from + PROD_PAGE_SIZE - 1;
@@ -725,7 +736,36 @@ const Admin = () => {
   };
   useEffect(() => {
     loadProdutos();
-  }, [pSearch, pCatFilter, prodPage]);
+  }, [fPart, fDesc, fCat, fSub, prodPage]);
+
+  // Atualiza contagem de arquivos por produto (na página atual)
+  useEffect(() => {
+    const ids = produtos.map(p => p.id);
+    if (ids.length === 0) { setProdFileCounts({}); return; }
+    (async () => {
+      const { data, error } = await supabase
+        .from('arquivos')
+        .select('id, produto_id')
+        .in('produto_id', ids);
+      if (!error) {
+        const counts: Record<string, number> = {};
+        (data as any[]).forEach((row: any) => {
+          counts[row.produto_id] = (counts[row.produto_id] || 0) + 1;
+        });
+        setProdFileCounts(counts);
+      }
+    })();
+  }, [produtos]);
+
+  const loadFilesForProduct = async (prodId: string) => {
+    if (prodFilesMap[prodId]) return;
+    const { data } = await supabase
+      .from('arquivos')
+      .select('id, nome_arquivo, categoria_arquivo, link_url, downloads, listado')
+      .eq('produto_id', prodId)
+      .order('created_at', { ascending: false });
+    setProdFilesMap(prev => ({ ...prev, [prodId]: (data as any) || [] }));
+  };
 
   // Produtos (lista para seleção em Arquivos)
   const loadAllProds = async () => {
@@ -1479,19 +1519,17 @@ const Admin = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-5 gap-3">
-              <div className="md:col-span-2">
-                <Label htmlFor="psearch">Buscar (part number)</Label>
-                <Input id="psearch" value={pSearch} onChange={e => {
-                setPSearch(e.target.value);
-                setProdPage(1);
-              }} placeholder="Ex: ABC" />
+              <div>
+                <Label htmlFor="fpart">Modelo</Label>
+                <Input id="fpart" value={fPart} onChange={e => { setFPart(e.target.value); setProdPage(1); }} placeholder="Ex: ABC-123" />
               </div>
               <div>
-                <Label>Filtrar por categoria</Label>
-                <Select value={pCatFilter || 'all'} onValueChange={v => {
-                setPCatFilter(v === 'all' ? '' : v);
-                setProdPage(1);
-              }}>
+                <Label htmlFor="fdesc">Descrição</Label>
+                <Input id="fdesc" value={fDesc} onChange={e => { setFDesc(e.target.value); setProdPage(1); }} placeholder="Texto na descrição" />
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Select value={fCat || 'all'} onValueChange={v => { setFCat(v === 'all' ? '' : v); setFSub(''); setProdPage(1); }}>
                   <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
@@ -1499,12 +1537,18 @@ const Admin = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="md:col-span-2 flex items-end justify-end gap-2">
-                <Button variant="outline" onClick={() => {
-                setPSearch('');
-                setPCatFilter('');
-                setProdPage(1);
-              }}>Limpar</Button>
+              <div>
+                <Label>Subcategoria</Label>
+                <Select value={fSub || 'all'} onValueChange={v => { setFSub(v === 'all' ? '' : v); setProdPage(1); }} disabled={!fCat}>
+                  <SelectTrigger><SelectValue placeholder={!fCat ? 'Selecione a categoria' : 'Todas'} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {subcategorias.filter(s => s.categoria_id === fCat).map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end justify-end gap-2">
+                <Button variant="outline" onClick={() => { setFPart(''); setFDesc(''); setFCat(''); setFSub(''); setProdPage(1); }}>Limpar</Button>
               </div>
             </div>
             <div className="grid md:grid-cols-5 gap-3">
@@ -1564,6 +1608,7 @@ const Admin = () => {
                     <TableHead>Descrição</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Subcategoria</TableHead>
+                    <TableHead className="text-center">Arquivos</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1615,6 +1660,37 @@ const Admin = () => {
                             subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'
                           )}
                         </TableCell>
+
+                        {/* Arquivos vinculados */}
+                        <TableCell className="text-center align-top">
+                          <Popover onOpenChange={(open) => { if (open) loadFilesForProduct(p.id); }}>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm" className="font-medium">
+                                {prodFileCounts[p.id] || 0}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-72" align="center">
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Arquivos vinculados</h4>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {(prodFilesMap[p.id] || []).length > 0 ? (
+                                    <ul className="space-y-1">
+                                      {(prodFilesMap[p.id] || []).map((f) => (
+                                        <li key={f.id} className="text-sm flex items-center justify-between">
+                                          <span className="truncate pr-2">{f.nome_arquivo}</span>
+                                          <a href={f.link_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-xs">Abrir</a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground">{prodFilesMap[p.id] ? 'Nenhum arquivo.' : 'Carregando...'}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+
                         <TableCell className="text-right align-top space-x-2 min-w-[200px]">
                           {isEditing ? <>
                               <Button size="sm" onClick={saveProduto} disabled={prodLoading || !editPPart.trim() || !editPCat}>Salvar</Button>
