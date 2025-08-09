@@ -761,7 +761,7 @@ const Admin = () => {
     if (prodFilesMap[prodId]) return;
     const { data } = await supabase
       .from('arquivos')
-      .select('id, nome_arquivo, categoria_arquivo, link_url, downloads, listado')
+      .select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, listado')
       .eq('produto_id', prodId)
       .order('created_at', { ascending: false });
     setProdFilesMap(prev => ({ ...prev, [prodId]: (data as any) || [] }));
@@ -1681,7 +1681,7 @@ const Admin = () => {
                                         <li key={f.id} className="text-sm flex items-center justify-between">
                                           <span className="truncate pr-2">{f.nome_arquivo}</span>
                                           <div className="flex items-center gap-1">
-                                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => startEditProduto(p)}>Editar</Button>
+                                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => startEditArquivo(f)}>Editar</Button>
                                             <Button variant="destructive" size="sm" className="h-7 px-2 text-xs" onClick={() => deleteArquivo(f)}>Excluir</Button>
                                           </div>
                                         </li>
