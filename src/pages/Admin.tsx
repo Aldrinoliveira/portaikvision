@@ -1681,7 +1681,9 @@ const Admin = () => {
                                         <li key={f.id} className="text-sm flex items-center justify-between">
                                           <span className="truncate pr-2">{f.nome_arquivo}</span>
                                           <div className="flex items-center gap-1">
-                                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => startEditArquivo(f)}>Editar</Button>
+                                            <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs">
+                                              <a href={f.link_url} target="_blank" rel="noopener noreferrer">Abrir</a>
+                                            </Button>
                                             <Button variant="destructive" size="sm" className="h-7 px-2 text-xs" onClick={() => deleteArquivo(f)}>Excluir</Button>
                                           </div>
                                         </li>
