@@ -760,7 +760,7 @@ const Admin = () => {
             </div>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="text-2xl font-semibold">{dailyCount}</div>
+            <div className="text-3xl sm:text-4xl font-semibold">{dailyCount}</div>
             <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
           </CardContent>
         </Card>
@@ -773,7 +773,7 @@ const Admin = () => {
             </div>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="text-2xl font-semibold">{monthlyCount}</div>
+            <div className="text-3xl sm:text-4xl font-semibold">{monthlyCount}</div>
             <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
           </CardContent>
         </Card>
