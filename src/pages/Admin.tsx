@@ -1305,20 +1305,22 @@ const Admin = () => {
             </div>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-semibold">{dailyCount}</div>
-                <p className="text-xs text-muted-foreground">Downloads do dia</p>
+                <div className="text-xl sm:text-2xl font-semibold">{dailyCount}</div>
+                <p className="text-xs text-muted-foreground">Do dia</p>
               </div>
               <div className="text-center">
-                <div className={`text-2xl sm:text-3xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : ''}`}>
+                <div className={`text-xl sm:text-2xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : ''}`}>
                   {firstCardMonthlyCount}
                 </div>
-                <p className="text-xs text-muted-foreground">Downloads do mês</p>
+                <p className="text-xs text-muted-foreground">Do mês</p>
                 {firstCardMonthlyCount > 3000 && (
-                  <p className="text-xs text-red-600 font-medium mt-1">Limite mensal ultrapassado</p>
+                  <p className="text-xs text-red-600 font-medium mt-1">Limite ultrapassado</p>
                 )}
-                <p className="text-xs text-muted-foreground">({firstCardMonthlyCount}/3000)</p>
+                <p className="text-xs text-muted-foreground">
+                  {firstCardMonthlyCount}<span className="text-base font-bold">/3000</span>
+                </p>
               </div>
             </div>
           </CardContent>
