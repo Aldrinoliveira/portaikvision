@@ -12,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Bell } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -102,6 +104,8 @@ const Admin = () => {
   const [monthSel, setMonthSel] = useState<string>(new Date().toISOString().slice(0, 7));
   const [dailyCount, setDailyCount] = useState<number>(0);
   const [monthlyCount, setMonthlyCount] = useState<number>(0);
+  const [dailySeries, setDailySeries] = useState<{ date: string; dateLabel: string; count: number }[]>([]);
+  const [seriesLoading, setSeriesLoading] = useState(false);
  
   // Site Settings (banner textos)
   type SiteSettings = {
@@ -675,8 +679,51 @@ const Admin = () => {
     if (!error) setMonthlyCount(count || 0);
   };
 
+  const getLastNDays = (days: number) => {
+    const now = new Date();
+    const startLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
+    const endLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // exclusivo
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const list = Array.from({ length: days }, (_, i) => {
+      const d = new Date(startLocal);
+      d.setDate(startLocal.getDate() + i);
+      return { key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, label: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}` };
+    });
+    return { start: startLocal.toISOString(), end: endLocal.toISOString(), days: list };
+  };
+
+  const loadDailySeries = async (days = 30) => {
+    setSeriesLoading(true);
+    try {
+      const { start, end, days: dayList } = getLastNDays(days);
+      const { data, error } = await supabase
+        .from('download_logs')
+        .select('created_at')
+        .gte('created_at', start)
+        .lt('created_at', end)
+        .limit(10000);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      if (error) {
+        toast({ title: 'Erro ao carregar série de downloads', description: error.message });
+        setDailySeries(dayList.map((d) => ({ date: d.key, dateLabel: d.label, count: 0 })));
+        return;
+      }
+      const counts: Record<string, number> = {};
+      (data as any[]).forEach((row) => {
+        const d = new Date(row.created_at as string);
+        const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      setDailySeries(dayList.map((d) => ({ date: d.key, dateLabel: d.label, count: counts[d.key] || 0 })));
+    } finally {
+      setSeriesLoading(false);
+    }
+  };
+
   useEffect(() => { loadDailyCount(); }, [dailyDate]);
   useEffect(() => { loadMonthlyCount(); }, [monthSel]);
+  useEffect(() => { loadDailySeries(); }, []);
+
 
   const pendingCount = solicitacoes.filter((s) => s.status === 'pendente').length;
 
@@ -702,7 +749,7 @@ const Admin = () => {
       </div>
 
       {/* Dashboard downloads */}
-      <section aria-label="Dashboard downloads" className="grid gap-4 sm:grid-cols-2">
+      <section aria-label="Dashboard downloads" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Downloads do dia</CardTitle>
@@ -731,6 +778,29 @@ const Admin = () => {
               <Label htmlFor="month-sel">Selecionar mês</Label>
               <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Evolução diária (30 dias)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dailySeries.length > 0 ? (
+              <ChartContainer
+                config={{ downloads: { label: 'Downloads', color: 'hsl(var(--primary))' } }}
+                className="h-40 w-full"
+              >
+                <LineChart data={dailySeries} margin={{ left: 12, right: 12 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ChartContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem dados no período.</p>
+            )}
           </CardContent>
         </Card>
       </section>
