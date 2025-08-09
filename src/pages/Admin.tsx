@@ -679,33 +679,35 @@ const Admin = () => {
     if (!error) setMonthlyCount(count || 0);
   };
 
-  const getLastNDays = (days: number) => {
-    const now = new Date();
-    const startLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
-    const endLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // exclusivo
+  const getDaysOfMonth = (ym: string) => {
+    const [yearStr, monthStr] = ym.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // 1-12
+    const first = new Date(year, month - 1, 1);
+    const nextMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
     const pad = (n: number) => n.toString().padStart(2, '0');
-    const list = Array.from({ length: days }, (_, i) => {
-      const d = new Date(startLocal);
-      d.setDate(startLocal.getDate() + i);
-      return { key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, label: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}` };
+    const days = Array.from({ length: daysInMonth }, (_, i) => {
+      const d = new Date(year, month - 1, i + 1);
+      return { key: `${year}-${pad(month)}-${pad(i + 1)}`, label: `${pad(i + 1)}/${pad(month)}` };
     });
-    return { start: startLocal.toISOString(), end: endLocal.toISOString(), days: list };
+    return { start: first.toISOString(), end: nextMonth.toISOString(), days };
   };
 
-  const loadDailySeries = async (days = 30) => {
+  const loadDailySeries = async (ym = monthSel) => {
     setSeriesLoading(true);
     try {
-      const { start, end, days: dayList } = getLastNDays(days);
+      const { start, end, days } = getDaysOfMonth(ym);
       const { data, error } = await supabase
         .from('download_logs')
         .select('created_at')
         .gte('created_at', start)
         .lt('created_at', end)
-        .limit(10000);
+        .limit(20000);
       const pad = (n: number) => n.toString().padStart(2, '0');
       if (error) {
         toast({ title: 'Erro ao carregar série de downloads', description: error.message });
-        setDailySeries(dayList.map((d) => ({ date: d.key, dateLabel: d.label, count: 0 })));
+        setDailySeries(days.map((d) => ({ date: d.key, dateLabel: d.label, count: 0 })));
         return;
       }
       const counts: Record<string, number> = {};
@@ -714,7 +716,7 @@ const Admin = () => {
         const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
         counts[key] = (counts[key] || 0) + 1;
       });
-      setDailySeries(dayList.map((d) => ({ date: d.key, dateLabel: d.label, count: counts[d.key] || 0 })));
+      setDailySeries(days.map((d) => ({ date: d.key, dateLabel: d.label, count: counts[d.key] || 0 })));
     } finally {
       setSeriesLoading(false);
     }
@@ -722,8 +724,7 @@ const Admin = () => {
 
   useEffect(() => { loadDailyCount(); }, [dailyDate]);
   useEffect(() => { loadMonthlyCount(); }, [monthSel]);
-  useEffect(() => { loadDailySeries(); }, []);
-
+  useEffect(() => { loadDailySeries(monthSel); }, [monthSel]);
 
   const pendingCount = solicitacoes.filter((s) => s.status === 'pendente').length;
 
@@ -782,12 +783,16 @@ const Admin = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Evolução diária (30 dias)</CardTitle>
+            <CardTitle className="text-base">Evolução diária do mês</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            <div className="min-w-[140px]">
+              <Label htmlFor="month-sel-graph">Selecionar mês</Label>
+              <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
+            </div>
             {dailySeries.length > 0 ? (
               <ChartContainer
-                config={{ downloads: { label: 'Downloads', color: 'hsl(var(--primary))' } }}
+                config={{ count: { label: 'Downloads', color: 'hsl(var(--primary))' } }}
                 className="h-40 w-full"
               >
                 <LineChart data={dailySeries} margin={{ left: 12, right: 12 }}>
