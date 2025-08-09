@@ -754,7 +754,7 @@ const Admin = () => {
         <Card>
           <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do dia</CardTitle>
-            <div className="w-32 sm:w-36 mt-1">
+            <div className="w-[166px] sm:w-[187px] mt-1">
               <Label htmlFor="daily-date" className="sr-only">Dia</Label>
               <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8 text-sm" />
             </div>
@@ -767,7 +767,7 @@ const Admin = () => {
         <Card>
           <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
-            <div className="w-36 sm:w-40 mt-1">
+            <div className="w-[187px] sm:w-[208px] mt-1">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
               <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm cursor-pointer" />
             </div>
@@ -780,7 +780,7 @@ const Admin = () => {
         <Card>
           <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
-            <div className="w-32 sm:w-40 mt-1">
+            <div className="w-[166px] sm:w-[208px] mt-1">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
               <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm cursor-pointer" />
             </div>
