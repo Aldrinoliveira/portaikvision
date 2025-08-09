@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Copy, Bell } from "lucide-react";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ const Admin = () => {
   type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
   type Solicitacao = { id: string; created_at: string; numero_serie: string | null; produto_nome: string | null; descricao: string | null; status: string; nome: string | null; telefone: string | null; email: string | null };
   // State
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   // Banners
   const [banners, setBanners] = useState<Banner[]>([]);
   const [bImagemUrl, setBImagemUrl] = useState("");
@@ -132,6 +134,7 @@ const Admin = () => {
         navigate('/');
         return;
       }
+      setUserEmail(session.user.email || null);
       await Promise.all([
         loadBanners(),
         loadCategorias(),
@@ -613,11 +616,49 @@ const Admin = () => {
     setALoading(false);
   };
 
+  const cleanupAuthState = () => {
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) localStorage.removeItem(key);
+      });
+      if (typeof sessionStorage !== 'undefined') {
+        Object.keys(sessionStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) sessionStorage.removeItem(key);
+        });
+      }
+    } catch {}
+  };
+
+  const handleSignOut = async () => {
+    try {
+      cleanupAuthState();
+      try { await supabase.auth.signOut({ scope: 'global' } as any); } catch {}
+      window.location.href = '/auth';
+    } catch {}
+  };
+
+  const pendingCount = solicitacoes.filter((s) => s.status === 'pendente').length;
 
   return (
     <main className="container mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-semibold">Painel Admin</h1>
-      <p className="text-muted-foreground">Em breve: gerenciamento de Banners, Categorias, Produtos, Arquivos e Solicitações.</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Painel Admin</h1>
+          <p className="text-muted-foreground">Em breve: gerenciamento de Banners, Categorias, Produtos, Arquivos e Solicitações.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button type="button" aria-label={pendingCount > 0 ? `Notificações pendentes: ${pendingCount}` : 'Sem notificações pendentes'} className={`relative inline-flex items-center justify-center h-9 w-9 rounded-md border border-transparent transition-colors ${pendingCount > 0 ? 'text-destructive' : 'text-success'}`}>
+            <Bell className="h-5 w-5" />
+            {pendingCount > 0 && (
+              <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 px-1 py-0 text-[10px] leading-none">{pendingCount}</Badge>
+            )}
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground" title={userEmail || ''}>{userEmail || '—'}</span>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>Sair</Button>
+          </div>
+        </div>
+      </div>
 
       {/* Banners */}
       <section className="space-y-4">
