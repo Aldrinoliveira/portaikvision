@@ -1096,11 +1096,11 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
-          <CardHeader className="flex items-baseline gap-2 px-3 py-2">
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do dia</CardTitle>
-            <div className="ml-auto shrink-0 w-32 sm:w-36">
+            <div className="shrink-0 w-[141px] sm:w-[158px]">
               <Label htmlFor="daily-date" className="sr-only">Dia</Label>
-              <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm self-baseline" />
+              <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
@@ -1109,9 +1109,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex items-center gap-2 px-3 py-2">
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
-            <div className="ml-auto shrink-0 w-32 sm:w-36">
+            <div className="shrink-0 w-[141px] sm:w-[158px]">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
               <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={e => setMonthSel(e.target.value)} className="h-8 text-sm" />
             </div>
@@ -1122,9 +1122,9 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex items-center gap-2 px-3 py-2">
+          <CardHeader className="items-center text-center gap-1 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
-            <div className="ml-auto shrink-0 w-32 sm:w-40">
+            <div className="shrink-0 w-[141px] sm:w-[176px]">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
               <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={e => setMonthSel(e.target.value)} className="h-8 text-sm" />
             </div>
