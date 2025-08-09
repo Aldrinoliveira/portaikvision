@@ -767,10 +767,9 @@ const Admin = () => {
         <Card>
           <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
-            <div className="w-36 sm:w-40 mt-1 relative z-50">
+            <div className="w-36 sm:w-40 mt-1">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
-              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8 cursor-pointer" />
-              <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm cursor-pointer" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
@@ -781,10 +780,9 @@ const Admin = () => {
         <Card>
           <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
-            <div className="w-32 sm:w-40 mt-1 relative">
+            <div className="w-32 sm:w-40 mt-1">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
-              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8 relative z-10 cursor-pointer" />
-              <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm cursor-pointer" />
             </div>
           </CardHeader>
           <CardContent className="px-3 pt-2 overflow-hidden">
