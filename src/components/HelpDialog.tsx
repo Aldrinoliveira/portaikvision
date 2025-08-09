@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QrCode, Tag, X } from "lucide-react";
+import { QrCode, Camera, X } from "lucide-react";
 
 interface HelpDialogProps {
   open: boolean;
@@ -144,7 +144,7 @@ const HelpDialog = ({ open, onOpenChange }: HelpDialogProps) => {
               className="h-auto py-6 flex-col"
               onClick={() => setView("serie")}
             >
-              <QrCode className="h-6 w-6 mb-2" />
+              <QrCode className="h-10 w-10 mb-2" />
               Pesquisar por número de série
             </Button>
             <Button
@@ -152,7 +152,7 @@ const HelpDialog = ({ open, onOpenChange }: HelpDialogProps) => {
               className="h-auto py-6 flex-col"
               onClick={() => setView("part")}
             >
-              <Tag className="h-6 w-6 mb-2" />
+              <Camera className="h-10 w-10 mb-2" />
               Pesquisa por modelo de produto
             </Button>
           </div>
