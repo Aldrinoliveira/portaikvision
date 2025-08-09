@@ -112,6 +112,42 @@ export type Database = {
         }
         Relationships: []
       }
+      download_logs: {
+        Row: {
+          arquivo_id: string
+          created_at: string
+          id: string
+          produto_id: string
+        }
+        Insert: {
+          arquivo_id: string
+          created_at?: string
+          id?: string
+          produto_id: string
+        }
+        Update: {
+          arquivo_id?: string
+          created_at?: string
+          id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "download_logs_arquivo_id_fkey"
+            columns: ["arquivo_id"]
+            isOneToOne: false
+            referencedRelation: "arquivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "download_logs_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       numeros_serie: {
         Row: {
           created_at: string

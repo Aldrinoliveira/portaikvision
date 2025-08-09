@@ -96,6 +96,12 @@ const Admin = () => {
   // Solicitações (Não Encontrei)
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [solLoading, setSolLoading] = useState(false);
+  
+  // Dashboard – Downloads
+  const [dailyDate, setDailyDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [monthSel, setMonthSel] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [dailyCount, setDailyCount] = useState<number>(0);
+  const [monthlyCount, setMonthlyCount] = useState<number>(0);
  
   // Site Settings (banner textos)
   type SiteSettings = {
@@ -637,6 +643,41 @@ const Admin = () => {
     } catch {}
   };
 
+  // Dashboard helpers and loaders
+  const getDayRange = (dateStr: string) => {
+    const start = new Date(dateStr + 'T00:00:00');
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+  const getMonthRange = (ym: string) => {
+    const start = new Date(ym + '-01T00:00:00');
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+  const loadDailyCount = async () => {
+    const { start, end } = getDayRange(dailyDate);
+    const { count, error } = await supabase
+      .from('download_logs')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', start)
+      .lt('created_at', end);
+    if (!error) setDailyCount(count || 0);
+  };
+  const loadMonthlyCount = async () => {
+    const { start, end } = getMonthRange(monthSel);
+    const { count, error } = await supabase
+      .from('download_logs')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', start)
+      .lt('created_at', end);
+    if (!error) setMonthlyCount(count || 0);
+  };
+
+  useEffect(() => { loadDailyCount(); }, [dailyDate]);
+  useEffect(() => { loadMonthlyCount(); }, [monthSel]);
+
   const pendingCount = solicitacoes.filter((s) => s.status === 'pendente').length;
 
   return (
@@ -659,6 +700,40 @@ const Admin = () => {
           </div>
         </div>
       </div>
+
+      {/* Dashboard downloads */}
+      <section aria-label="Dashboard downloads" className="grid gap-4 sm:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Downloads do dia</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between gap-3">
+            <div>
+              <div className="text-3xl font-semibold">{dailyCount}</div>
+              <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
+            </div>
+            <div className="min-w-[140px]">
+              <Label htmlFor="daily-date">Selecionar dia</Label>
+              <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Downloads do mês</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between gap-3">
+            <div>
+              <div className="text-3xl font-semibold">{monthlyCount}</div>
+              <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
+            </div>
+            <div className="min-w-[140px]">
+              <Label htmlFor="month-sel">Selecionar mês</Label>
+              <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Banners */}
       <section className="space-y-4">
