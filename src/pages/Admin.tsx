@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -239,6 +239,45 @@ const Admin = () => {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+  // Google Drive upload via Edge Function
+  const driveFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [driveUploading, setDriveUploading] = useState(false);
+
+  const onClickUploadToDrive = () => {
+    driveFileInputRef.current?.click();
+  };
+
+  const onDriveFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.currentTarget.value = "";
+    if (!file) return;
+    try {
+      setDriveUploading(true);
+      const base64 = await fileToBase64(file);
+      const { data, error } = await supabase.functions.invoke('upload-to-drive', {
+        body: {
+          filename: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          base64
+        }
+      });
+      if (error) throw error;
+      const link = (data as any)?.webViewLink || (data as any)?.webContentLink;
+      if (link) {
+        setALink(link);
+        if (!aNome.trim()) setANome(file.name);
+        toast({ title: 'Upload concluído', description: 'Link preenchido automaticamente.' });
+      } else {
+        toast({ title: 'Upload concluído', description: 'Não foi possível obter o link.' });
+      }
+    } catch (err: any) {
+      console.error('upload-to-drive error', err);
+      toast({ title: 'Erro ao enviar para o Drive', description: err?.message || 'Tente novamente.' });
+    } finally {
+      setDriveUploading(false);
+    }
+  };
 
   // Banners CRUD
   const loadBanners = async () => {
@@ -1838,7 +1877,13 @@ const Admin = () => {
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="alink">Link URL</Label>
-                <Input id="alink" value={aLink} onChange={e => setALink(e.target.value)} placeholder="https://..." />
+                <div className="flex gap-2">
+                  <Input id="alink" value={aLink} onChange={e => setALink(e.target.value)} placeholder="https://..." />
+                  <input ref={driveFileInputRef} type="file" onChange={onDriveFileSelected} className="hidden" />
+                  <Button type="button" variant="secondary" onClick={onClickUploadToDrive} disabled={driveUploading}>
+                    {driveUploading ? 'Enviando...' : 'Enviar para Drive'}
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-2 md:col-span-2">
                 <Switch id="anaolistado" checked={aNaoListado} onCheckedChange={setANaoListado} />
