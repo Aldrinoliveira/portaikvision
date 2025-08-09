@@ -40,11 +40,18 @@ interface Produto {
   descricao: string | null;
   imagem_url: string | null;
   categoria_id?: string | null;
+  subcategoria_id?: string | null;
 }
 interface Categoria {
   id: string;
   nome: string;
   descricao: string | null;
+}
+interface Subcategoria {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  categoria_id: string;
 }
 const Index = () => {
   useSEO();
@@ -57,9 +64,11 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const RESULTS_PAGE_SIZE = 6;
   const [page, setPage] = useState(1);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [catFilter, setCatFilter] = useState("");
-  const [embla, setEmbla] = useState<CarouselApi | null>(null);
+const [categorias, setCategorias] = useState<Categoria[]>([]);
+const [catFilter, setCatFilter] = useState("");
+const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+const [subFilter, setSubFilter] = useState("");
+const [embla, setEmbla] = useState<CarouselApi | null>(null);
   const [selected, setSelected] = useState(0);
   const [snapCount, setSnapCount] = useState(0);
   const [searched, setSearched] = useState(false);
@@ -83,13 +92,15 @@ const Index = () => {
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   useEffect(() => {
     const load = async () => {
-      const [bRes, cRes, pRes] = await Promise.all([supabase.from("banners").select("*").eq("ativo", true).order("created_at", {
-        ascending: false
-      }), supabase.from("categorias").select("id,nome,descricao").order("nome"), supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id").order("created_at", {
-        ascending: false
-      }).limit(1000)]);
+      const [bRes, cRes, sRes, pRes] = await Promise.all([
+        supabase.from("banners").select("*").eq("ativo", true).order("created_at", { ascending: false }),
+        supabase.from("categorias").select("id,nome,descricao").order("nome"),
+        supabase.from("subcategorias").select("id,nome,descricao,categoria_id").order("nome"),
+        supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id").order("created_at", { ascending: false }).limit(1000),
+      ]);
       setBanners(bRes.data || []);
       setCategorias(cRes.data || []);
+      setSubcategorias(sRes.data || []);
       setResults(pRes.data || []);
       setAllProducts(pRes.data || []);
     };
@@ -183,18 +194,18 @@ const Index = () => {
           // Fallback: tentar por partnumber quando não achar por série
           const {
             data: prods
-          } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id").ilike("partnumber", `%${query.trim()}%`);
+          } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id").ilike("partnumber", `%${query.trim()}%`);
           setResults(prods || []);
         } else {
           const {
             data: prods
-          } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id").in("id", ids);
+          } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id").in("id", ids);
           setResults(prods || []);
         }
       } else {
         const {
           data: prods
-        } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id").ilike("partnumber", `%${query.trim()}%`);
+        } = await supabase.from("produtos").select("id, partnumber, descricao, imagem_url, categoria_id, subcategoria_id").ilike("partnumber", `%${query.trim()}%`);
         setResults(prods || []);
       }
     } finally {
@@ -261,21 +272,31 @@ const Index = () => {
       embla.off('reInit', onReInit);
     };
   }, [embla]);
-  useEffect(() => {
-    if (query.trim() === '') {
-      setResults(allProducts);
-      setSearched(false);
-      setPage(1);
-    }
-  }, [query, allProducts]);
-  const excludedCategoryIds = useMemo(() => categorias.filter(c => /^(software|ferramentas)$/i.test((c.nome || '').trim())).map(c => c.id), [categorias]);
-  const baseResults = useMemo(() => results.filter(p => !excludedCategoryIds.includes((p.categoria_id || '') as string)), [results, excludedCategoryIds]);
-  const filtered = useMemo(() => catFilter ? baseResults.filter(p => p.categoria_id === catFilter) : baseResults, [baseResults, catFilter]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
-  const visibleResults = useMemo(() => {
-    const start = (page - 1) * RESULTS_PAGE_SIZE;
-    return filtered.slice(start, start + RESULTS_PAGE_SIZE);
-  }, [filtered, page]);
+useEffect(() => {
+  if (query.trim() === '') {
+    setResults(allProducts);
+    setSearched(false);
+    setPage(1);
+  }
+}, [query, allProducts]);
+
+// Reset subcategoria quando categoria mudar
+useEffect(() => {
+  setSubFilter("");
+  setPage(1);
+}, [catFilter]);
+
+const excludedCategoryIds = useMemo(() => categorias.filter(c => /^(software|ferramentas)$/i.test((c.nome || '').trim())).map(c => c.id), [categorias]);
+const baseResults = useMemo(() => results.filter(p => !excludedCategoryIds.includes((p.categoria_id || '') as string)), [results, excludedCategoryIds]);
+const filtered = useMemo(() => {
+  const byCat = catFilter ? baseResults.filter(p => p.categoria_id === catFilter) : baseResults;
+  return subFilter ? byCat.filter(p => p.subcategoria_id === subFilter) : byCat;
+}, [baseResults, catFilter, subFilter]);
+const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
+const visibleResults = useMemo(() => {
+  const start = (page - 1) * RESULTS_PAGE_SIZE;
+  return filtered.slice(start, start + RESULTS_PAGE_SIZE);
+}, [filtered, page]);
   return <div className="min-h-screen bg-background text-foreground">
       <TopBar />
 
@@ -349,7 +370,7 @@ const Index = () => {
         </section>
 
         {/* Filtros por categoria */}
-        {categorias.length > 0 && <section aria-label="Filtros" className="animate-fade-in">
+        {categorias.length > 0 && <section aria-label="Filtros" className="animate-fade-in space-y-2">
             <div className="flex flex-wrap gap-2">
               <Button variant={catFilter === "" ? "default" : "outline"} size="sm" onClick={() => {
             setCatFilter("");
@@ -362,7 +383,18 @@ const Index = () => {
                     {c.nome}
                   </Button>)}
             </div>
+            {catFilter !== "" && subcategorias.filter(s => s.categoria_id === catFilter).length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1" aria-label="Subcategorias">
+                <Button variant={subFilter === "" ? "default" : "outline"} size="sm" onClick={() => { setSubFilter(""); setPage(1); }}>Todas</Button>
+                {subcategorias.filter(s => s.categoria_id === catFilter).map(s => (
+                  <Button key={s.id} variant={subFilter === s.id ? "default" : "outline"} size="sm" onClick={() => { setSubFilter(s.id); setPage(1); }}>
+                    {s.nome}
+                  </Button>
+                ))}
+              </div>
+            )}
           </section>}
+
 
         {/* Resultados */}
         {loading && <section aria-label="Resultados" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
