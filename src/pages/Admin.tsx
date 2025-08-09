@@ -752,11 +752,11 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
-          <CardHeader className="flex items-center gap-2 px-3 py-2">
+          <CardHeader className="flex items-baseline gap-2 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do dia</CardTitle>
             <div className="ml-auto shrink-0 w-32 sm:w-36">
               <Label htmlFor="daily-date" className="sr-only">Dia</Label>
-              <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8 text-sm" />
+              <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} className="h-8 text-sm self-baseline" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
