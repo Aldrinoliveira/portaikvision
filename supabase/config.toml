@@ -1,2 +1,4 @@
 project_id = "vtafquzacrmemncgcjcc"
 
+[functions.upload-to-drive]
+verify_jwt = false
