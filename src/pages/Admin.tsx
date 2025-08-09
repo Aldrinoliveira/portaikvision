@@ -155,6 +155,15 @@ const Admin = () => {
   const [arqLoading, setArqLoading] = useState(false);
   const [editADesc, setEditADesc] = useState("");
 
+  // Arquivos - filtros e paginação
+  const [faNome, setFaNome] = useState("");
+  const [faDesc, setFaDesc] = useState("");
+  const [faTipo, setFaTipo] = useState<string>("");
+  const [faProd, setFaProd] = useState<string>("");
+  const ARQ_PAGE_SIZE = 12;
+  const [arqPage, setArqPage] = useState(1);
+  const [arqTotal, setArqTotal] = useState(0);
+
   // Números de Série form/lista
   const [nsProduto, setNsProduto] = useState<string>("");
   const [nsNumero, setNsNumero] = useState("");
@@ -785,26 +794,39 @@ const Admin = () => {
     setAllProds(data as any || []);
   };
 
-  // Arquivos (listagem)
+  // Arquivos (listagem com filtros/paginação)
   const loadArquivos = async () => {
     setArqListLoading(true);
-    const {
-      data,
-      error
-    } = await supabase.from('arquivos').select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, created_at, listado').order('created_at', {
-      ascending: false
-    }).limit(30);
-    if (error) {
-      toast({
-        title: 'Erro ao carregar arquivos',
-        description: error.message
-      });
-      setArquivos([]);
-    } else {
-      setArquivos(data as any || []);
+    try {
+      let query = supabase
+        .from('arquivos')
+        .select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, created_at, listado', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      if (faProd) query = query.eq('produto_id', faProd);
+      if (faTipo) query = query.eq('categoria_arquivo', faTipo);
+      if (faNome.trim()) query = query.ilike('nome_arquivo', `%${faNome.trim()}%`);
+      if (faDesc.trim()) query = query.ilike('descricao', `%${faDesc.trim()}%`);
+
+      const from = (arqPage - 1) * ARQ_PAGE_SIZE;
+      const to = from + ARQ_PAGE_SIZE - 1;
+      const { data, count, error } = await query.range(from, to);
+      if (error) {
+        toast({ title: 'Erro ao carregar arquivos', description: error.message });
+        setArquivos([]);
+        setArqTotal(0);
+        return;
+      }
+      setArquivos((data as any) || []);
+      setArqTotal(count || 0);
+    } finally {
+      setArqListLoading(false);
     }
-    setArqListLoading(false);
   };
+
+  useEffect(() => {
+    loadArquivos();
+  }, [faNome, faDesc, faTipo, faProd, arqPage]);
 
   // Números de Série (listagem)
   const loadNumerosSerie = async () => {
@@ -1827,6 +1849,44 @@ const Admin = () => {
               </div>
             </div>
 
+            <div className="rounded-md border bg-muted/40 p-3 shadow-sm">
+              <div className="grid md:grid-cols-5 gap-2">
+                <div>
+                  <Label htmlFor="fanome" className="text-sm">Nome</Label>
+                  <Input id="fanome" value={faNome} onChange={e => { setFaNome(e.target.value); setArqPage(1); }} placeholder="Nome do arquivo" className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label htmlFor="fadesc" className="text-sm">Descrição</Label>
+                  <Input id="fadesc" value={faDesc} onChange={e => { setFaDesc(e.target.value); setArqPage(1); }} placeholder="Texto na descrição" className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label className="text-sm">Tipo</Label>
+                  <Select value={faTipo || 'all'} onValueChange={v => { setFaTipo(v === 'all' ? '' : v); setArqPage(1); }}>
+                    <SelectTrigger className="h-8"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="firmware">Firmware</SelectItem>
+                      <SelectItem value="documento">Documento</SelectItem>
+                      <SelectItem value="video">Vídeo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Produto</Label>
+                  <Select value={faProd || 'all'} onValueChange={v => { setFaProd(v === 'all' ? '' : v); setArqPage(1); }}>
+                    <SelectTrigger className="h-8"><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {allProds.map(p => <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { setFaNome(''); setFaDesc(''); setFaTipo(''); setFaProd(''); setArqPage(1); }}>Limpar</Button>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <h3 className="text-base font-medium">Arquivos adicionados</h3>
               {arqListLoading ? <p className="text-sm text-muted-foreground">Carregando arquivos...</p> : arquivos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum arquivo cadastrado.</p> : <div className="w-full overflow-x-auto">
@@ -1903,7 +1963,14 @@ const Admin = () => {
                     </TableBody>
                   </Table>
                 </div>}
-            </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm text-muted-foreground">Página {arqPage} de {Math.max(1, Math.ceil(arqTotal / ARQ_PAGE_SIZE))}</span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setArqPage(p => Math.max(1, p - 1))} disabled={arqPage <= 1}>Anterior</Button>
+                    <Button variant="outline" size="sm" onClick={() => setArqPage(p => p + 1)} disabled={arqPage >= Math.max(1, Math.ceil(arqTotal / ARQ_PAGE_SIZE))}>Próxima</Button>
+                  </div>
+                </div>
+              </div>
           </CardContent>
         </Card>
       </section>
