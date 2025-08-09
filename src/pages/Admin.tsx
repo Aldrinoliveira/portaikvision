@@ -1520,39 +1520,6 @@ const Admin = () => {
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-5 gap-3">
               <div>
-                <Label htmlFor="fpart">Modelo</Label>
-                <Input id="fpart" value={fPart} onChange={e => { setFPart(e.target.value); setProdPage(1); }} placeholder="Ex: ABC-123" />
-              </div>
-              <div>
-                <Label htmlFor="fdesc">Descrição</Label>
-                <Input id="fdesc" value={fDesc} onChange={e => { setFDesc(e.target.value); setProdPage(1); }} placeholder="Texto na descrição" />
-              </div>
-              <div>
-                <Label>Categoria</Label>
-                <Select value={fCat || 'all'} onValueChange={v => { setFCat(v === 'all' ? '' : v); setFSub(''); setProdPage(1); }}>
-                  <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Subcategoria</Label>
-                <Select value={fSub || 'all'} onValueChange={v => { setFSub(v === 'all' ? '' : v); setProdPage(1); }} disabled={!fCat}>
-                  <SelectTrigger><SelectValue placeholder={!fCat ? 'Selecione a categoria' : 'Todas'} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {subcategorias.filter(s => s.categoria_id === fCat).map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end justify-end gap-2">
-                <Button variant="outline" onClick={() => { setFPart(''); setFDesc(''); setFCat(''); setFSub(''); setProdPage(1); }}>Limpar</Button>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-5 gap-3">
-              <div>
                 <Label htmlFor="ppart">Part number</Label>
                 <Input id="ppart" value={pPart} onChange={e => setPPart(e.target.value)} placeholder="Ex: ABC-123" />
               </div>
@@ -1595,6 +1562,41 @@ const Admin = () => {
               </div>
               <div className="md:col-span-5">
                 <Button onClick={createProduto} disabled={prodLoading || !pPart.trim() || !pCat}>Criar produto</Button>
+              </div>
+            </div>
+            <div className="rounded-md border bg-muted/40 p-3 shadow-sm">
+              <div className="grid md:grid-cols-5 gap-2">
+                <div>
+                  <Label htmlFor="fpart" className="text-sm">Modelo</Label>
+                  <Input id="fpart" value={fPart} onChange={e => { setFPart(e.target.value); setProdPage(1); }} placeholder="Ex: ABC-123" className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label htmlFor="fdesc" className="text-sm">Descrição</Label>
+                  <Input id="fdesc" value={fDesc} onChange={e => { setFDesc(e.target.value); setProdPage(1); }} placeholder="Texto na descrição" className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label className="text-sm">Categoria</Label>
+                  <Select value={fCat || 'all'} onValueChange={v => { setFCat(v === 'all' ? '' : v); setFSub(''); setProdPage(1); }}>
+                    <SelectTrigger className="h-8"><SelectValue placeholder="Todas" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Subcategoria</Label>
+                  <Select value={fSub || 'all'} onValueChange={v => { setFSub(v === 'all' ? '' : v); setProdPage(1); }} disabled={!fCat}>
+                    <SelectTrigger className="h-8"><SelectValue placeholder={!fCat ? 'Selecione a categoria' : 'Todas'} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {subcategorias.filter(s => s.categoria_id === fCat).map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { setFPart(''); setFDesc(''); setFCat(''); setFSub(''); setProdPage(1); }}>Limpar</Button>
+                </div>
               </div>
             </div>
 
