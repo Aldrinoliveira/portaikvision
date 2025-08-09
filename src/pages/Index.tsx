@@ -603,7 +603,7 @@ const TopDownloads = () => {
   return <section aria-label="Top Downloads" className="space-y-3">
       <h2 className="text-xl font-semibold">Top Downloads</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map(it => <Card key={it.file?.id || it.produto_id} className="hover:shadow-md transition hover-scale animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => openFile(it.file?.link_url)} role="button" tabIndex={0} onKeyDown={e => {
+        {items.map(it => <Card key={it.file?.id || it.produto_id} className="relative hover:shadow-md transition hover-scale animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => openFile(it.file?.link_url)} role="button" tabIndex={0} onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url);
       }}>
             <CardHeader className="pb-2">
@@ -613,12 +613,9 @@ const TopDownloads = () => {
                   <CardTitle className="text-base">{it.partnumber}</CardTitle>
                   {it.descricao && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{it.descricao}</p>}
                 </div>
-                <span aria-label={`${it.total_downloads} downloads`} className="text-xs text-muted-foreground whitespace-nowrap mx-[10px]">
-                  {it.total_downloads} downloads
-                </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-8">
               <div className="min-w-0 space-y-1">
                 {it.file && <div className="text-sm">
                     <p className="font-medium truncate" title={it.file.nome_arquivo}>{it.file.nome_arquivo}</p>
@@ -626,9 +623,12 @@ const TopDownloads = () => {
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                       {it.file.categoria_arquivo === 'firmware' ? <Cpu className="h-4 w-4" /> : it.file.categoria_arquivo === 'documento' ? <FileText className="h-4 w-4" /> : it.file.categoria_arquivo === 'video' ? <Video className="h-4 w-4" /> : null}
                       <span className="capitalize">{it.file.categoria_arquivo}</span>
-                    </div>
-                  </div>}
-              </div>
+                      </div>
+                    </div>}
+                </div>
+                <div className="flex justify-end">
+                  <span aria-label={`${it.total_downloads} downloads`} className="text-xs text-muted-foreground">{it.total_downloads} downloads</span>
+                </div>
             </CardContent>
           </Card>)}
       </div>
