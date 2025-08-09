@@ -750,54 +750,54 @@ const Admin = () => {
       </div>
 
       {/* Dashboard downloads */}
-      <section aria-label="Dashboard downloads" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2">
             <CardTitle className="text-base">Downloads do dia</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-end justify-between gap-3">
+          <CardContent className="flex items-center justify-between gap-2 py-3">
             <div>
-              <div className="text-3xl font-semibold">{dailyCount}</div>
+              <div className="text-2xl font-semibold">{dailyCount}</div>
               <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
             </div>
-            <div className="min-w-[140px]">
-              <Label htmlFor="daily-date">Selecionar dia</Label>
-              <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
-            </div>
+                <div className="w-[120px]">
+                  <Label htmlFor="daily-date" className="text-xs">Selecionar dia</Label>
+                  <Input id="daily-date" type="date" value={dailyDate} onChange={(e) => setDailyDate(e.target.value)} />
+                </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2">
             <CardTitle className="text-base">Downloads do mês</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-end justify-between gap-3">
+          <CardContent className="flex items-center justify-between gap-2 py-3">
             <div>
-              <div className="text-3xl font-semibold">{monthlyCount}</div>
+              <div className="text-2xl font-semibold">{monthlyCount}</div>
               <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
             </div>
-            <div className="min-w-[140px]">
-              <Label htmlFor="month-sel">Selecionar mês</Label>
-              <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
-            </div>
+                <div className="w-[120px]">
+                  <Label htmlFor="month-sel" className="text-xs">Selecionar mês</Label>
+                  <Input id="month-sel" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
+                </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2">
             <CardTitle className="text-base">Evolução diária do mês</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="min-w-[140px]">
-              <Label htmlFor="month-sel-graph">Selecionar mês</Label>
+          <CardContent className="space-y-2">
+            <div className="w-[140px]">
+              <Label htmlFor="month-sel-graph" className="text-xs">Selecionar mês</Label>
               <Input id="month-sel-graph" type="month" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} />
             </div>
             {dailySeries.length > 0 ? (
               <ChartContainer
                 config={{ count: { label: 'Downloads', color: 'hsl(var(--primary))' } }}
-                className="h-40 w-full"
+                className="h-36 w-full"
               >
-                <LineChart data={dailySeries} margin={{ left: 12, right: 12 }}>
+                <LineChart data={dailySeries} margin={{ left: 8, right: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={12} />
+                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={11} />
                   <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
