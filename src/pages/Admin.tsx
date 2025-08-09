@@ -289,18 +289,37 @@ const Admin = () => {
   const saveCategoria = async () => {
     if (!editingCatId) return;
     setCatLoading(true);
-    const { error } = await supabase.from('categorias').update({ nome: editCatNome.trim() } as any).eq('id', editingCatId);
+    const payload = { nome: editCatNome.trim(), descricao: editCatDesc.trim() || null } as any;
+    const { error } = await supabase.from('categorias').update(payload).eq('id', editingCatId);
     if (error) toast({ title: 'Erro ao salvar categoria', description: error.message });
     else { await loadCategorias(); cancelEditCategoria(); }
     setCatLoading(false);
   };
   const deleteCategoria = async (c: Categoria) => {
     if (!confirm('Excluir esta categoria?')) return;
+    // Verifica vínculos antes de excluir
+    const { count: prodCount, error: prodErr } = await supabase
+      .from('produtos')
+      .select('id', { count: 'exact', head: true })
+      .eq('categoria_id', c.id);
+    const { count: subCount, error: subErr } = await supabase
+      .from('subcategorias')
+      .select('id', { count: 'exact', head: true })
+      .eq('categoria_id', c.id);
+
+    if (prodErr || subErr) {
+      toast({ title: 'Erro ao verificar vínculos', description: (prodErr || subErr)?.message });
+      return;
+    }
+    if ((prodCount || 0) > 0 || (subCount || 0) > 0) {
+      toast({ title: 'Não é possível excluir', description: 'Existem produtos ou subcategorias vinculados a esta categoria.' });
+      return;
+    }
+
     const { error } = await supabase.from('categorias').delete().eq('id', c.id);
     if (error) toast({ title: 'Erro ao excluir categoria', description: error.message });
     else setCategorias((prev) => prev.filter((x) => x.id !== c.id));
   };
-
   // Produtos CRUD
   const loadProdutos = async () => {
     if (!prodTotal && produtos.length === 0 && !prodListLoading) setProdListLoading(true);
@@ -703,7 +722,8 @@ const Admin = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead className="w-[180px] text-right">Ações</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[220px] text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -714,6 +734,13 @@ const Admin = () => {
                           <Input value={editCatNome} onChange={(e) => setEditCatNome(e.target.value)} placeholder="Nome" />
                         ) : (
                           <span className="font-medium">{c.nome}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
+                        {editingCatId === c.id ? (
+                          <Input value={editCatDesc} onChange={(e) => setEditCatDesc(e.target.value)} placeholder="Descrição (opcional)" />
+                        ) : (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{c.descricao}</p>
                         )}
                       </TableCell>
                       <TableCell>
@@ -735,7 +762,7 @@ const Admin = () => {
                   ))}
                   {categorias.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</TableCell>
+                      <TableCell colSpan={3} className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
