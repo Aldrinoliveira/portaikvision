@@ -1680,7 +1680,10 @@ const Admin = () => {
                                       {(prodFilesMap[p.id] || []).map((f) => (
                                         <li key={f.id} className="text-sm flex items-center justify-between">
                                           <span className="truncate pr-2">{f.nome_arquivo}</span>
-                                          <a href={f.link_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-xs">Abrir</a>
+                                          <div className="flex items-center gap-1">
+                                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => startEditProduto(p)}>Editar</Button>
+                                            <Button variant="destructive" size="sm" className="h-7 px-2 text-xs" onClick={() => deleteArquivo(f)}>Excluir</Button>
+                                          </div>
                                         </li>
                                       ))}
                                     </ul>
