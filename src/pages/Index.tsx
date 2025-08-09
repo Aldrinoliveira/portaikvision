@@ -337,10 +337,10 @@ const visibleResults = useMemo(() => {
               <CardTitle>Buscar arquivos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button variant={mode === "serie" ? "default" : "outline"} onClick={() => setMode("serie")}>Número de Série</Button>
                 <Button variant={mode === "part" ? "default" : "outline"} onClick={() => setMode("part")}>Modelo do Dispositivo</Button>
-                <Button variant="secondary" size="lg" onClick={() => { setHelpView('menu'); setOpenHelp(true); }} aria-label="Ajuda sobre como encontrar">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => { setHelpView('menu'); setOpenHelp(true); }} aria-label="Ajuda sobre como encontrar">
                   <HelpCircle className="h-5 w-5 mr-2" /> Ajuda
                 </Button>
               </div>
