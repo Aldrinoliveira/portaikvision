@@ -187,6 +187,10 @@ const Admin = () => {
   }[]>([]);
   const [seriesLoading, setSeriesLoading] = useState(false);
   
+  // Primeiro card - mes selecionado para downloads mensais
+  const [firstCardMonth, setFirstCardMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [firstCardMonthlyCount, setFirstCardMonthlyCount] = useState<number>(0);
+  
   // Contagens de arquivos e produtos
   const [arquivosCount, setArquivosCount] = useState<number>(0);
   const [produtosCount, setProdutosCount] = useState<number>(0);
@@ -1242,6 +1246,17 @@ const Admin = () => {
     if (!error) setProdutosCount(count || 0);
   };
 
+  // Carregar contagem mensal para o primeiro card
+  const loadFirstCardMonthlyCount = async () => {
+    const { start, end } = getMonthRange(firstCardMonth);
+    const { count, error } = await supabase
+      .from('download_logs')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', start)
+      .lt('created_at', end);
+    if (!error) setFirstCardMonthlyCount(count || 0);
+  };
+
   useEffect(() => {
     loadDailyCount();
   }, [dailyDate]);
@@ -1251,6 +1266,9 @@ const Admin = () => {
   useEffect(() => {
     loadDailySeries(monthSel);
   }, [monthSel]);
+  useEffect(() => {
+    loadFirstCardMonthlyCount();
+  }, [firstCardMonth]);
   const pendingCount = solicitacoes.filter(s => s.status === 'pendente').length;
   return <main className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -1274,15 +1292,35 @@ const Admin = () => {
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
           <CardHeader className="items-center text-center gap-1 px-3 py-2">
-            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do dia</CardTitle>
-            <div className="shrink-0 w-[141px] sm:w-[158px]">
-              <Label htmlFor="daily-date" className="sr-only">Dia</Label>
-              <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm" />
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads</CardTitle>
+            <div className="flex flex-col gap-1 w-full">
+              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
+                <Label htmlFor="daily-date" className="sr-only">Dia</Label>
+                <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm" />
+              </div>
+              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
+                <Label htmlFor="first-card-month" className="sr-only">Mês</Label>
+                <Input id="first-card-month" type="month" aria-label="Selecionar mês" value={firstCardMonth} onChange={e => setFirstCardMonth(e.target.value)} className="h-8 text-sm" />
+              </div>
             </div>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="text-3xl sm:text-4xl font-semibold">{dailyCount}</div>
-            <p className="text-sm text-muted-foreground">Total no dia selecionado</p>
+            <div className="space-y-3">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-semibold">{dailyCount}</div>
+                <p className="text-xs text-muted-foreground">Downloads do dia</p>
+              </div>
+              <div className="text-center">
+                <div className={`text-2xl sm:text-3xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : ''}`}>
+                  {firstCardMonthlyCount}
+                </div>
+                <p className="text-xs text-muted-foreground">Downloads do mês</p>
+                {firstCardMonthlyCount > 3000 && (
+                  <p className="text-xs text-red-600 font-medium mt-1">Limite mensal ultrapassado</p>
+                )}
+                <p className="text-xs text-muted-foreground">({firstCardMonthlyCount}/3000)</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
