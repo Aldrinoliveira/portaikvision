@@ -27,11 +27,17 @@ function base64UrlEncode(input: string | ArrayBuffer): string {
 
 async function importPrivateKey(pem: string): Promise<CryptoKey> {
   // Support keys with literal "\n" characters (commonly stored in secrets)
-  const normalized = pem.replace(/\\n/g, "\n");
-  const pemContents = normalized
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\r?\n|\s/g, "");
+  const normalized = pem.trim().replace(/\\n/g, "\n");
+  let pemContents: string;
+  if (normalized.includes("BEGIN PRIVATE KEY")) {
+    pemContents = normalized
+      .replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replace(/\r?\n|\s/g, "");
+  } else {
+    // Assume it's a raw base64-encoded PKCS8 key without headers
+    pemContents = normalized.replace(/\r?\n|\s|\"/g, "");
+  }
   const raw = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
   return crypto.subtle.importKey(
     "pkcs8",
@@ -40,6 +46,34 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
     false,
     ["sign"],
   );
+}
+
+function extractCreds(emailEnv?: string | null, keyEnv?: string | null) {
+  let email = emailEnv || undefined;
+  let privateKey = keyEnv || undefined;
+  if (privateKey) {
+    const trimmed = privateKey.trim();
+    if (trimmed.startsWith('{')) {
+      try {
+        const json = JSON.parse(trimmed);
+        privateKey = json.private_key;
+        if (!email && json.client_email) email = json.client_email;
+      } catch (_) { /* ignore */ }
+    } else {
+      // Some setups store the JSON as base64
+      try {
+        const decoded = atob(trimmed);
+        if (decoded.startsWith('{')) {
+          const json = JSON.parse(decoded);
+          privateKey = json.private_key;
+          if (!email && json.client_email) email = json.client_email;
+        }
+      } catch (_) { /* ignore */ }
+    }
+  }
+  if (!privateKey) throw new Error("Missing Google Drive configuration secrets (private key).");
+  if (!email) throw new Error("Missing Google Drive configuration secrets (service account email).");
+  return { email, privateKey } as { email: string; privateKey: string };
 }
 
 async function getAccessToken(email: string, privateKeyPem: string, scopes: string[]): Promise<string> {
@@ -86,12 +120,14 @@ async function getAccessToken(email: string, privateKeyPem: string, scopes: stri
 }
 
 async function uploadToDrive(params: { filename: string; mimeType: string; base64: string }) {
-  const serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  const privateKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
   const folderId = Deno.env.get("GOOGLE_DRIVE_FOLDER_ID");
+  const { email: serviceEmail, privateKey } = extractCreds(
+    Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
+    Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"),
+  );
 
-  if (!serviceEmail || !privateKey || !folderId) {
-    throw new Error("Missing Google Drive configuration secrets.");
+  if (!folderId) {
+    throw new Error("Missing Google Drive configuration secrets (folder id).");
   }
 
   const accessToken = await getAccessToken(
@@ -103,8 +139,16 @@ async function uploadToDrive(params: { filename: string; mimeType: string; base6
     ],
   );
 
+  // Validate size (limit ~15MB to avoid memory issues)
+  const b64 = (params.base64 || "").trim();
+  const estimatedBytes = Math.floor(b64.length * 3 / 4) - (b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0);
+  const MAX_BYTES = 15 * 1024 * 1024;
+  if (estimatedBytes > MAX_BYTES) {
+    throw new Error("O arquivo excede o limite de 15MB para upload via Edge Function.");
+  }
+
   // Decode base64 to bytes
-  const fileBytes = Uint8Array.from(atob(params.base64), (c) => c.charCodeAt(0));
+  const fileBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
   // Build multipart request using FormData (metadata + file)
   const metadata = {
