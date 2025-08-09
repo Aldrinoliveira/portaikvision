@@ -289,11 +289,11 @@ const Index = () => {
                 {banners.map(b => <CarouselItem key={b.id}>
                     {b.link_redirecionamento?.startsWith('/') ? <Link to={b.link_redirecionamento}>
                         <div className="relative">
-                          <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md" />
+                          <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-contain md:object-cover rounded-md" />
                         </div>
                       </Link> : <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
                         <div className="relative">
-                          <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-cover rounded-md" />
+                          <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-contain md:object-cover rounded-md" />
                         </div>
                       </a>}
                   </CarouselItem>)}
