@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Software from "./pages/Software";
 import Ferramentas from "./pages/Ferramentas";
+import DropboxUpload from "./pages/DropboxUpload";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,7 @@ const App = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="/software" element={<Software />} />
             <Route path="/ferramentas" element={<Ferramentas />} />
+            <Route path="/dropbox" element={<DropboxUpload />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -57,3 +60,4 @@ const App = () => {
 };
 
 export default App;
+
