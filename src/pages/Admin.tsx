@@ -1015,65 +1015,6 @@ const Admin = () => {
         </Card>
       </section>
 
-      {/* Solicitações (Não encontrei) */}
-      <section className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Solicitações (Não encontrei)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {solLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando solicitações...</p>
-            ) : solicitacoes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p>
-            ) : (
-              <div className="w-full overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Telefone</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Produto</TableHead>
-                      <TableHead>Nº de Série</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {solicitacoes.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-medium">{s.nome || '-'}</TableCell>
-                        <TableCell>{s.telefone || '-'}</TableCell>
-                        <TableCell>{s.email || '-'}</TableCell>
-                        <TableCell className="min-w-[160px]">{s.produto_nome || '-'}</TableCell>
-                        <TableCell>{s.numero_serie || '-'}</TableCell>
-                        <TableCell className="min-w-[220px]"><p className="text-sm text-muted-foreground line-clamp-2" title={s.descricao || ''}>{s.descricao || '-'}</p></TableCell>
-                        <TableCell className="min-w-[160px]">
-                          <Select value={s.status} onValueChange={(v) => updateSolicitacaoStatus(s.id, v)}>
-                            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pendente">Pendente</SelectItem>
-                              <SelectItem value="em_andamento">Em andamento</SelectItem>
-                              <SelectItem value="finalizado">Finalizado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="secondary" onClick={() => finalizeSolicitacao(s.id)}>Finalizar</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
 
        {/* Arquivos */}
        <section className="space-y-4">
@@ -1237,6 +1178,66 @@ const Admin = () => {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Solicitações (Não encontrei) */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Solicitações (Não encontrei)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {solLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando solicitações...</p>
+            ) : solicitacoes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p>
+            ) : (
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Nº de Série</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {solicitacoes.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.nome || '-'}</TableCell>
+                        <TableCell>{s.telefone || '-'}</TableCell>
+                        <TableCell>{s.email || '-'}</TableCell>
+                        <TableCell className="min-w-[160px]">{s.produto_nome || '-'}</TableCell>
+                        <TableCell>{s.numero_serie || '-'}</TableCell>
+                        <TableCell className="min-w-[220px]"><p className="text-sm text-muted-foreground line-clamp-2" title={s.descricao || ''}>{s.descricao || '-'}</p></TableCell>
+                        <TableCell className="min-w-[160px]">
+                          <Select value={s.status} onValueChange={(v) => updateSolicitacaoStatus(s.id, v)}>
+                            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pendente">Pendente</SelectItem>
+                              <SelectItem value="em_andamento">Em andamento</SelectItem>
+                              <SelectItem value="finalizado">Finalizado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="secondary" onClick={() => finalizeSolicitacao(s.id)}>Finalizar</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>
