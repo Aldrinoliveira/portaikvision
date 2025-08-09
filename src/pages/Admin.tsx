@@ -186,6 +186,10 @@ const Admin = () => {
     count: number;
   }[]>([]);
   const [seriesLoading, setSeriesLoading] = useState(false);
+  
+  // Contagens de arquivos e produtos
+  const [arquivosCount, setArquivosCount] = useState<number>(0);
+  const [produtosCount, setProdutosCount] = useState<number>(0);
 
   // Site Settings (banner textos)
   type SiteSettings = {
@@ -226,7 +230,7 @@ const Admin = () => {
         return;
       }
       setUserEmail(session.user.email || null);
-      await Promise.all([loadBanners(), loadCategorias(), loadSubcategorias(), loadProdutos(), loadAllProds(), loadArquivos(), loadNumerosSerie(), loadSiteSettings(), loadSolicitacoes()]);
+      await Promise.all([loadBanners(), loadCategorias(), loadSubcategorias(), loadProdutos(), loadAllProds(), loadArquivos(), loadNumerosSerie(), loadSiteSettings(), loadSolicitacoes(), loadArquivosCount(), loadProdutosCount()]);
     };
     init();
   }, [navigate]);
@@ -692,7 +696,7 @@ const Admin = () => {
       setPImg('');
       setPCat('');
       setPSub('');
-      await loadProdutos();
+      await Promise.all([loadProdutos(), loadProdutosCount()]);
     }
     setProdLoading(false);
   };
@@ -742,7 +746,10 @@ const Admin = () => {
     if (error) toast({
       title: 'Erro ao excluir produto',
       description: error.message
-    });else setProdutos(prev => prev.filter(x => x.id !== p.id));
+    });else {
+      setProdutos(prev => prev.filter(x => x.id !== p.id));
+      loadProdutosCount();
+    }
   };
   useEffect(() => {
     loadProdutos();
@@ -1023,6 +1030,7 @@ const Admin = () => {
         title: 'Arquivo excluído'
       });
       setArquivos(prev => prev.filter(x => x.id !== a.id));
+      loadArquivosCount();
     }
   };
   const toggleArquivoListado = async (a: Arquivo) => {
@@ -1080,7 +1088,7 @@ const Admin = () => {
       setADesc('');
       setALink('');
       setANaoListado(false);
-      await loadArquivos();
+      await Promise.all([loadArquivos(), loadArquivosCount()]);
     }
     setALoading(false);
   };
@@ -1218,6 +1226,22 @@ const Admin = () => {
       setSeriesLoading(false);
     }
   };
+  
+  // Carregar contagens de arquivos e produtos
+  const loadArquivosCount = async () => {
+    const { count, error } = await supabase
+      .from('arquivos')
+      .select('id', { count: 'exact', head: true });
+    if (!error) setArquivosCount(count || 0);
+  };
+
+  const loadProdutosCount = async () => {
+    const { count, error } = await supabase
+      .from('produtos')
+      .select('id', { count: 'exact', head: true });
+    if (!error) setProdutosCount(count || 0);
+  };
+
   useEffect(() => {
     loadDailyCount();
   }, [dailyDate]);
@@ -1263,15 +1287,19 @@ const Admin = () => {
         </Card>
         <Card>
           <CardHeader className="items-center text-center gap-1 px-3 py-2">
-            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
-            <div className="shrink-0 w-[141px] sm:w-[158px]">
-              <Label htmlFor="month-sel" className="sr-only">Mês</Label>
-              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={e => setMonthSel(e.target.value)} className="h-8 text-sm" />
-            </div>
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Arquivos e Produtos</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="text-3xl sm:text-4xl font-semibold">{monthlyCount}</div>
-            <p className="text-sm text-muted-foreground">Total no mês selecionado</p>
+            <div className="space-y-3">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-semibold">{arquivosCount}</div>
+                <p className="text-xs text-muted-foreground">Arquivos cadastrados</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-semibold">{produtosCount}</div>
+                <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
