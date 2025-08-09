@@ -324,7 +324,7 @@ const Index = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
                 <Button variant={mode === "serie" ? "default" : "outline"} onClick={() => setMode("serie")}>Número de Série</Button>
-                <Button variant={mode === "part" ? "default" : "outline"} onClick={() => setMode("part")}>Part Number</Button>
+                <Button variant={mode === "part" ? "default" : "outline"} onClick={() => setMode("part")}>Modelo do Dispositivo</Button>
               </div>
               <div className="flex flex-col md:flex-row items-stretch gap-3">
                 <div className="flex-1 relative">
@@ -345,7 +345,7 @@ const Index = () => {
                 <Button onClick={onSearch} disabled={loading}>
                   <Search className="h-4 w-4 mr-2" /> {loading ? "Buscando..." : "Buscar"}
                 </Button>
-                <Button variant="outline" onClick={() => setOpenRequest(true)}>Não encontrei um firmware</Button>
+                <Button variant="outline" onClick={() => setOpenRequest(true)}>Não Encontrei</Button>
               </div>
             </CardContent>
           </Card>
