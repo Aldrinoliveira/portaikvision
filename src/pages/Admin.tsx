@@ -769,7 +769,7 @@ const Admin = () => {
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
             <div className="w-32 sm:w-36 mt-1 relative">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
-              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8" />
+              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8 relative z-10 cursor-pointer" />
               <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
           </CardHeader>
@@ -783,7 +783,7 @@ const Admin = () => {
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
             <div className="w-32 sm:w-40 mt-1 relative">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
-              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8" />
+              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8 relative z-10 cursor-pointer" />
               <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
           </CardHeader>
