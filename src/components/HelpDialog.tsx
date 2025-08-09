@@ -12,11 +12,6 @@ const HelpDialog = ({ open, onOpenChange }: HelpDialogProps) => {
   const [view, setView] = useState<"menu" | "serie" | "part">("menu");
 
   const helpSerieHtml = `
-<h3>
-    <strong>Como encontrar o número de série na etiqueta do produto?</strong>
-</h3>
-
-
 <p>
     <br>
     <strong>Como encontrar o número de série na etiqueta do produto?</strong>
@@ -61,9 +56,6 @@ const HelpDialog = ({ open, onOpenChange }: HelpDialogProps) => {
 `;
 
   const helpPartHtml = `
-<h3 style="-webkit-text-stroke-width:0px;color:rgb(0, 0, 0);font-family:&quot;Times New Roman&quot;;font-style:normal;font-variant-caps:normal;font-variant-ligatures:normal;letter-spacing:normal;orphans:2;text-align:start;text-decoration-color:initial;text-decoration-style:initial;text-decoration-thickness:initial;text-indent:0px;text-transform:none;white-space:normal;widows:2;word-spacing:0px;">
-    <strong>Como encontrar o número de série na etiqueta do produto?</strong>
-</h3>
 <p style="-webkit-text-stroke-width:0px;color:rgb(0, 0, 0);font-family:&quot;Times New Roman&quot;;font-size:medium;font-style:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-weight:400;letter-spacing:normal;orphans:2;text-align:start;text-decoration-color:initial;text-decoration-style:initial;text-decoration-thickness:initial;text-indent:0px;text-transform:none;white-space:normal;widows:2;word-spacing:0px;">
     <strong>Como encontrar o modelo do dispositivo na etiqueta do produto?</strong>
 </p>
