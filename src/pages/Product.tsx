@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 
@@ -25,8 +26,8 @@ const Product = () => {
   const navigate = useNavigate();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   
-
   useSEO("Produto – Arquivos", "Veja firmwares, documentos e vídeos para o produto.");
 
   useEffect(() => {
@@ -70,43 +71,88 @@ const Product = () => {
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
       </div>
-      <section className="grid md:grid-cols-2 gap-6 items-start">
+      <section className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         {produto.imagem_url && (
-          <img src={produto.imagem_url} alt={`Imagem do produto ${produto.partnumber}`} className="w-28 h-28 md:w-40 md:h-40 rounded-md object-cover" loading="lazy" />
+          <img
+            src={produto.imagem_url}
+            alt={`Imagem do produto ${produto.partnumber}`}
+            className="w-28 h-28 md:w-40 md:h-40 rounded-md object-cover"
+            loading="lazy"
+          />
         )}
-        <div>
+        <div className="space-y-1">
           <h1 className="text-2xl font-semibold">{produto.partnumber}</h1>
-          <p className="text-muted-foreground mt-2">{produto.descricao}</p>
+          {produto.descricao && <p className="text-muted-foreground">{produto.descricao}</p>}
         </div>
       </section>
+
+      <div className="flex justify-end">
+        <ToggleGroup
+          type="single"
+          value={viewMode}
+          onValueChange={(v) => v && setViewMode(v as "cards" | "list")}
+          aria-label="Modo de visualização"
+        >
+          <ToggleGroupItem value="cards" aria-label="Cards">
+            <LayoutGrid className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list" aria-label="Lista">
+            <List className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
       {(["firmware", "documento", "video"] as const).map((cat) => (
         <section key={cat} className="space-y-3">
           <h2 className="text-xl font-semibold capitalize">{cat}</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(grouped[cat] || []).map((a) => (
-              <Card key={a.id} className="hover:shadow-md transition">
-                <CardHeader>
-                  <CardTitle className="text-base">{a.nome_arquivo}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {a.descricao && (
-                    <p className="text-sm text-muted-foreground">{a.descricao}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <Button onClick={() => handleDownload(a)}>Download</Button>
-                    <div className="text-right">
-                      <span className="block text-xs text-muted-foreground">{a.downloads} downloads</span>
-                      <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
+          {viewMode === "cards" ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(grouped[cat] || []).map((a) => (
+                <Card key={a.id} className="hover:shadow-md transition">
+                  <CardHeader>
+                    <CardTitle className="text-base">{a.nome_arquivo}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {a.descricao && (
+                      <p className="text-sm text-muted-foreground">{a.descricao}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <Button onClick={() => handleDownload(a)}>Download</Button>
+                      <div className="text-right">
+                        <span className="block text-xs text-muted-foreground">{a.downloads} downloads</span>
+                        <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {(grouped[cat] || []).length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum arquivo de {cat}.</p>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-md border divide-y">
+              {(grouped[cat] || []).map((a) => (
+                <div key={a.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{a.nome_arquivo}</p>
+                    {a.descricao && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
+                    )}
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {a.downloads} downloads • Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-            {(grouped[cat] || []).length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum arquivo de {cat}.</p>
-            )}
-          </div>
+                  <div className="flex-shrink-0">
+                    <Button onClick={() => handleDownload(a)}>Download</Button>
+                  </div>
+                </div>
+              ))}
+              {(grouped[cat] || []).length === 0 && (
+                <p className="text-sm text-muted-foreground p-3">Nenhum arquivo de {cat}.</p>
+              )}
+            </div>
+          )}
         </section>
       ))}
 
