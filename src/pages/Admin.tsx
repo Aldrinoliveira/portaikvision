@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Bell } from "lucide-react";
+import { Copy, Bell, Calendar } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 const Admin = () => {
@@ -765,11 +765,12 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex items-center gap-2 px-3 py-2">
+          <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads do mês</CardTitle>
-            <div className="ml-auto shrink-0 w-32 sm:w-36">
+            <div className="w-32 sm:w-36 mt-1 relative">
               <Label htmlFor="month-sel" className="sr-only">Mês</Label>
-              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm" />
+              <Input id="month-sel" type="month" aria-label="Selecionar mês" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8" />
+              <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
           </CardHeader>
           <CardContent className="py-3">
@@ -778,11 +779,12 @@ const Admin = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex items-center gap-2 px-3 py-2">
+          <CardHeader className="items-start px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
-            <div className="ml-auto shrink-0 w-32 sm:w-40">
+            <div className="w-32 sm:w-40 mt-1 relative">
               <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
-              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm" />
+              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={(e) => setMonthSel(e.target.value)} className="h-8 text-sm pr-8" />
+              <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
           </CardHeader>
           <CardContent className="px-3 pt-2 overflow-hidden">
