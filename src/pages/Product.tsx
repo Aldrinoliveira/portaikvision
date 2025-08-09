@@ -104,7 +104,7 @@ const Product = () => {
 
       {(["firmware", "documento", "video"] as const).map((cat) => (
         <section key={cat} className="space-y-3">
-          <h2 className="text-xl font-semibold capitalize">{cat}</h2>
+          <h2 className="text-xl font-semibold capitalize">{cat === "firmware" ? "Arquivos" : cat}</h2>
           {viewMode === "cards" ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {(grouped[cat] || []).map((a) => (
