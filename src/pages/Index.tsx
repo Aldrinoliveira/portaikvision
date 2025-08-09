@@ -6,16 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { toast } from "@/hooks/use-toast";
-import { QrCode, HelpCircle, Search, Cpu, FileText, Video, X } from "lucide-react";
+import { QrCode, HelpCircle, Search, Cpu, FileText, Video, X, Tag } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import Autoplay from "embla-carousel-autoplay";
 import { Skeleton } from "@/components/ui/skeleton";
 import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
+import HelpDialog from "@/components/HelpDialog";
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
@@ -68,6 +69,10 @@ const Index = () => {
   const [reqSerie, setReqSerie] = useState("");
   const [reqProduto, setReqProduto] = useState("");
   const [reqDesc, setReqDesc] = useState("");
+
+  // Ajuda modal
+  const [openHelp, setOpenHelp] = useState(false);
+  const [helpView, setHelpView] = useState<"menu" | "serie" | "part">("menu");
 
   // QR Code modal
   const [openQR, setOpenQR] = useState(false);
@@ -306,25 +311,16 @@ const Index = () => {
         {/* Busca */}
         <section aria-label="Busca">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Buscar arquivos</CardTitle>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Ajuda">
-                      <HelpCircle className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Encontre o número de série no produto ou o part number na etiqueta da caixa.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
                 <Button variant={mode === "serie" ? "default" : "outline"} onClick={() => setMode("serie")}>Número de Série</Button>
                 <Button variant={mode === "part" ? "default" : "outline"} onClick={() => setMode("part")}>Modelo do Dispositivo</Button>
+                <Button variant="secondary" size="lg" onClick={() => { setHelpView('menu'); setOpenHelp(true); }} aria-label="Ajuda sobre como encontrar">
+                  <HelpCircle className="h-5 w-5 mr-2" /> Ajuda
+                </Button>
               </div>
               <div className="flex flex-col md:flex-row items-stretch gap-3">
                 <div className="flex-1 relative">
@@ -430,6 +426,9 @@ const Index = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Ajuda */}
+      <HelpDialog open={openHelp} onOpenChange={setOpenHelp} />
 
       {/* Dialog Solicitação */}
       <Dialog open={openRequest} onOpenChange={setOpenRequest}>
