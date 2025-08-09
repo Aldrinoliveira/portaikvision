@@ -97,6 +97,16 @@ const Admin = () => {
   const [editCatNome, setEditCatNome] = useState("");
   const [editCatDesc, setEditCatDesc] = useState("");
   const [catLoading, setCatLoading] = useState(false);
+  // Subcategoria form
+  const [subCat, setSubCat] = useState<string>("");
+  const [subNome, setSubNome] = useState("");
+  const [subDesc, setSubDesc] = useState("");
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [editSubCat, setEditSubCat] = useState<string>("");
+  const [editSubNome, setEditSubNome] = useState("");
+  const [editSubDesc, setEditSubDesc] = useState("");
+  const [subLoading, setSubLoading] = useState(false);
+
   // Produto form
   const [pPart, setPPart] = useState("");
   const [pDesc, setPDesc] = useState("");
@@ -424,6 +434,86 @@ const Admin = () => {
       return;
     }
     setSubcategorias(data as any || []);
+  };
+
+  // Subcategorias CRUD
+  const createSubcategoria = async () => {
+    if (!subCat || !subNome.trim()) {
+      toast({ title: 'Preencha os campos', description: 'Categoria e Nome são obrigatórios.' });
+      return;
+    }
+    setSubLoading(true);
+    const { error } = await supabase.from('subcategorias').insert({
+      categoria_id: subCat,
+      nome: subNome.trim(),
+      descricao: subDesc.trim() || null,
+    } as any);
+    if (error) {
+      toast({ title: 'Erro ao criar subcategoria', description: error.message });
+    } else {
+      setSubCat('');
+      setSubNome('');
+      setSubDesc('');
+      await loadSubcategorias();
+    }
+    setSubLoading(false);
+  };
+
+  const startEditSubcategoria = (s: Subcategoria) => {
+    setEditingSubId(s.id);
+    setEditSubCat(s.categoria_id);
+    setEditSubNome(s.nome);
+    setEditSubDesc(s.descricao || '');
+  };
+
+  const cancelEditSubcategoria = () => {
+    setEditingSubId(null);
+    setEditSubCat('');
+    setEditSubNome('');
+    setEditSubDesc('');
+  };
+
+  const saveSubcategoria = async () => {
+    if (!editingSubId) return;
+    if (!editSubCat || !editSubNome.trim()) {
+      toast({ title: 'Preencha os campos', description: 'Categoria e Nome são obrigatórios.' });
+      return;
+    }
+    setSubLoading(true);
+    const { error } = await supabase.from('subcategorias').update({
+      categoria_id: editSubCat,
+      nome: editSubNome.trim(),
+      descricao: editSubDesc.trim() || null,
+    }).eq('id', editingSubId);
+    if (error) {
+      toast({ title: 'Erro ao salvar subcategoria', description: error.message });
+    } else {
+      await loadSubcategorias();
+      cancelEditSubcategoria();
+    }
+    setSubLoading(false);
+  };
+
+  const deleteSubcategoria = async (s: Subcategoria) => {
+    if (!confirm('Excluir esta subcategoria?')) return;
+    const { count, error: cntErr } = await supabase
+      .from('produtos')
+      .select('id', { count: 'exact', head: true })
+      .eq('subcategoria_id', s.id);
+    if (cntErr) {
+      toast({ title: 'Erro ao verificar vínculos', description: cntErr.message });
+      return;
+    }
+    if ((count || 0) > 0) {
+      toast({ title: 'Não é possível excluir', description: 'Existem produtos vinculados a esta subcategoria.' });
+      return;
+    }
+    const { error } = await supabase.from('subcategorias').delete().eq('id', s.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir subcategoria', description: error.message });
+    } else {
+      setSubcategorias(prev => prev.filter(x => x.id !== s.id));
+    }
   };
   const createCategoria = async () => {
     if (!catNome.trim()) {
@@ -1272,6 +1362,108 @@ const Admin = () => {
                   {categorias.length === 0 && <TableRow>
                       <TableCell colSpan={3} className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</TableCell>
                     </TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Subcategorias */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Subcategorias</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-4 gap-3">
+              <div>
+                <Label>Categoria</Label>
+                <Select value={subCat} onValueChange={setSubCat}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                  <SelectContent>
+                    {categorias.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="subnome">Nome</Label>
+                <Input id="subnome" value={subNome} onChange={e => setSubNome(e.target.value)} placeholder="Nome da subcategoria" />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="subdesc">Descrição (opcional)</Label>
+                <Input id="subdesc" value={subDesc} onChange={e => setSubDesc(e.target.value)} placeholder="Descrição da subcategoria" />
+              </div>
+              <div className="md:col-span-4">
+                <Button onClick={createSubcategoria} disabled={subLoading || !subCat || !subNome.trim()}>Criar subcategoria</Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {subcategorias.map(s => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        {editingSubId === s.id ? (
+                          <Input value={editSubNome} onChange={e => setEditSubNome(e.target.value)} placeholder="Nome" />
+                        ) : (
+                          <span className="font-medium">{s.nome}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
+                        {editingSubId === s.id ? (
+                          <Input value={editSubDesc} onChange={e => setEditSubDesc(e.target.value)} placeholder="Descrição (opcional)" />
+                        ) : (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{s.descricao}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="min-w-[200px]">
+                        {editingSubId === s.id ? (
+                          <Select value={editSubCat} onValueChange={setEditSubCat}>
+                            <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
+                            <SelectContent>
+                              {categorias.map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          categorias.find(c => c.id === s.categoria_id)?.nome || '-'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          {editingSubId === s.id ? (
+                            <>
+                              <Button size="sm" onClick={saveSubcategoria} disabled={subLoading || !editSubCat || !editSubNome.trim()}>Salvar</Button>
+                              <Button size="sm" variant="outline" onClick={cancelEditSubcategoria}>Cancelar</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="secondary" onClick={() => startEditSubcategoria(s)}>Editar</Button>
+                              <Button size="sm" variant="destructive" onClick={() => deleteSubcategoria(s)}>Excluir</Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {subcategorias.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-sm text-muted-foreground">Nenhuma subcategoria cadastrada.</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
