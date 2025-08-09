@@ -86,6 +86,8 @@ const Admin = () => {
   const [editALink, setEditALink] = useState("");
   const [arqLoading, setArqLoading] = useState(false);
   const [editADesc, setEditADesc] = useState("");
+  const [gArqFile, setGArqFile] = useState<File | null>(null);
+  const [gUploading, setGUploading] = useState(false);
 
   // Números de Série form/lista
   const [nsProduto, setNsProduto] = useState<string>("");
@@ -580,6 +582,41 @@ const Admin = () => {
     }
     setALoading(false);
   };
+  const uploadArquivoToDrive = async () => {
+    if (!aProd || !gArqFile) {
+      toast({ title: 'Selecione produto e arquivo', description: 'Escolha o produto e um arquivo para enviar ao Google Drive.' });
+      return;
+    }
+    try {
+      setGUploading(true);
+      const base64 = await fileToBase64(gArqFile);
+      const { data, error } = await supabase.functions.invoke('gdrive', {
+        body: {
+          action: 'upload',
+          productId: aProd,
+          fileName: gArqFile.name,
+          contentType: gArqFile.type || 'application/octet-stream',
+          fileBase64: base64,
+        },
+      });
+      if (error) {
+        toast({ title: 'Erro no upload', description: (error as any)?.message || 'Não foi possível enviar para o Drive.' });
+        return;
+      }
+      const publicUrl = (data as any)?.file?.publicUrl as string | undefined;
+      if (publicUrl) {
+        setALink(publicUrl);
+        if (!aNome) setANome(gArqFile.name);
+        toast({ title: 'Upload concluído', description: 'Link preenchido automaticamente.' });
+      } else {
+        toast({ title: 'Upload concluído', description: 'Arquivo enviado, mas não obtivemos o link público.' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Erro inesperado', description: e?.message || String(e) });
+    } finally {
+      setGUploading(false);
+    }
+  };
 
   // Google Drive
   const listFiles = async () => {
@@ -1057,6 +1094,16 @@ const Admin = () => {
               <div className="md:col-span-2">
                 <Label htmlFor="alink">Link URL</Label>
                 <Input id="alink" value={aLink} onChange={(e) => setALink(e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="gdupload">Upload para Google Drive</Label>
+                <div className="flex items-center gap-2">
+                  <Input id="gdupload" type="file" onChange={(e) => setGArqFile(e.target.files?.[0] || null)} />
+                  <Button variant="secondary" onClick={uploadArquivoToDrive} disabled={!aProd || !gArqFile || gUploading}>
+                    {gUploading ? 'Enviando...' : 'Enviar'}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">O link será preenchido automaticamente após o upload.</p>
               </div>
               <div className="flex items-center gap-2 md:col-span-2">
                 <Switch id="anaolistado" checked={aNaoListado} onCheckedChange={setANaoListado} />
