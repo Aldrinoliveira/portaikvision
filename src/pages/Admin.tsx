@@ -22,6 +22,7 @@ const Admin = () => {
   type Produto = { id: string; partnumber: string; descricao: string | null; imagem_url: string | null; categoria_id: string; subcategoria_id: string | null };
   type Arquivo = { id: string; produto_id: string; nome_arquivo: string; descricao: string | null; categoria_arquivo: string; link_url: string; downloads: number; created_at: string; listado: boolean };
   type NumeroSerie = { id: string; produto_id: string; numero_serie: string; created_at: string };
+  type Solicitacao = { id: string; created_at: string; numero_serie: string | null; produto_nome: string | null; descricao: string | null; status: string; nome: string | null; telefone: string | null; email: string | null };
   // State
   // Banners
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -89,7 +90,11 @@ const Admin = () => {
   const [nsLoading, setNsLoading] = useState(false);
   const [numerosSerie, setNumerosSerie] = useState<NumeroSerie[]>([]);
   const [nsListLoading, setNsListLoading] = useState(false);
-
+ 
+  // Solicitações (Não Encontrei)
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [solLoading, setSolLoading] = useState(false);
+ 
   // Site Settings (banner textos)
   type SiteSettings = {
     id: string;
@@ -136,6 +141,7 @@ const Admin = () => {
         loadArquivos(),
         loadNumerosSerie(),
         loadSiteSettings(),
+        loadSolicitacoes(),
       ]);
     };
     init();
@@ -434,8 +440,38 @@ const Admin = () => {
     }
     setNsListLoading(false);
   };
+ 
+  // Solicitações (listagem e ações)
+  const loadSolicitacoes = async () => {
+    setSolLoading(true);
+    const { data, error } = await supabase
+      .from('solicitacoes_firmware')
+      .select('id, created_at, numero_serie, produto_nome, descricao, status, nome, telefone, email')
+      .neq('status', 'finalizado')
+      .order('created_at', { ascending: false });
+    if (error) {
+      toast({ title: 'Erro ao carregar solicitações', description: error.message });
+      setSolicitacoes([]);
+    } else {
+      setSolicitacoes((data as any) || []);
+    }
+    setSolLoading(false);
+  };
 
-  // Números de Série (create)
+  const updateSolicitacaoStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from('solicitacoes_firmware').update({ status }).eq('id', id);
+    if (error) {
+      toast({ title: 'Erro ao atualizar status', description: error.message });
+    } else {
+      setSolicitacoes((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)).filter((s) => s.status !== 'finalizado'));
+    }
+  };
+
+  const finalizeSolicitacao = async (id: string) => {
+    await updateSolicitacaoStatus(id, 'finalizado');
+  };
+
+   // Números de Série (create)
   const createNumeroSerie = async () => {
     if (!nsProduto || !nsNumero.trim()) {
       toast({ title: 'Preencha os campos', description: 'Produto e Número de Série são obrigatórios.' });
@@ -979,8 +1015,68 @@ const Admin = () => {
         </Card>
       </section>
 
-      {/* Arquivos */}
+      {/* Solicitações (Não encontrei) */}
       <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Solicitações (Não encontrei)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {solLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando solicitações...</p>
+            ) : solicitacoes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p>
+            ) : (
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Nº de Série</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {solicitacoes.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.nome || '-'}</TableCell>
+                        <TableCell>{s.telefone || '-'}</TableCell>
+                        <TableCell>{s.email || '-'}</TableCell>
+                        <TableCell className="min-w-[160px]">{s.produto_nome || '-'}</TableCell>
+                        <TableCell>{s.numero_serie || '-'}</TableCell>
+                        <TableCell className="min-w-[220px]"><p className="text-sm text-muted-foreground line-clamp-2" title={s.descricao || ''}>{s.descricao || '-'}</p></TableCell>
+                        <TableCell className="min-w-[160px]">
+                          <Select value={s.status} onValueChange={(v) => updateSolicitacaoStatus(s.id, v)}>
+                            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pendente">Pendente</SelectItem>
+                              <SelectItem value="em_andamento">Em andamento</SelectItem>
+                              <SelectItem value="finalizado">Finalizado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="secondary" onClick={() => finalizeSolicitacao(s.id)}>Finalizar</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+       {/* Arquivos */}
+       <section className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Arquivos</CardTitle>

@@ -69,6 +69,9 @@ const Index = () => {
   const [reqSerie, setReqSerie] = useState("");
   const [reqProduto, setReqProduto] = useState("");
   const [reqDesc, setReqDesc] = useState("");
+  const [reqNome, setReqNome] = useState("");
+  const [reqTelefone, setReqTelefone] = useState("");
+  const [reqEmail, setReqEmail] = useState("");
 
   // Ajuda modal
   const [openHelp, setOpenHelp] = useState(false);
@@ -223,25 +226,23 @@ const Index = () => {
     const payload = {
       numero_serie: reqSerie || null,
       produto_nome: reqProduto || null,
-      descricao: reqDesc || null
+      descricao: reqDesc || null,
+      nome: reqNome || null,
+      telefone: reqTelefone || null,
+      email: reqEmail || null,
     };
-    const {
-      error
-    } = await supabase.from("solicitacoes_firmware").insert(payload as any);
+    const { error } = await supabase.from("solicitacoes_firmware").insert(payload as any);
     if (error) {
-      toast({
-        title: "Erro ao enviar",
-        description: error.message
-      });
+      toast({ title: "Erro ao enviar", description: error.message });
     } else {
-      toast({
-        title: "Solicitação enviada",
-        description: "Obrigado! Entraremos em contato."
-      });
+      toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
       setOpenRequest(false);
       setReqDesc("");
       setReqProduto("");
       setReqSerie("");
+      setReqNome("");
+      setReqTelefone("");
+      setReqEmail("");
     }
   };
   useEffect(() => {
@@ -439,15 +440,27 @@ const Index = () => {
           <div className="grid gap-3 py-2">
             <div className="grid gap-1">
               <Label htmlFor="reqserie">Número de Série (opcional)</Label>
-              <Input id="reqserie" value={reqSerie} onChange={e => setReqSerie(e.target.value)} maxLength={9} />
+              <Input id="reqserie" value={reqSerie} onChange={(e) => setReqSerie(e.target.value)} maxLength={9} />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="reqprod">Nome do Produto (opcional)</Label>
-              <Input id="reqprod" value={reqProduto} onChange={e => setReqProduto(e.target.value)} />
+              <Input id="reqprod" value={reqProduto} onChange={(e) => setReqProduto(e.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="reqnome">Seu nome</Label>
+              <Input id="reqnome" value={reqNome} onChange={(e) => setReqNome(e.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="reqtel">Telefone</Label>
+              <Input id="reqtel" value={reqTelefone} onChange={(e) => setReqTelefone(e.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="reqemail">Email</Label>
+              <Input id="reqemail" type="email" value={reqEmail} onChange={(e) => setReqEmail(e.target.value)} />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="reqdesc">Descrição</Label>
-              <Input id="reqdesc" value={reqDesc} onChange={e => setReqDesc(e.target.value)} />
+              <Input id="reqdesc" value={reqDesc} onChange={(e) => setReqDesc(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
