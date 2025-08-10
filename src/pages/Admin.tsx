@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Bell } from "lucide-react";
+import { Copy, Bell, Calendar as CalendarIcon } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -1120,24 +1121,40 @@ const Admin = () => {
     } catch {}
   };
 
-  // Dashboard helpers and loaders
+// Dashboard helpers and loaders
   const getDayRange = (dateStr: string) => {
     const start = new Date(dateStr + 'T00:00:00');
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
-    return {
-      start: start.toISOString(),
-      end: end.toISOString()
-    };
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+  const toYMD = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const formatBR = (ymd: string) => {
+    const [y, m, d] = ymd.split('-');
+    return `${d}/${m}/${y}`;
   };
   const getMonthRange = (ym: string) => {
     const start = new Date(ym + '-01T00:00:00');
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
-    return {
-      start: start.toISOString(),
-      end: end.toISOString()
-    };
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+  const getRecentMonths = (n: number) => {
+    const months: { value: string; label: string }[] = [];
+    const d = new Date();
+    d.setDate(1);
+    for (let i = 0; i < n; i++) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      months.push({ value: `${y}-${m}`, label: `${m}/${y}` });
+      d.setMonth(d.getMonth() - 1);
+    }
+    return months;
   };
   const loadDailyCount = async () => {
     const {
@@ -1291,38 +1308,107 @@ const Admin = () => {
       {/* Dashboard downloads */}
       <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
-          <CardHeader className="items-center text-center gap-1 px-3 py-2">
-            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads</CardTitle>
-            <div className="flex flex-col gap-1 w-full">
-              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
-                <Label htmlFor="daily-date" className="sr-only">Dia</Label>
-                <Input id="daily-date" type="date" aria-label="Selecionar dia" value={dailyDate} onChange={e => setDailyDate(e.target.value)} className="h-8 text-sm" />
+          <CardHeader className="gap-2 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Downloads</CardTitle>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Dia:</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 px-2">
+                      <CalendarIcon className="mr-1 h-4 w-4" />
+                      {formatBR(dailyDate)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={new Date(dailyDate)}
+                      onSelect={(d: Date | undefined) => d && setDailyDate(toYMD(d))}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="shrink-0 w-[141px] sm:w-[158px] mx-auto">
-                <Label htmlFor="first-card-month" className="sr-only">Mês</Label>
-                <Input id="first-card-month" type="month" aria-label="Selecionar mês" value={firstCardMonth} onChange={e => setFirstCardMonth(e.target.value)} className="h-8 text-sm" />
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Mês:</Label>
+                <Select value={firstCardMonth} onValueChange={setFirstCardMonth}>
+                  <SelectTrigger className="h-8 w-[140px]">
+                    <SelectValue placeholder="Selecione o mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getRecentMonths(12).map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
           <CardContent className="py-3">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-semibold">{dailyCount}</div>
-                <p className="text-xs text-muted-foreground">Do dia</p>
+                <p className="text-xs text-muted-foreground mb-1">Do dia</p>
+                <div className="text-3xl font-semibold">{dailyCount}</div>
               </div>
               <div className="text-center">
-                <div className={`text-xl sm:text-2xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-red-600' : ''}`}>
+                <p className="text-xs text-muted-foreground mb-1">Do mês</p>
+                <div className={`text-3xl font-semibold ${firstCardMonthlyCount > 3000 ? 'text-destructive' : ''}`}>
                   {firstCardMonthlyCount}
+                  <span className="ml-1 text-xl font-bold opacity-80">/3000</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Do mês</p>
                 {firstCardMonthlyCount > 3000 && (
-                  <p className="text-xs text-red-600 font-medium mt-1">Limite ultrapassado</p>
+                  <p className="text-xs text-destructive font-medium mt-1">Limite mensal ultrapassado</p>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  {firstCardMonthlyCount}<span className="text-base font-bold">/3000</span>
-                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="gap-2 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Mês:</Label>
+              <Select value={monthSel} onValueChange={setMonthSel}>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue placeholder="Selecione o mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getRecentMonths(12).map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent className="px-3 pt-2 overflow-hidden">
+            {dailySeries.length > 0 ? (
+              <ChartContainer
+                config={{
+                  count: { label: 'Downloads', color: 'hsl(var(--primary))' },
+                }}
+                className="h-40 sm:h-44 w-full"
+              >
+                <LineChart data={dailySeries} margin={{ left: 8, right: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={11} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ChartContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem dados no período.</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -1330,44 +1416,16 @@ const Admin = () => {
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Arquivos e Produtos</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-semibold">{arquivosCount}</div>
-                <p className="text-xs text-muted-foreground">Arquivos cadastrados</p>
+                <p className="text-xs text-muted-foreground mb-1">Arquivos cadastrados</p>
+                <div className="text-3xl font-semibold">{arquivosCount}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-semibold">{produtosCount}</div>
-                <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
+                <p className="text-xs text-muted-foreground mb-1">Produtos cadastrados</p>
+                <div className="text-3xl font-semibold">{produtosCount}</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="items-center text-center gap-1 px-3 py-2">
-            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Evolução diária do mês</CardTitle>
-            <div className="shrink-0 w-[141px] sm:w-[176px]">
-              <Label htmlFor="month-sel-graph" className="sr-only">Mês</Label>
-              <Input id="month-sel-graph" type="month" aria-label="Selecionar mês para gráfico" value={monthSel} onChange={e => setMonthSel(e.target.value)} className="h-8 text-sm" />
-            </div>
-          </CardHeader>
-          <CardContent className="px-3 pt-2 overflow-hidden">
-            {dailySeries.length > 0 ? <ChartContainer config={{
-            count: {
-              label: 'Downloads',
-              color: 'hsl(var(--primary))'
-            }
-          }} className="h-40 sm:h-44 w-full">
-                <LineChart data={dailySeries} margin={{
-              left: 8,
-              right: 8
-            }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={11} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ChartContainer> : <p className="text-sm text-muted-foreground">Sem dados no período.</p>}
           </CardContent>
         </Card>
       </section>
