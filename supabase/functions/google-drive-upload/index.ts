@@ -13,6 +13,12 @@ interface GoogleDriveUploadResponse {
   webContentLink: string;
 }
 
+interface GoogleTokenResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,25 +54,45 @@ Deno.serve(async (req) => {
 
     console.log('File received:', fileName, 'Size:', file.size)
 
-    // Get Google Drive credentials from secrets
-    const apiKey = Deno.env.get('GOOGLE_DRIVE_API_KEY')
+    // Get OAuth2 credentials from secrets
+    const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
+    const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
+    const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN')
 
-    if (!apiKey) {
-      console.error('Google Drive credentials not configured')
-      return new Response('Google Drive credentials not configured', { status: 500, headers: corsHeaders })
+    if (!clientId || !clientSecret || !refreshToken) {
+      console.error('Google OAuth2 credentials not configured')
+      return new Response('Google OAuth2 credentials not configured', { status: 500, headers: corsHeaders })
     }
 
-    // For simplicity, we'll use the API key for upload (limited functionality)
-    // In production, you'd want proper OAuth2 flow
-    console.log('Using API key for upload...')
+    // Get access token using refresh token
+    console.log('Getting access token...')
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    })
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text()
+      console.error('Token response error:', errorText)
+      return new Response(`Failed to get access token: ${errorText}`, { status: 500, headers: corsHeaders })
+    }
+
+    const tokenData: GoogleTokenResponse = await tokenResponse.json()
+    console.log('Access token obtained successfully')
 
     const fileArrayBuffer = await file.arrayBuffer()
-    const fileBlob = new Blob([fileArrayBuffer], { type: file.type })
 
     // Create metadata
     const metadata = {
       name: fileName,
-      parents: ['1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'] // Example folder ID - replace with your own
     }
 
     // Create form data for multipart upload
@@ -94,11 +120,12 @@ Deno.serve(async (req) => {
     const closeDelimBytes = new TextEncoder().encode(close_delim)
     bodyArray.set(closeDelimBytes, offset)
 
-    // Upload to Google Drive using resumable upload
+    // Upload to Google Drive using OAuth2 access token
     console.log('Uploading to Google Drive...')
-    const uploadResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&key=${apiKey}`, {
+    const uploadResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
         'Content-Type': `multipart/related; boundary="${boundary}"`,
       },
       body: bodyArray
@@ -115,9 +142,10 @@ Deno.serve(async (req) => {
 
     // Make the file publicly accessible
     console.log('Setting file permissions...')
-    const permissionResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions?key=${apiKey}`, {
+    const permissionResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
