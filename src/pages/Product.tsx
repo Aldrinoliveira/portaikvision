@@ -133,12 +133,12 @@ const Product = () => {
                              className="relative cursor-pointer rounded-md overflow-hidden group"
                              onClick={() => handleDownload(a)}
                            >
-                             <img 
-                               src={getVideoThumbnail(a.link_url)!} 
-                               alt={`Capa do vídeo ${a.nome_arquivo}`}
-                               className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
-                               loading="lazy"
-                             />
+                              <img 
+                                src={getVideoThumbnail(a.link_url)!} 
+                                alt={`Capa do vídeo ${a.nome_arquivo}`}
+                                className="w-full h-16 object-cover group-hover:scale-105 transition-transform duration-200"
+                                loading="lazy"
+                              />
                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
                                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
                                  <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
@@ -180,12 +180,12 @@ const Product = () => {
                          className="relative cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
                          onClick={() => handleDownload(a)}
                        >
-                         <img 
-                           src={getVideoThumbnail(a.link_url)!} 
-                           alt={`Capa do vídeo ${a.nome_arquivo}`}
-                           className="w-20 h-12 object-cover group-hover:scale-105 transition-transform duration-200"
-                           loading="lazy"
-                         />
+                          <img 
+                            src={getVideoThumbnail(a.link_url)!} 
+                            alt={`Capa do vídeo ${a.nome_arquivo}`}
+                            className="w-10 h-6 object-cover group-hover:scale-105 transition-transform duration-200"
+                            loading="lazy"
+                          />
                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
                            <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
                              <div className="w-0 h-0 border-l-[4px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5"></div>
