@@ -453,7 +453,8 @@ const Admin = () => {
       if (error) {
         throw new Error(error.message || 'Falha no upload');
       }
-      const publicUrl = (data as any)?.publicUrl as string | undefined;
+      const d: any = data ?? {};
+      const publicUrl = d.publicUrl || d.url || d.Location || d.location || d.fileUrl || (typeof d === 'string' ? d : undefined);
       if (publicUrl) {
         setALink(publicUrl);
         toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
