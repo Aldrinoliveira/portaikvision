@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,23 +49,13 @@ const ContaboTest = () => {
 
       console.log('Presigned data received:', presignData);
 
-      // Create FormData for the upload
-      const formData = new FormData();
-      
-      // Add all the required fields from presignData.formData
-      Object.entries(presignData.formData).forEach(([key, value]) => {
-        formData.append(key, value as string);
-      });
-      
-      // Add the file last
-      formData.append('file', selectedFile);
-
-      console.log('Uploading to:', presignData.uploadUrl);
-
-      // Upload the file
+      // Upload the file using PUT method with presigned URL
       const uploadResponse = await fetch(presignData.uploadUrl, {
-        method: 'POST',
-        body: formData
+        method: presignData.method || 'PUT',
+        body: selectedFile,
+        headers: {
+          'Content-Type': selectedFile.type
+        }
       });
 
       if (!uploadResponse.ok) {

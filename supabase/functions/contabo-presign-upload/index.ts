@@ -21,7 +21,6 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    const region = 'eu-central-1';
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error('Missing required Contabo S3 configuration');
@@ -30,7 +29,6 @@ serve(async (req) => {
     console.log('Using config:', { 
       endpoint, 
       bucketName, 
-      region,
       accessKeyId: accessKeyId.substring(0, 8) + '...' 
     });
 
@@ -38,31 +36,56 @@ serve(async (req) => {
     const timestamp = Date.now();
     const fileKey = `uploads/${timestamp}-${fileName}`;
 
-    // Create the presigned URL using AWS Signature Version 4
+    // Para Contabo, vamos tentar usar GET presigned URL ao invés de POST
     const now = new Date();
     const date = now.toISOString().slice(0, 10).replace(/-/g, '');
     const datetime = now.toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
-    
-    const credential = `${accessKeyId}/${date}/${region}/s3/aws4_request`;
+    const region = 'eu-central-1';
+    const service = 's3';
+    const expires = '3600';
+
+    const credential = `${accessKeyId}/${date}/${region}/${service}/aws4_request`;
     const algorithm = 'AWS4-HMAC-SHA256';
-    const expires = new Date(now.getTime() + 3600000).toISOString();
 
-    // Create policy for POST upload
-    const policy = {
-      expiration: expires,
-      conditions: [
-        { bucket: bucketName },
-        { key: fileKey },
-        { 'Content-Type': contentType },
-        ['content-length-range', 0, 100 * 1024 * 1024], // Max 100MB
-        { 'x-amz-algorithm': algorithm },
-        { 'x-amz-credential': credential },
-        { 'x-amz-date': datetime }
-      ]
-    };
+    // Create canonical request for PUT method
+    const method = 'PUT';
+    const uri = `/${bucketName}/${fileKey}`;
+    const host = new URL(endpoint).host;
+    
+    const queryParams = new URLSearchParams({
+      'X-Amz-Algorithm': algorithm,
+      'X-Amz-Credential': credential,
+      'X-Amz-Date': datetime,
+      'X-Amz-Expires': expires,
+      'X-Amz-SignedHeaders': 'host',
+    });
 
-    const policyBase64 = btoa(JSON.stringify(policy));
-    console.log('Policy created:', { policy, policyBase64 });
+    const canonicalRequest = [
+      method,
+      uri,
+      queryParams.toString(),
+      `host:${host}`,
+      '',
+      'host',
+      'UNSIGNED-PAYLOAD'
+    ].join('\n');
+
+    console.log('Canonical request:', canonicalRequest);
+
+    // Create string to sign
+    const hashedCanonicalRequest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonicalRequest));
+    const hashedCanonicalRequestHex = Array.from(new Uint8Array(hashedCanonicalRequest))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    const stringToSign = [
+      algorithm,
+      datetime,
+      `${date}/${region}/${service}/aws4_request`,
+      hashedCanonicalRequestHex
+    ].join('\n');
+
+    console.log('String to sign:', stringToSign);
 
     // Create signature
     async function sign(key: Uint8Array, message: string): Promise<Uint8Array> {
@@ -79,13 +102,11 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
-    console.log('Creating signature with secret key length:', secretAccessKey.length);
-    
     const kDate = await sign(encoder.encode(`AWS4${secretAccessKey}`), date);
     const kRegion = await sign(kDate, region);
-    const kService = await sign(kRegion, 's3');
+    const kService = await sign(kRegion, service);
     const kSigning = await sign(kService, 'aws4_request');
-    const signature = await sign(kSigning, policyBase64);
+    const signature = await sign(kSigning, stringToSign);
 
     const signatureHex = Array.from(signature)
       .map(b => b.toString(16).padStart(2, '0'))
@@ -93,29 +114,15 @@ serve(async (req) => {
 
     console.log('Signature created:', signatureHex.substring(0, 16) + '...');
 
-    // Para Contabo, construir URL completa com bucket
-    const uploadUrl = `${endpoint}/${bucketName}`;
-    const formData = {
-      key: fileKey,
-      'Content-Type': contentType,
-      'X-Amz-Algorithm': algorithm,
-      'X-Amz-Credential': credential,
-      'X-Amz-Date': datetime,
-      Policy: policyBase64,
-      'X-Amz-Signature': signatureHex
-    };
+    // Create final URL
+    const uploadUrl = `${endpoint}${uri}?${queryParams.toString()}&X-Amz-Signature=${signatureHex}`;
 
-    console.log('Generated presigned upload URL successfully:', { 
-      uploadUrl, 
-      fileKey,
-      formDataKeys: Object.keys(formData),
-      credentialUsed: credential
-    });
+    console.log('Generated presigned upload URL successfully');
 
     return new Response(JSON.stringify({ 
       uploadUrl,
-      formData,
-      fileKey 
+      fileKey,
+      method: 'PUT'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
