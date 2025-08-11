@@ -54,14 +54,14 @@ Deno.serve(async (req) => {
 
     console.log('File received:', fileName, 'Size:', file.size)
 
-    // Get OAuth2 credentials from secrets - with detailed logging
+    // Get OAuth2 credentials from secrets - using correct variable names
     console.log('Checking for environment variables...')
-    const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
-    const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
+    const clientId = Deno.env.get('GOOGLE_DRIVE_CLIENT_ID')
+    const clientSecret = Deno.env.get('GOOGLE_DRIVE_CLIENT_SECRET')
     const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN')
 
-    console.log('GOOGLE_CLIENT_ID exists:', !!clientId)
-    console.log('GOOGLE_CLIENT_SECRET exists:', !!clientSecret)
+    console.log('GOOGLE_DRIVE_CLIENT_ID exists:', !!clientId)
+    console.log('GOOGLE_DRIVE_CLIENT_SECRET exists:', !!clientSecret)
     console.log('GOOGLE_REFRESH_TOKEN exists:', !!refreshToken)
 
     if (!clientId || !clientSecret || !refreshToken) {
