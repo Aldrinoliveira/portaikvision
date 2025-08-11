@@ -480,27 +480,31 @@ const Admin = () => {
         }
       }
 
-      // 2) Fallback: envia base64 (função pode esperar o arquivo inline)
+      // 2) Fallbacks JSON: tentar diferentes formatos aceitos pela função existente
       const base64 = await fileToBase64(file);
-      const { data, error } = await supabase.functions.invoke('upload-contabo', {
-        body: {
-          fileName,
-          fileType: file.type,
-          fileBase64: base64,
-          folder: 'arquivos',
-        },
-      });
-      if (!error) {
-        const d2: any = data ?? {};
-        const publicUrl2 = d2.publicUrl || d2.url || d2.Location || d2.location || d2.fileUrl || (typeof d2 === 'string' ? d2 : undefined);
-        if (publicUrl2) {
-          setALink(publicUrl2);
-          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
-          return;
+      const tryBodies: any[] = [
+        { fileName, mimeType: file.type, dataUrl: `data:${file.type};base64,${base64}`, folder: 'arquivos' },
+        { fileName, fileType: file.type, fileBase64: base64, folder: 'arquivos' },
+        { key: `arquivos/${fileName}`, contentType: file.type, base64 },
+        { filename: fileName, type: file.type, file: base64, folder: 'arquivos' },
+      ];
+
+      let okUrl: string | undefined;
+      for (const body of tryBodies) {
+        const { data, error } = await supabase.functions.invoke('upload-contabo', { body });
+        if (!error) {
+          const d: any = data ?? {};
+          const url = d.publicUrl || d.url || d.Location || d.location || d.fileUrl || (typeof d === 'string' ? d : undefined);
+          if (url) { okUrl = url; break; }
         }
       }
+      if (okUrl) {
+        setALink(okUrl);
+        toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+        return;
+      }
 
-      // 3) Fallback multipart: chama função via fetch com FormData
+      // 3) Fallback multipart (última tentativa)
       const { data: sess } = await supabase.auth.getSession();
       const token = sess?.session?.access_token ?? '';
       const form = new FormData();
@@ -510,10 +514,7 @@ const Admin = () => {
       form.append('folder', 'arquivos');
       const res = await fetch('https://vtafquzacrmemncgcjcc.supabase.co/functions/v1/upload-contabo', {
         method: 'POST',
-        headers: {
-          authorization: `Bearer ${token}`,
-          apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YWZxdXphY3JtZW1uY2djamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg0MzYsImV4cCI6MjA3MDA2NDQzNn0.JioCFooPIkpDYbYUUyHLmUH9N4CNBt-aWQh9IwGT1ys',
-        },
+        headers: { authorization: `Bearer ${token}`, apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YWZxdXphY3JtZW1uY2djamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg0MzYsImV4cCI6MjA3MDA2NDQzNn0.JioCFooPIkpDYbYUUyHLmUH9N4CNBt-aWQh9IwGT1ys' },
         body: form,
       });
       if (!res.ok) throw new Error(`Falha no upload (multipart): ${res.status}`);
