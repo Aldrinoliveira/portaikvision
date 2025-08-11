@@ -490,17 +490,40 @@ const Admin = () => {
           folder: 'arquivos',
         },
       });
-      if (error) {
-        throw new Error(error.message || 'Falha no upload');
+      if (!error) {
+        const d2: any = data ?? {};
+        const publicUrl2 = d2.publicUrl || d2.url || d2.Location || d2.location || d2.fileUrl || (typeof d2 === 'string' ? d2 : undefined);
+        if (publicUrl2) {
+          setALink(publicUrl2);
+          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+          return;
+        }
       }
-      const d2: any = data ?? {};
-      const publicUrl = d2.publicUrl || d2.url || d2.Location || d2.location || d2.fileUrl || (typeof d2 === 'string' ? d2 : undefined);
-      if (publicUrl) {
-        setALink(publicUrl);
-        toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
-      } else {
-        toast({ title: 'Upload concluído', description: 'Retorno sem URL pública.' });
-      }
+
+      // 3) Fallback multipart: chama função via fetch com FormData
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token ?? '';
+      const form = new FormData();
+      form.append('file', file);
+      form.append('fileName', fileName);
+      form.append('fileType', file.type);
+      form.append('folder', 'arquivos');
+      const res = await fetch('https://vtafquzacrmemncgcjcc.supabase.co/functions/v1/upload-contabo', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${token}`,
+          apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YWZxdXphY3JtZW1uY2djamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg0MzYsImV4cCI6MjA3MDA2NDQzNn0.JioCFooPIkpDYbYUUyHLmUH9N4CNBt-aWQh9IwGT1ys',
+        },
+        body: form,
+      });
+      if (!res.ok) throw new Error(`Falha no upload (multipart): ${res.status}`);
+      const text = await res.text();
+      let parsed: any = {};
+      try { parsed = JSON.parse(text); } catch { parsed = { url: text }; }
+      const finalUrl = parsed.publicUrl || parsed.url || parsed.Location || parsed.location || parsed.fileUrl || (typeof parsed === 'string' ? parsed : undefined);
+      if (!finalUrl) throw new Error('Upload concluído, mas sem URL de retorno.');
+      setALink(finalUrl);
+      toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
     } catch (err: any) {
       toast({ title: 'Erro ao enviar arquivo', description: String(err?.message || err) });
     } finally {
