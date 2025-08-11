@@ -130,13 +130,13 @@ const Product = () => {
                        <div className="space-y-2">
                          {getVideoThumbnail(a.link_url) && (
                             <div 
-                              className="relative w-1/2 cursor-pointer rounded-md overflow-hidden group"
+                              className="relative w-[35%] cursor-pointer rounded-md overflow-hidden group"
                               onClick={() => handleDownload(a)}
                             >
                               <img 
                                 src={getVideoThumbnail(a.link_url)!} 
                                 alt={`Capa do vídeo ${a.nome_arquivo}`}
-                                className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                                className="w-full h-[90px] object-cover group-hover:scale-105 transition-transform duration-200"
                                 loading="lazy"
                               />
                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
@@ -177,7 +177,7 @@ const Product = () => {
                    {cat === "video" && getVideoThumbnail(a.link_url) ? (
                      <div className="flex gap-3 w-full">
                         <div 
-                          className="relative w-40 h-24 cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
+                          className="relative w-[112px] h-[67px] cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
                           onClick={() => handleDownload(a)}
                         >
                           <img 
