@@ -129,14 +129,14 @@ const Product = () => {
                      {cat === "video" ? (
                        <div className="space-y-2">
                          {getVideoThumbnail(a.link_url) && (
-                           <div 
-                             className="relative cursor-pointer rounded-md overflow-hidden group"
-                             onClick={() => handleDownload(a)}
-                           >
+                            <div 
+                              className="relative w-1/2 cursor-pointer rounded-md overflow-hidden group"
+                              onClick={() => handleDownload(a)}
+                            >
                               <img 
                                 src={getVideoThumbnail(a.link_url)!} 
                                 alt={`Capa do vídeo ${a.nome_arquivo}`}
-                                className="w-1/2 h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                                className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
                                 loading="lazy"
                               />
                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
@@ -176,14 +176,14 @@ const Product = () => {
                  <div key={a.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
                    {cat === "video" && getVideoThumbnail(a.link_url) ? (
                      <div className="flex gap-3 w-full">
-                       <div 
-                         className="relative cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
-                         onClick={() => handleDownload(a)}
-                       >
+                        <div 
+                          className="relative w-10 h-12 cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
+                          onClick={() => handleDownload(a)}
+                        >
                           <img 
                             src={getVideoThumbnail(a.link_url)!} 
                             alt={`Capa do vídeo ${a.nome_arquivo}`}
-                            className="w-10 h-12 object-cover group-hover:scale-105 transition-transform duration-200"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                             loading="lazy"
                           />
                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
