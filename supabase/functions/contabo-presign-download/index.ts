@@ -21,10 +21,8 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    let region = Deno.env.get('CONTABO_S3_REGION') || 'eu-central-1';
-
-    // Clean up region string (remove any whitespace/tabs)
-    region = region.trim();
+    // Para Contabo, use sempre 'eu-central-1' como região
+    const region = 'eu-central-1';
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error('Missing required Contabo S3 configuration');
@@ -33,7 +31,7 @@ serve(async (req) => {
     console.log('Using config:', { 
       endpoint, 
       bucketName, 
-      region: `"${region}"`, 
+      region,
       accessKeyId: accessKeyId.substring(0, 8) + '...' 
     });
 
@@ -108,8 +106,7 @@ serve(async (req) => {
     const downloadUrl = `${endpoint}/${bucketName}/${fileKey}?${query}&X-Amz-Signature=${signatureHex}`;
 
     console.log('Generated presigned download URL successfully:', {
-      downloadUrl: downloadUrl.substring(0, 100) + '...',
-      cleanRegion: region
+      downloadUrl: downloadUrl.substring(0, 100) + '...'
     });
 
     return new Response(JSON.stringify({ 

@@ -21,10 +21,8 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    let region = Deno.env.get('CONTABO_S3_REGION') || 'eu-central-1';
-
-    // Clean up region string (remove any whitespace/tabs)
-    region = region.trim();
+    // Para Contabo, use sempre 'eu-central-1' como região
+    const region = 'eu-central-1';
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error('Missing required Contabo S3 configuration');
@@ -33,7 +31,7 @@ serve(async (req) => {
     console.log('Using config:', { 
       endpoint, 
       bucketName, 
-      region: `"${region}"`, 
+      region,
       accessKeyId: accessKeyId.substring(0, 8) + '...' 
     });
 
@@ -89,10 +87,11 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // Para Contabo, a URL deve ser: endpoint + "/" + bucket
-    const uploadUrl = `${endpoint}/${bucketName}`;
+    // Para Contabo, use apenas o endpoint sem o bucket no URL
+    const uploadUrl = endpoint;
     const formData = {
       key: fileKey,
+      bucket: bucketName,
       'Content-Type': contentType,
       'X-Amz-Algorithm': algorithm,
       'X-Amz-Credential': credential,
@@ -104,8 +103,7 @@ serve(async (req) => {
     console.log('Generated presigned upload URL successfully:', { 
       uploadUrl, 
       fileKey,
-      credential,
-      cleanRegion: region
+      formData: Object.keys(formData)
     });
 
     return new Response(JSON.stringify({ 
