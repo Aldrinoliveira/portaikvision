@@ -49,6 +49,16 @@ const Product = () => {
     return g;
   }, [arquivos]);
 
+  const getVideoThumbnail = (url: string) => {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = url.includes('youtu.be') 
+        ? url.split('youtu.be/')[1]?.split('?')[0] 
+        : url.split('v=')[1]?.split('&')[0];
+      return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+    }
+    return null;
+  };
+
   const handleDownload = async (a: Arquivo) => {
     const { data, error } = await supabase.rpc('increment_downloads', { _arquivo_id: a.id });
     if (error) {
@@ -112,18 +122,48 @@ const Product = () => {
                   <CardHeader>
                     <CardTitle className="text-base">{a.nome_arquivo}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    {a.descricao && (
-                      <p className="text-sm text-muted-foreground">{a.descricao}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <Button onClick={() => handleDownload(a)}>Download</Button>
-                      <div className="text-right">
-                        <span className="block text-xs text-muted-foreground">{a.downloads} downloads</span>
-                        <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                  </CardContent>
+                   <CardContent className="space-y-2">
+                     {a.descricao && (
+                       <p className="text-sm text-muted-foreground">{a.descricao}</p>
+                     )}
+                     {cat === "video" ? (
+                       <div className="space-y-2">
+                         {getVideoThumbnail(a.link_url) && (
+                           <div 
+                             className="relative cursor-pointer rounded-md overflow-hidden group"
+                             onClick={() => handleDownload(a)}
+                           >
+                             <img 
+                               src={getVideoThumbnail(a.link_url)!} 
+                               alt={`Capa do vídeo ${a.nome_arquivo}`}
+                               className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                               loading="lazy"
+                             />
+                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                               <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                                 <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+                         <div className="flex items-center justify-between">
+                           <span className="text-sm font-medium">Assistir vídeo</span>
+                           <div className="text-right">
+                             <span className="block text-xs text-muted-foreground">{a.downloads} visualizações</span>
+                             <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
+                           </div>
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="flex items-center justify-between">
+                         <Button onClick={() => handleDownload(a)}>Download</Button>
+                         <div className="text-right">
+                           <span className="block text-xs text-muted-foreground">{a.downloads} downloads</span>
+                           <span className="block text-xs text-muted-foreground">Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}</span>
+                         </div>
+                       </div>
+                     )}
+                   </CardContent>
                 </Card>
               ))}
               {(grouped[cat] || []).length === 0 && (
@@ -133,20 +173,52 @@ const Product = () => {
           ) : (
             <div className="rounded-md border divide-y">
               {(grouped[cat] || []).map((a) => (
-                <div key={a.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{a.nome_arquivo}</p>
-                    {a.descricao && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
-                    )}
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {a.downloads} downloads • Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Button onClick={() => handleDownload(a)}>Download</Button>
-                  </div>
-                </div>
+                 <div key={a.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
+                   {cat === "video" && getVideoThumbnail(a.link_url) ? (
+                     <div className="flex gap-3 w-full">
+                       <div 
+                         className="relative cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
+                         onClick={() => handleDownload(a)}
+                       >
+                         <img 
+                           src={getVideoThumbnail(a.link_url)!} 
+                           alt={`Capa do vídeo ${a.nome_arquivo}`}
+                           className="w-20 h-12 object-cover group-hover:scale-105 transition-transform duration-200"
+                           loading="lazy"
+                         />
+                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                           <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
+                             <div className="w-0 h-0 border-l-[4px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5"></div>
+                           </div>
+                         </div>
+                       </div>
+                       <div className="min-w-0 flex-1">
+                         <p className="font-medium truncate">{a.nome_arquivo}</p>
+                         {a.descricao && (
+                           <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
+                         )}
+                         <div className="mt-1 text-xs text-muted-foreground">
+                           {a.downloads} visualizações • Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}
+                         </div>
+                       </div>
+                     </div>
+                   ) : (
+                     <>
+                       <div className="min-w-0">
+                         <p className="font-medium truncate">{a.nome_arquivo}</p>
+                         {a.descricao && (
+                           <p className="text-sm text-muted-foreground line-clamp-2">{a.descricao}</p>
+                         )}
+                         <div className="mt-1 text-xs text-muted-foreground">
+                           {a.downloads} downloads • Adicionado em {new Date(a.created_at).toLocaleDateString('pt-BR')}
+                         </div>
+                       </div>
+                       <div className="flex-shrink-0">
+                         <Button onClick={() => handleDownload(a)}>Download</Button>
+                       </div>
+                     </>
+                   )}
+                 </div>
               ))}
               {(grouped[cat] || []).length === 0 && (
                 <p className="text-sm text-muted-foreground p-3">Nenhum arquivo de {cat}.</p>
