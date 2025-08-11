@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,10 +15,9 @@ interface Produto {
   created_at: string;
   partnumber: string;
   descricao: string;
-  categoria: string;
-  preco: number;
-  imagens: string[];
-  estoque: number;
+  categoria_id: string;
+  subcategoria_id: string;
+  imagem_url: string;
 }
 
 interface Arquivo {
@@ -28,50 +28,41 @@ interface Arquivo {
   nome_arquivo: string;
   link_url: string;
   descricao?: string;
+  downloads?: number;
+  listado?: boolean;
 }
 
-interface Cliente {
+interface Categoria {
   id: string;
-  created_at: string;
   nome: string;
-  email: string;
-  telefone: string;
-  empresa: string;
+  descricao: string;
 }
 
 export default function Admin() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [novoProduto, setNovoProduto] = useState<Omit<Produto, 'id' | 'created_at'>>({
     partnumber: '',
     descricao: '',
-    categoria: '',
-    preco: 0,
-    imagens: [],
-    estoque: 0,
+    categoria_id: '',
+    subcategoria_id: '',
+    imagem_url: '',
   });
-  const [novoArquivo, setNovoArquivo] = useState<Arquivo>({
+  const [novoArquivo, setNovoArquivo] = useState<Omit<Arquivo, 'id' | 'created_at'>>({
     produto_id: '',
     categoria_arquivo: 'firmware',
     nome_arquivo: '',
     link_url: '',
     descricao: '',
   });
-  const [novoCliente, setNovoCliente] = useState<Omit<Cliente, 'id' | 'created_at'>>({
-    nome: '',
-    email: '',
-    telefone: '',
-    empresa: '',
-  });
   const [editandoProduto, setEditandoProduto] = useState<string | null>(null);
   const [editandoArquivo, setEditandoArquivo] = useState<string | null>(null);
-  const [editandoCliente, setEditandoCliente] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProdutos();
     fetchArquivos();
-    fetchClientes();
+    fetchCategorias();
   }, []);
 
   async function fetchProdutos() {
@@ -92,12 +83,12 @@ export default function Admin() {
     }
   }
 
-  async function fetchClientes() {
-    const { data, error } = await supabase.from('clientes').select('*');
+  async function fetchCategorias() {
+    const { data, error } = await supabase.from('categorias').select('*');
     if (error) {
-      console.error('Erro ao buscar clientes:', error);
+      console.error('Erro ao buscar categorias:', error);
     } else {
-      setClientes(data || []);
+      setCategorias(data || []);
     }
   }
 
@@ -114,7 +105,7 @@ export default function Admin() {
         toast.error('Erro ao atualizar produto.');
       } else {
         toast.success('Produto atualizado com sucesso!');
-        setProdutos(produtos.map(produto => produto.id === editandoProduto ? {...produto, ...novoProduto} : produto));
+        fetchProdutos();
         setEditandoProduto(null);
       }
     } else {
@@ -132,10 +123,9 @@ export default function Admin() {
     setNovoProduto({
       partnumber: '',
       descricao: '',
-      categoria: '',
-      preco: 0,
-      imagens: [],
-      estoque: 0,
+      categoria_id: '',
+      subcategoria_id: '',
+      imagem_url: '',
     });
   }
 
@@ -152,7 +142,7 @@ export default function Admin() {
         toast.error('Erro ao atualizar arquivo.');
       } else {
         toast.success('Arquivo atualizado com sucesso!');
-        setArquivos(arquivos.map(arquivo => arquivo.id === editandoArquivo ? {...arquivo, ...novoArquivo} : arquivo));
+        fetchArquivos();
         setEditandoArquivo(null);
       }
     } else {
@@ -173,42 +163,6 @@ export default function Admin() {
       nome_arquivo: '',
       link_url: '',
       descricao: '',
-    });
-  }
-
-  async function adicionarCliente() {
-    if (editandoCliente) {
-      // Atualizar cliente existente
-      const { data, error } = await supabase
-        .from('clientes')
-        .update(novoCliente)
-        .eq('id', editandoCliente);
-
-      if (error) {
-        console.error('Erro ao atualizar cliente:', error);
-        toast.error('Erro ao atualizar cliente.');
-      } else {
-        toast.success('Cliente atualizado com sucesso!');
-        setClientes(clientes.map(cliente => cliente.id === editandoCliente ? {...cliente, ...novoCliente} : cliente));
-        setEditandoCliente(null);
-      }
-    } else {
-      // Adicionar novo cliente
-      const { data, error } = await supabase.from('clientes').insert([novoCliente]);
-      if (error) {
-        console.error('Erro ao adicionar cliente:', error);
-        toast.error('Erro ao adicionar cliente.');
-      } else {
-        toast.success('Cliente adicionado com sucesso!');
-        fetchClientes();
-      }
-    }
-
-    setNovoCliente({
-      nome: '',
-      email: '',
-      telefone: '',
-      empresa: '',
     });
   }
 
@@ -240,20 +194,6 @@ export default function Admin() {
     }
   }
 
-  async function deletarCliente(id: string) {
-    const confirmacao = window.confirm('Tem certeza que deseja deletar este cliente?');
-    if (confirmacao) {
-      const { error } = await supabase.from('clientes').delete().eq('id', id);
-      if (error) {
-        console.error('Erro ao deletar cliente:', error);
-        toast.error('Erro ao deletar cliente.');
-      } else {
-        toast.success('Cliente deletado com sucesso!');
-        setClientes(clientes.filter(cliente => cliente.id !== id));
-      }
-    }
-  }
-
   const handleGoogleDriveUpload = (downloadLink: string, fileName: string) => {
     setNovoArquivo(prev => ({
       ...prev,
@@ -272,7 +212,7 @@ export default function Admin() {
         <h2 className="text-2xl font-semibold mb-6">Gerenciar Produtos</h2>
         
         {/* Formulário de Novo Produto */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
             <Label htmlFor="partnumber">Part Number</Label>
             <Input
@@ -295,33 +235,27 @@ export default function Admin() {
 
           <div>
             <Label htmlFor="categoria">Categoria</Label>
-            <Input
-              id="categoria"
-              value={novoProduto.categoria}
-              onChange={(e) => setNovoProduto({...novoProduto, categoria: e.target.value})}
-              placeholder="Categoria"
-            />
+            <Select value={novoProduto.categoria_id} onValueChange={(value) => setNovoProduto({...novoProduto, categoria_id: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categorias.map((categoria) => (
+                  <SelectItem key={categoria.id} value={categoria.id}>
+                    {categoria.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <Label htmlFor="preco">Preço</Label>
+            <Label htmlFor="imagem_url">URL da Imagem</Label>
             <Input
-              id="preco"
-              type="number"
-              value={novoProduto.preco}
-              onChange={(e) => setNovoProduto({...novoProduto, preco: parseFloat(e.target.value)})}
-              placeholder="Preço"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="estoque">Estoque</Label>
-            <Input
-              id="estoque"
-              type="number"
-              value={novoProduto.estoque}
-              onChange={(e) => setNovoProduto({...novoProduto, estoque: parseInt(e.target.value)})}
-              placeholder="Estoque"
+              id="imagem_url"
+              value={novoProduto.imagem_url}
+              onChange={(e) => setNovoProduto({...novoProduto, imagem_url: e.target.value})}
+              placeholder="URL da imagem"
             />
           </div>
         </div>
@@ -346,12 +280,6 @@ export default function Admin() {
                   Categoria
                 </th>
                 <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Preço
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Estoque
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
@@ -366,24 +294,17 @@ export default function Admin() {
                     {produto.descricao}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {produto.categoria}
+                    {categorias.find(cat => cat.id === produto.categoria_id)?.nome || 'N/A'}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {produto.preco}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {produto.estoque}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <Button variant="secondary" size="sm" onClick={() => {
+                    <Button variant="secondary" size="sm" className="mr-2" onClick={() => {
                       setEditandoProduto(produto.id);
                       setNovoProduto({
                         partnumber: produto.partnumber,
                         descricao: produto.descricao,
-                        categoria: produto.categoria,
-                        preco: produto.preco,
-                        imagens: produto.imagens,
-                        estoque: produto.estoque,
+                        categoria_id: produto.categoria_id,
+                        subcategoria_id: produto.subcategoria_id,
+                        imagem_url: produto.imagem_url,
                       });
                     }}>
                       <Edit className="w-4 h-4 mr-2" />
@@ -499,6 +420,9 @@ export default function Admin() {
                   URL do Arquivo
                 </th>
                 <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Downloads
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
@@ -521,7 +445,10 @@ export default function Admin() {
                     </a>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <Button variant="secondary" size="sm" onClick={() => {
+                    {arquivo.downloads || 0}
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <Button variant="secondary" size="sm" className="mr-2" onClick={() => {
                       setEditandoArquivo(arquivo.id);
                       setNovoArquivo({
                         produto_id: arquivo.produto_id,
@@ -534,122 +461,7 @@ export default function Admin() {
                       <Edit className="w-4 h-4 mr-2" />
                       Editar
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => deletarArquivo(arquivo.id)}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Deletar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Seção de Clientes */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Gerenciar Clientes</h2>
-
-        {/* Formulário de Novo Cliente */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div>
-            <Label htmlFor="nome">Nome</Label>
-            <Input
-              id="nome"
-              value={novoCliente.nome}
-              onChange={(e) => setNovoCliente({...novoCliente, nome: e.target.value})}
-              placeholder="Nome"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={novoCliente.email}
-              onChange={(e) => setNovoCliente({...novoCliente, email: e.target.value})}
-              placeholder="Email"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="telefone">Telefone</Label>
-            <Input
-              id="telefone"
-              value={novoCliente.telefone}
-              onChange={(e) => setNovoCliente({...novoCliente, telefone: e.target.value})}
-              placeholder="Telefone"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="empresa">Empresa</Label>
-            <Input
-              id="empresa"
-              value={novoCliente.empresa}
-              onChange={(e) => setNovoCliente({...novoCliente, empresa: e.target.value})}
-              placeholder="Empresa"
-            />
-          </div>
-        </div>
-
-        <Button onClick={adicionarCliente} className="mb-6">
-          <Plus className="w-4 h-4 mr-2" />
-          {editandoCliente ? 'Atualizar Cliente' : 'Adicionar Cliente'}
-        </Button>
-
-        {/* Tabela de Clientes */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full leading-normal">
-            <thead>
-              <tr>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Nome
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Telefone
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Empresa
-                </th>
-                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((cliente) => (
-                <tr key={cliente.id}>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {cliente.nome}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {cliente.email}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {cliente.telefone}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {cliente.empresa}
-                  </td>
-                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <Button variant="secondary" size="sm" onClick={() => {
-                      setEditandoCliente(cliente.id);
-                      setNovoCliente({
-                        nome: cliente.nome,
-                        email: cliente.email,
-                        telefone: cliente.telefone,
-                        empresa: cliente.empresa,
-                      });
-                    }}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => deletarCliente(cliente.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => deletarArquivo(arquivo.id!)}>
                       <Trash2 className="w-4 h-4 mr-2" />
                       Deletar
                     </Button>
