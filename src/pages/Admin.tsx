@@ -439,17 +439,32 @@ const Admin = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAFileUploading(true);
-    const filePath = `arquivo-${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from('arquivos').upload(filePath, file, { contentType: file.type });
-    if (error) {
-      toast({ title: 'Erro ao enviar arquivo', description: error.message });
+    try {
+      const base64 = await fileToBase64(file);
+      const fileName = `arquivo-${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.functions.invoke('upload-contabo', {
+        body: {
+          fileName,
+          fileType: file.type,
+          fileBase64: base64,
+          folder: 'arquivos'
+        }
+      });
+      if (error) {
+        throw new Error(error.message || 'Falha no upload');
+      }
+      const publicUrl = (data as any)?.publicUrl as string | undefined;
+      if (publicUrl) {
+        setALink(publicUrl);
+        toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+      } else {
+        toast({ title: 'Upload concluído', description: 'Retorno sem URL pública.' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Erro ao enviar arquivo', description: String(err?.message || err) });
+    } finally {
       setAFileUploading(false);
-      return;
     }
-    const { data } = supabase.storage.from('arquivos').getPublicUrl(filePath);
-    setALink(data.publicUrl);
-    toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
-    setAFileUploading(false);
   };
 
   // Categorias CRUD
