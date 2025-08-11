@@ -440,21 +440,61 @@ const Admin = () => {
     if (!file) return;
     setAFileUploading(true);
     try {
-      const base64 = await fileToBase64(file);
       const fileName = `arquivo-${Date.now()}-${file.name}`;
+      // 1) Tenta fluxo de pré-assinatura (PUT ou POST policy)
+      const { data: presign, error: presignErr }: any = await supabase.functions.invoke('upload-contabo', {
+        body: {
+          action: 'presign',
+          fileName,
+          fileType: file.type,
+          folder: 'arquivos',
+          size: file.size,
+        },
+      });
+      if (!presignErr && presign) {
+        const d: any = presign;
+        // PUT URL direto
+        if (d.uploadUrl) {
+          const putRes = await fetch(d.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file,
+          });
+          if (!putRes.ok) throw new Error('Falha no upload (PUT presign).');
+          const publicUrl = d.publicUrl || d.url || d.fileUrl || d.Location || d.location || d.cdnUrl || d.baseUrl && d.key ? `${d.baseUrl}/${d.key}` : (d.uploadUrl.split('?')[0]);
+          setALink(publicUrl);
+          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+          return;
+        }
+        // POST policy (campos + url)
+        if (d.url && d.fields) {
+          const form = new FormData();
+          Object.entries(d.fields).forEach(([k, v]: [string, any]) => form.append(k, String(v)));
+          form.append('file', file);
+          const postRes = await fetch(d.url, { method: 'POST', body: form });
+          if (!postRes.ok) throw new Error('Falha no upload (POST policy).');
+          const publicUrl = d.publicUrl || `${d.url}${d.url.endsWith('/') ? '' : '/'}${d.fields.key}`;
+          setALink(publicUrl);
+          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+          return;
+        }
+      }
+
+      // 2) Fallback: envia base64 (função pode esperar o arquivo inline)
+      const base64 = await fileToBase64(file);
       const { data, error } = await supabase.functions.invoke('upload-contabo', {
         body: {
           fileName,
           fileType: file.type,
           fileBase64: base64,
-          folder: 'arquivos'
-        }
+          folder: 'arquivos',
+        },
       });
       if (error) {
         throw new Error(error.message || 'Falha no upload');
       }
-      const d: any = data ?? {};
-      const publicUrl = d.publicUrl || d.url || d.Location || d.location || d.fileUrl || (typeof d === 'string' ? d : undefined);
+      const d2: any = data ?? {};
+      const publicUrl = d2.publicUrl || d2.url || d2.Location || d2.location || d2.fileUrl || (typeof d2 === 'string' ? d2 : undefined);
       if (publicUrl) {
         setALink(publicUrl);
         toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
