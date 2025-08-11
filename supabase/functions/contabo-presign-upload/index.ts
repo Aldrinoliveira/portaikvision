@@ -21,26 +21,32 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    const region = Deno.env.get('CONTABO_S3_REGION') || 'eu-central-1';
+    let region = Deno.env.get('CONTABO_S3_REGION') || 'eu-central-1';
+
+    // Clean up region string (remove any whitespace/tabs)
+    region = region.trim();
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error('Missing required Contabo S3 configuration');
     }
 
-    console.log('Using config:', { endpoint, bucketName, region, accessKeyId: accessKeyId.substring(0, 8) + '...' });
+    console.log('Using config:', { 
+      endpoint, 
+      bucketName, 
+      region: `"${region}"`, 
+      accessKeyId: accessKeyId.substring(0, 8) + '...' 
+    });
 
     // Generate unique file key
     const timestamp = Date.now();
     const fileKey = `uploads/${timestamp}-${fileName}`;
 
     // Create the presigned URL using AWS Signature Version 4
-    const host = new URL(endpoint).host;
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const datetime = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
     
     const credential = `${accessKeyId}/${date}/${region}/s3/aws4_request`;
     const algorithm = 'AWS4-HMAC-SHA256';
-    const expires = '3600'; // 1 hour
 
     // Create policy for POST upload
     const policy = {
@@ -83,7 +89,7 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // URL deve incluir o bucket no path
+    // Para Contabo, a URL deve ser: endpoint + "/" + bucket
     const uploadUrl = `${endpoint}/${bucketName}`;
     const formData = {
       key: fileKey,
@@ -95,7 +101,12 @@ serve(async (req) => {
       'X-Amz-Signature': signatureHex
     };
 
-    console.log('Generated presigned upload URL successfully:', { uploadUrl, fileKey });
+    console.log('Generated presigned upload URL successfully:', { 
+      uploadUrl, 
+      fileKey,
+      credential,
+      cleanRegion: region
+    });
 
     return new Response(JSON.stringify({ 
       uploadUrl,
