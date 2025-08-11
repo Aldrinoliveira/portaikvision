@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -430,6 +430,26 @@ const Admin = () => {
       description: 'URL preenchida automaticamente.'
     });
     setProdLoading(false);
+  };
+
+  // Upload de arquivo para bucket 'arquivos'
+  const aFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [aFileUploading, setAFileUploading] = useState(false);
+  const onSelectArquivoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAFileUploading(true);
+    const filePath = `arquivo-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('arquivos').upload(filePath, file, { contentType: file.type });
+    if (error) {
+      toast({ title: 'Erro ao enviar arquivo', description: error.message });
+      setAFileUploading(false);
+      return;
+    }
+    const { data } = supabase.storage.from('arquivos').getPublicUrl(filePath);
+    setALink(data.publicUrl);
+    toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+    setAFileUploading(false);
   };
 
   // Categorias CRUD
@@ -2130,6 +2150,10 @@ const Admin = () => {
                 <Label htmlFor="alink">Link URL</Label>
                 <div className="flex gap-2">
                   <Input id="alink" value={aLink} onChange={e => setALink(e.target.value)} placeholder="https://..." />
+                  <input ref={aFileInputRef} type="file" className="hidden" onChange={onSelectArquivoFile} />
+                  <Button type="button" variant="outline" onClick={() => aFileInputRef.current?.click()} disabled={aFileUploading}>
+                    <Upload className="h-4 w-4 mr-1" /> {aFileUploading ? 'Enviando...' : 'Upload'}
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2 md:col-span-2">
