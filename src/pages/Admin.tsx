@@ -17,6 +17,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import * as XLSX from 'xlsx';
+import { Checkbox } from "@/components/ui/checkbox";
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -156,6 +157,7 @@ const Admin = () => {
   const [editALink, setEditALink] = useState("");
   const [arqLoading, setArqLoading] = useState(false);
   const [editADesc, setEditADesc] = useState("");
+  const [aProds, setAProds] = useState<string[]>([]);
 
   // Arquivos - filtros e paginação
   const [faNome, setFaNome] = useState("");
@@ -1159,35 +1161,32 @@ const Admin = () => {
 
   // Arquivos CRUD (create)
   const createArquivo = async () => {
-    if (!aProd || !aTipo || !aNome.trim() || !aLink.trim()) {
+    if (!aProds.length || !aTipo || !aNome.trim() || !aLink.trim()) {
       toast({
         title: 'Preencha os campos obrigatórios',
-        description: 'Produto, Tipo, Nome e Link são obrigatórios.'
+        description: 'Produtos, Tipo, Nome e Link são obrigatórios.'
       });
       return;
     }
     setALoading(true);
-    const payload = {
-      produto_id: aProd,
+    const payloads = aProds.map((prodId) => ({
+      produto_id: prodId,
       categoria_arquivo: aTipo,
       nome_arquivo: aNome.trim(),
       descricao: aDesc.trim() || null,
       link_url: aLink.trim(),
-      listado: !aNaoListado
-    } as any;
-    const {
-      error
-    } = await supabase.from('arquivos').insert(payload);
+      listado: !aNaoListado,
+    } as any));
+    const { error } = await supabase.from('arquivos').insert(payloads);
     if (error) {
       toast({
         title: 'Erro ao cadastrar arquivo',
         description: error.message
       });
     } else {
-      toast({
-        title: 'Arquivo cadastrado'
-      });
+      toast({ title: 'Arquivo(s) cadastrado(s)' });
       setAProd('');
+      setAProds([]);
       setATipo('');
       setANome('');
       setADesc('');
@@ -2083,13 +2082,31 @@ const Admin = () => {
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-4 gap-3">
               <div>
-                <Label>Produto</Label>
-                <Select value={aProd} onValueChange={setAProd}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                  <SelectContent>
-                    {allProds.map(p => <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Produtos</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      {aProds.length ? `${aProds.length} selecionado(s)` : 'Selecione produtos'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-2 max-h-64 overflow-auto">
+                    <div className="space-y-1">
+                      {allProds.map(p => (
+                        <label key={p.id} className="flex items-center gap-2 p-1 rounded hover:bg-accent cursor-pointer">
+                          <Checkbox
+                            checked={aProds.includes(p.id)}
+                            onCheckedChange={(checked) => {
+                              const isChecked = Boolean(checked);
+                              setAProds(prev => isChecked ? Array.from(new Set([...prev, p.id])) : prev.filter(id => id !== p.id));
+                            }}
+                            aria-label={`Selecionar ${p.partnumber}`}
+                          />
+                          <span className="text-sm">{p.partnumber}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <Label htmlFor="anome">Nome do arquivo</Label>
@@ -2120,7 +2137,7 @@ const Admin = () => {
                 <Label htmlFor="anaolistado">Não listado</Label>
               </div>
               <div className="md:col-span-4">
-                <Button onClick={createArquivo} disabled={aLoading || !aProd || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
+                <Button onClick={createArquivo} disabled={aLoading || aProds.length === 0 || !aTipo || !aNome.trim() || !aLink.trim()}>Cadastrar arquivo</Button>
               </div>
             </div>
 
