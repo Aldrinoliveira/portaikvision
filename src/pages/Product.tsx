@@ -26,7 +26,7 @@ const Product = () => {
   const navigate = useNavigate();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
-  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "list">("list");
   
   useSEO("Produto – Arquivos", "Veja firmwares, documentos e vídeos para o produto.");
 
@@ -177,7 +177,7 @@ const Product = () => {
                    {cat === "video" && getVideoThumbnail(a.link_url) ? (
                      <div className="flex gap-3 w-full">
                         <div 
-                          className="relative w-10 h-12 cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
+                          className="relative w-40 h-24 cursor-pointer rounded-md overflow-hidden group flex-shrink-0"
                           onClick={() => handleDownload(a)}
                         >
                           <img 
