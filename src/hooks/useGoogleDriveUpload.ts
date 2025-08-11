@@ -19,6 +19,8 @@ export const useGoogleDriveUpload = () => {
     setIsUploading(true);
     
     try {
+      console.log('Starting upload process for file:', fileName || file.name);
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -31,25 +33,36 @@ export const useGoogleDriveUpload = () => {
         formData.append('fileName', fileName);
       }
 
+      console.log('Calling Google Drive upload function...');
       const { data, error } = await supabase.functions.invoke('google-drive-upload', {
         body: formData,
       });
 
+      console.log('Function response:', { data, error });
+
       if (error) {
-        throw new Error(error.message);
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Erro na função de upload');
+      }
+
+      if (!data) {
+        throw new Error('Nenhuma resposta da função de upload');
       }
 
       if (!data.success) {
+        console.error('Upload failed:', data.error);
         throw new Error(data.error || 'Falha no upload');
       }
 
+      console.log('Upload successful:', data);
       toast.success('Arquivo enviado para Google Drive com sucesso!');
       return data;
 
     } catch (error) {
       console.error('Erro no upload:', error);
-      toast.error(`Erro no upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro no upload: ${errorMessage}`);
+      return { success: false, error: errorMessage };
     } finally {
       setIsUploading(false);
     }

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { GoogleDriveUpload } from '@/components/GoogleDriveUpload';
 
 interface Produto {
@@ -24,7 +24,7 @@ interface Arquivo {
   id?: string;
   created_at?: string;
   produto_id: string;
-  categoria_arquivo: 'firmware' | 'manual' | 'datasheet' | 'video' | 'software' | 'outros';
+  categoria_arquivo: string; // Changed to string to match database
   nome_arquivo: string;
   link_url: string;
   descricao?: string;
@@ -94,7 +94,6 @@ export default function Admin() {
 
   async function adicionarProduto() {
     if (editandoProduto) {
-      // Atualizar produto existente
       const { data, error } = await supabase
         .from('produtos')
         .update(novoProduto)
@@ -109,7 +108,6 @@ export default function Admin() {
         setEditandoProduto(null);
       }
     } else {
-      // Adicionar novo produto
       const { data, error } = await supabase.from('produtos').insert([novoProduto]);
       if (error) {
         console.error('Erro ao adicionar produto:', error);
@@ -131,7 +129,6 @@ export default function Admin() {
 
   async function adicionarArquivo() {
     if (editandoArquivo) {
-      // Atualizar arquivo existente
       const { data, error } = await supabase
         .from('arquivos')
         .update(novoArquivo)
@@ -146,7 +143,6 @@ export default function Admin() {
         setEditandoArquivo(null);
       }
     } else {
-      // Adicionar novo arquivo
       const { data, error } = await supabase.from('arquivos').insert([novoArquivo]);
       if (error) {
         console.error('Erro ao adicionar arquivo:', error);
@@ -351,7 +347,7 @@ export default function Admin() {
 
           <div>
             <Label htmlFor="categoria">Categoria</Label>
-            <Select value={novoArquivo.categoria_arquivo} onValueChange={(value) => setNovoArquivo({...novoArquivo, categoria_arquivo: value as any})}>
+            <Select value={novoArquivo.categoria_arquivo} onValueChange={(value) => setNovoArquivo({...novoArquivo, categoria_arquivo: value})}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
@@ -362,6 +358,7 @@ export default function Admin() {
                 <SelectItem value="video">Vídeo</SelectItem>
                 <SelectItem value="software">Software</SelectItem>
                 <SelectItem value="outros">Outros</SelectItem>
+                <SelectItem value="documento">Documento</SelectItem>
               </SelectContent>
             </Select>
           </div>
