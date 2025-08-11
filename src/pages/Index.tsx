@@ -20,7 +20,7 @@ import HelpDialog from "@/components/HelpDialog";
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
-    document.title = "Hikvision – Firmware, Documentos e Vídeos";
+    document.title = "Hikvision – Portal de Arquivos";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Busque por número de série ou part number e baixe firmwares, documentos e vídeos de produtos Hikvision.");
   }, []);
