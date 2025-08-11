@@ -136,7 +136,7 @@ const Product = () => {
                               <img 
                                 src={getVideoThumbnail(a.link_url)!} 
                                 alt={`Capa do vídeo ${a.nome_arquivo}`}
-                                className="w-full h-16 object-cover group-hover:scale-105 transition-transform duration-200"
+                                className="w-1/2 h-32 object-cover group-hover:scale-105 transition-transform duration-200"
                                 loading="lazy"
                               />
                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
@@ -183,7 +183,7 @@ const Product = () => {
                           <img 
                             src={getVideoThumbnail(a.link_url)!} 
                             alt={`Capa do vídeo ${a.nome_arquivo}`}
-                            className="w-10 h-6 object-cover group-hover:scale-105 transition-transform duration-200"
+                            className="w-10 h-12 object-cover group-hover:scale-105 transition-transform duration-200"
                             loading="lazy"
                           />
                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
