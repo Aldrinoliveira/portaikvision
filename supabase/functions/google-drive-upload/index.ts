@@ -54,13 +54,22 @@ Deno.serve(async (req) => {
 
     console.log('File received:', fileName, 'Size:', file.size)
 
-    // Get OAuth2 credentials from secrets
+    // Get OAuth2 credentials from secrets - with detailed logging
+    console.log('Checking for environment variables...')
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
     const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN')
 
+    console.log('GOOGLE_CLIENT_ID exists:', !!clientId)
+    console.log('GOOGLE_CLIENT_SECRET exists:', !!clientSecret)
+    console.log('GOOGLE_REFRESH_TOKEN exists:', !!refreshToken)
+
     if (!clientId || !clientSecret || !refreshToken) {
-      console.error('Google OAuth2 credentials not configured')
+      console.error('Missing credentials:', {
+        clientId: !!clientId,
+        clientSecret: !!clientSecret,
+        refreshToken: !!refreshToken
+      })
       return new Response('Google OAuth2 credentials not configured', { status: 500, headers: corsHeaders })
     }
 
