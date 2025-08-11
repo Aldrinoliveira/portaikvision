@@ -194,9 +194,11 @@ const Admin = () => {
   const [firstCardMonth, setFirstCardMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [firstCardMonthlyCount, setFirstCardMonthlyCount] = useState<number>(0);
   
-  // Contagens de arquivos e produtos
+  // Contagens de arquivos, produtos, números de série e solicitações
   const [arquivosCount, setArquivosCount] = useState<number>(0);
   const [produtosCount, setProdutosCount] = useState<number>(0);
+  const [numerosSerieCount, setNumerosSerieCount] = useState<number>(0);
+  const [solicitacoesCount, setSolicitacoesCount] = useState<number>(0);
 
   // Site Settings (banner textos)
   type SiteSettings = {
@@ -237,7 +239,7 @@ const Admin = () => {
         return;
       }
       setUserEmail(session.user.email || null);
-      await Promise.all([loadBanners(), loadCategorias(), loadSubcategorias(), loadProdutos(), loadAllProds(), loadArquivos(), loadNumerosSerie(), loadSiteSettings(), loadSolicitacoes(), loadArquivosCount(), loadProdutosCount()]);
+      await Promise.all([loadBanners(), loadCategorias(), loadSubcategorias(), loadProdutos(), loadAllProds(), loadArquivos(), loadNumerosSerie(), loadSiteSettings(), loadSolicitacoes(), loadArquivosCount(), loadProdutosCount(), loadNumerosSerieCount(), loadSolicitacoesCount()]);
     };
     init();
   }, [navigate]);
@@ -900,6 +902,7 @@ const Admin = () => {
         ...s,
         status
       } : s).filter(s => s.status !== 'finalizado'));
+      await loadSolicitacoesCount();
     }
   };
   const finalizeSolicitacao = async (id: string) => {
@@ -934,7 +937,7 @@ const Admin = () => {
       });
       setNsProduto('');
       setNsNumero('');
-      await loadNumerosSerie();
+      await Promise.all([loadNumerosSerie(), loadNumerosSerieCount()]);
     }
     setNsLoading(false);
   };
@@ -1010,7 +1013,7 @@ const Admin = () => {
           title: `${sucessos.length} números importados com sucesso`,
           description: sucessos.length > 3 ? `${sucessos.slice(0, 3).join(', ')}...` : sucessos.join(', ')
         });
-        await loadNumerosSerie();
+        await Promise.all([loadNumerosSerie(), loadNumerosSerieCount()]);
       }
 
       if (erros.length > 0) {
@@ -1360,6 +1363,20 @@ const Admin = () => {
     if (!error) setProdutosCount(count || 0);
   };
 
+  const loadNumerosSerieCount = async () => {
+    const { count, error } = await supabase
+      .from('numeros_serie')
+      .select('id', { count: 'exact', head: true });
+    if (!error) setNumerosSerieCount(count || 0);
+  };
+
+  const loadSolicitacoesCount = async () => {
+    const { count, error } = await supabase
+      .from('solicitacoes_firmware')
+      .select('id', { count: 'exact', head: true });
+    if (!error) setSolicitacoesCount(count || 0);
+  };
+
   // Carregar contagem mensal para o primeiro card
   const loadFirstCardMonthlyCount = async () => {
     const { start, end } = getMonthRange(firstCardMonth);
@@ -1510,17 +1527,25 @@ const Admin = () => {
         </Card>
         <Card>
           <CardHeader className="items-center text-center gap-1 px-3 py-2">
-            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Arquivos e Produtos</CardTitle>
+            <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Registros</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Arquivos cadastrados</p>
-                <div className="text-3xl font-semibold">{arquivosCount}</div>
+                <div className="text-2xl font-semibold">{arquivosCount}</div>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Produtos cadastrados</p>
-                <div className="text-3xl font-semibold">{produtosCount}</div>
+                <div className="text-2xl font-semibold">{produtosCount}</div>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-1">Números de série</p>
+                <div className="text-2xl font-semibold">{numerosSerieCount}</div>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-1">Solicitações firmware</p>
+                <div className="text-2xl font-semibold">{solicitacoesCount}</div>
               </div>
             </div>
           </CardContent>
