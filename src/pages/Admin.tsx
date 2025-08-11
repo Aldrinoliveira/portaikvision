@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,7 @@ interface Produto {
   descricao: string;
   categoria_id: string;
   subcategoria_id: string;
-  listado: boolean;
-  imagens: string[];
-  datasheet: string;
-  video_url: string;
+  imagem_url: string;
 }
 
 interface Categoria {
@@ -52,10 +50,12 @@ interface Arquivo {
 interface Banner {
   id: string;
   created_at: string;
-  image_url: string;
-  link_url: string;
-  alt_text: string;
-  listado: boolean;
+  imagem_url: string;
+  link_redirecionamento: string;
+  titulo: string;
+  descricao: string;
+  tamanho: string;
+  ativo: boolean;
 }
 
 interface Solicitacao {
@@ -64,9 +64,9 @@ interface Solicitacao {
   nome: string;
   email: string;
   telefone: string;
-  empresa: string;
-  mensagem: string;
-  produto_interesse: string;
+  produto_nome: string;
+  numero_serie: string;
+  descricao: string;
   status: 'pendente' | 'resolvido';
 }
 
@@ -83,10 +83,7 @@ const Admin = () => {
     descricao: '',
     categoria_id: '',
     subcategoria_id: '',
-    listado: false,
-    imagens: [] as string[],
-    datasheet: '',
-    video_url: '',
+    imagem_url: '',
   });
 
   const [novaCategoria, setNovaCategoria] = useState({
@@ -109,10 +106,12 @@ const Admin = () => {
   });
 
   const [novoBanner, setNovoBanner] = useState({
-    image_url: '',
-    link_url: '',
-    alt_text: '',
-    listado: false,
+    imagem_url: '',
+    link_redirecionamento: '',
+    titulo: '',
+    descricao: '',
+    tamanho: '',
+    ativo: false,
   });
 
   useEffect(() => {
@@ -185,7 +184,7 @@ const Admin = () => {
   };
 
   const fetchSolicitacoes = async () => {
-    const { data, error } = await supabase.from('solicitacoes').select('*');
+    const { data, error } = await supabase.from('solicitacoes_firmware').select('*');
     if (error) {
       toast({
         title: "Erro ao buscar solicitações",
@@ -216,10 +215,7 @@ const Admin = () => {
         descricao: '',
         categoria_id: '',
         subcategoria_id: '',
-        listado: false,
-        imagens: [] as string[],
-        datasheet: '',
-        video_url: '',
+        imagem_url: '',
       });
     }
   };
@@ -310,16 +306,18 @@ const Admin = () => {
       });
       fetchBanners();
       setNovoBanner({
-        image_url: '',
-        link_url: '',
-        alt_text: '',
-        listado: false,
+        imagem_url: '',
+        link_redirecionamento: '',
+        titulo: '',
+        descricao: '',
+        tamanho: '',
+        ativo: false,
       });
     }
   };
 
   const handleSolicitacaoUpdate = async (id: string, status: 'pendente' | 'resolvido') => {
-    const { data, error } = await supabase.from('solicitacoes').update({ status }).eq('id', id);
+    const { data, error } = await supabase.from('solicitacoes_firmware').update({ status }).eq('id', id);
     if (error) {
       toast({
         title: "Erro ao atualizar solicitação",
@@ -412,32 +410,13 @@ const Admin = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="datasheet">Link do Datasheet</Label>
+                  <Label htmlFor="imagem_url">URL da Imagem</Label>
                   <Input
-                    id="datasheet"
-                    value={novoProduto.datasheet}
-                    onChange={(e) => setNovoProduto({...novoProduto, datasheet: e.target.value})}
-                    placeholder="URL do datasheet"
+                    id="imagem_url"
+                    value={novoProduto.imagem_url}
+                    onChange={(e) => setNovoProduto({...novoProduto, imagem_url: e.target.value})}
+                    placeholder="URL da imagem do produto"
                   />
-                </div>
-                
-                <div>
-                  <Label htmlFor="video_url">Link do Vídeo</Label>
-                  <Input
-                    id="video_url"
-                    value={novoProduto.video_url}
-                    onChange={(e) => setNovoProduto({...novoProduto, video_url: e.target.value})}
-                    placeholder="URL do vídeo"
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="listado"
-                    checked={novoProduto.listado}
-                    onCheckedChange={(checked) => setNovoProduto({...novoProduto, listado: checked})}
-                  />
-                  <Label htmlFor="listado">Produto listado publicamente</Label>
                 </div>
                 
                 <Button type="submit">Cadastrar Produto</Button>
@@ -666,45 +645,65 @@ const Admin = () => {
             <CardContent>
               <form onSubmit={handleBannerSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="image_url">URL da Imagem</Label>
+                  <Label htmlFor="imagem_url">URL da Imagem</Label>
                   <Input
-                    id="image_url"
-                    value={novoBanner.image_url}
-                    onChange={(e) => setNovoBanner({...novoBanner, image_url: e.target.value})}
+                    id="imagem_url"
+                    value={novoBanner.imagem_url}
+                    onChange={(e) => setNovoBanner({...novoBanner, imagem_url: e.target.value})}
                     placeholder="URL da imagem do banner"
                     required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="link_url">Link URL</Label>
+                  <Label htmlFor="link_redirecionamento">Link URL</Label>
                   <Input
-                    id="link_url"
-                    value={novoBanner.link_url}
-                    onChange={(e) => setNovoBanner({...novoBanner, link_url: e.target.value})}
+                    id="link_redirecionamento"
+                    value={novoBanner.link_redirecionamento}
+                    onChange={(e) => setNovoBanner({...novoBanner, link_redirecionamento: e.target.value})}
                     placeholder="URL de destino do banner"
                     required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="alt_text">Texto Alternativo</Label>
+                  <Label htmlFor="titulo">Título</Label>
                   <Input
-                    id="alt_text"
-                    value={novoBanner.alt_text}
-                    onChange={(e) => setNovoBanner({...novoBanner, alt_text: e.target.value})}
-                    placeholder="Texto alternativo para a imagem"
+                    id="titulo"
+                    value={novoBanner.titulo}
+                    onChange={(e) => setNovoBanner({...novoBanner, titulo: e.target.value})}
+                    placeholder="Título do banner"
                     required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Textarea
+                    id="descricao"
+                    value={novoBanner.descricao}
+                    onChange={(e) => setNovoBanner({...novoBanner, descricao: e.target.value})}
+                    placeholder="Descrição do banner"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="tamanho">Tamanho</Label>
+                  <Input
+                    id="tamanho"
+                    value={novoBanner.tamanho}
+                    onChange={(e) => setNovoBanner({...novoBanner, tamanho: e.target.value})}
+                    placeholder="Tamanho do banner (ex: 1920x1080)"
                   />
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <Switch
-                    id="listado"
-                    checked={novoBanner.listado}
-                    onCheckedChange={(checked) => setNovoBanner({...novoBanner, listado: checked})}
+                    id="ativo"
+                    checked={novoBanner.ativo}
+                    onCheckedChange={(checked) => setNovoBanner({...novoBanner, ativo: checked})}
                   />
-                  <Label htmlFor="listado">Banner listado publicamente</Label>
+                  <Label htmlFor="ativo">Banner ativo</Label>
                 </div>
                 
                 <Button type="submit">Cadastrar Banner</Button>
@@ -717,7 +716,7 @@ const Admin = () => {
           <Card>
             <CardHeader>
               <CardTitle>Gerenciar Solicitações</CardTitle>
-              <CardDescription>Visualize e gerencie as solicitações de contato</CardDescription>
+              <CardDescription>Visualize e gerencie as solicitações de firmware</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -734,10 +733,10 @@ const Admin = () => {
                         Telefone
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Empresa
+                        Produto
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Produto de Interesse
+                        Número de Série
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
@@ -753,8 +752,8 @@ const Admin = () => {
                         <td className="px-6 py-4 whitespace-nowrap">{solicitacao.nome}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{solicitacao.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{solicitacao.telefone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{solicitacao.empresa}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{solicitacao.produto_interesse}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{solicitacao.produto_nome}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{solicitacao.numero_serie}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{solicitacao.status}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {solicitacao.status === 'pendente' ? (
