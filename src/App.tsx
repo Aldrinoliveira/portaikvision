@@ -13,7 +13,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Software from "./pages/Software";
 import Ferramentas from "./pages/Ferramentas";
-import ContaboTest from "./pages/ContaboTest";
+
 
 const queryClient = new QueryClient();
 
@@ -49,7 +49,6 @@ const App = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="/software" element={<Software />} />
             <Route path="/ferramentas" element={<Ferramentas />} />
-            <Route path="/contabo-test" element={<ContaboTest />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
@@ -61,3 +60,4 @@ const App = () => {
 };
 
 export default App;
+
