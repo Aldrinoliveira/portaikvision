@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Bell, Calendar as CalendarIcon } from "lucide-react";
+import { Copy, Bell, Calendar as CalendarIcon, Upload } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import * as XLSX from 'xlsx';
 const Admin = () => {
   const navigate = useNavigate();
 
@@ -171,6 +172,7 @@ const Admin = () => {
   const [nsLoading, setNsLoading] = useState(false);
   const [numerosSerie, setNumerosSerie] = useState<NumeroSerie[]>([]);
   const [nsListLoading, setNsListLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // Solicitações (Não Encontrei)
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
@@ -935,6 +937,101 @@ const Admin = () => {
       await loadNumerosSerie();
     }
     setNsLoading(false);
+  };
+
+  // Upload de arquivo Excel para números de série
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Por favor, selecione um arquivo Excel (.xlsx ou .xls)'
+      });
+      return;
+    }
+
+    setUploadLoading(true);
+    
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Espera formato: primeira linha header, demais linhas: [partnumber, numero_serie]
+      const rows = jsonData.slice(1) as any[][]; // Remove header
+      
+      if (rows.length === 0) {
+        toast({
+          title: 'Arquivo vazio',
+          description: 'O arquivo Excel não contém dados para importar.'
+        });
+        setUploadLoading(false);
+        return;
+      }
+
+      const sucessos: string[] = [];
+      const erros: string[] = [];
+
+      for (const row of rows) {
+        if (!row[0] || !row[1]) continue; // Pula linhas vazias
+        
+        const partnumber = String(row[0]).trim();
+        const numeroSerie = String(row[1]).trim();
+        
+        // Encontra o produto pelo partnumber
+        const produto = allProds.find(p => p.partnumber === partnumber);
+        if (!produto) {
+          erros.push(`Produto "${partnumber}" não encontrado`);
+          continue;
+        }
+
+        try {
+          const { error } = await supabase.from('numeros_serie').insert({
+            produto_id: produto.id,
+            numero_serie: numeroSerie
+          });
+          
+          if (error) {
+            erros.push(`${partnumber} - ${numeroSerie}: ${error.message}`);
+          } else {
+            sucessos.push(`${partnumber} - ${numeroSerie}`);
+          }
+        } catch (error) {
+          erros.push(`${partnumber} - ${numeroSerie}: Erro interno`);
+        }
+      }
+
+      if (sucessos.length > 0) {
+        toast({
+          title: `${sucessos.length} números importados com sucesso`,
+          description: sucessos.length > 3 ? `${sucessos.slice(0, 3).join(', ')}...` : sucessos.join(', ')
+        });
+        await loadNumerosSerie();
+      }
+
+      if (erros.length > 0) {
+        toast({
+          title: `${erros.length} erros encontrados`,
+          description: erros.length > 2 ? `${erros.slice(0, 2).join(', ')}...` : erros.join(', '),
+          variant: 'destructive'
+        });
+      }
+
+    } catch (error) {
+      toast({
+        title: 'Erro ao processar arquivo',
+        description: 'Verifique se o arquivo está no formato correto.',
+        variant: 'destructive'
+      });
+    }
+
+    setUploadLoading(false);
+    // Reset input
+    e.target.value = '';
   };
 
   // Site Settings (carregar)
@@ -1880,22 +1977,46 @@ const Admin = () => {
             <CardTitle>Números de Série</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-4 gap-3">
-              <div>
-                <Label>Produto</Label>
-                <Select value={nsProduto} onValueChange={setNsProduto}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                  <SelectContent>
-                    {allProds.map(p => <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              {/* Cadastro individual */}
+              <div className="grid md:grid-cols-4 gap-3">
+                <div>
+                  <Label>Produto</Label>
+                  <Select value={nsProduto} onValueChange={setNsProduto}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
+                    <SelectContent>
+                      {allProds.map(p => <SelectItem key={p.id} value={p.id}>{p.partnumber}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="nsnumero">Número de série</Label>
+                  <Input id="nsnumero" value={nsNumero} onChange={e => setNsNumero(e.target.value)} placeholder="Máx. 9 dígitos" maxLength={9} />
+                </div>
+                <div className="md:col-span-4">
+                  <Button onClick={createNumeroSerie} disabled={nsLoading || !nsProduto || !nsNumero.trim()}>Cadastrar número de série</Button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="nsnumero">Número de série</Label>
-                <Input id="nsnumero" value={nsNumero} onChange={e => setNsNumero(e.target.value)} placeholder="Máx. 9 dígitos" maxLength={9} />
-              </div>
-              <div className="md:col-span-4">
-                <Button onClick={createNumeroSerie} disabled={nsLoading || !nsProduto || !nsNumero.trim()}>Cadastrar número de série</Button>
+
+              {/* Upload de Excel */}
+              <div className="rounded-md border bg-muted/40 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <h4 className="text-sm font-medium">Upload em lote (Excel)</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Formato esperado: Coluna A = Part Number, Coluna B = Número de Série. A primeira linha será ignorada (cabeçalho).
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelUpload}
+                    disabled={uploadLoading}
+                    className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+                  />
+                  {uploadLoading && <span className="text-sm text-muted-foreground">Processando arquivo...</span>}
+                </div>
               </div>
             </div>
 
