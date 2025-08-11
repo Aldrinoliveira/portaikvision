@@ -135,7 +135,7 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Cadastro de Arquivos com Upload */}
+          {/* Cadastro de Arquivos */}
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
