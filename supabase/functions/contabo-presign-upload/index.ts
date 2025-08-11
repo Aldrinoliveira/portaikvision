@@ -21,7 +21,6 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    // Para Contabo, use sempre 'eu-central-1' como região
     const region = 'eu-central-1';
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
@@ -40,15 +39,17 @@ serve(async (req) => {
     const fileKey = `uploads/${timestamp}-${fileName}`;
 
     // Create the presigned URL using AWS Signature Version 4
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const datetime = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const datetime = now.toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
     
     const credential = `${accessKeyId}/${date}/${region}/s3/aws4_request`;
     const algorithm = 'AWS4-HMAC-SHA256';
+    const expires = new Date(now.getTime() + 3600000).toISOString();
 
     // Create policy for POST upload
     const policy = {
-      expiration: new Date(Date.now() + 3600000).toISOString(),
+      expiration: expires,
       conditions: [
         { bucket: bucketName },
         { key: fileKey },
@@ -61,6 +62,7 @@ serve(async (req) => {
     };
 
     const policyBase64 = btoa(JSON.stringify(policy));
+    console.log('Policy created:', { policy, policyBase64 });
 
     // Create signature
     async function sign(key: Uint8Array, message: string): Promise<Uint8Array> {
@@ -77,6 +79,8 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
+    console.log('Creating signature with secret key length:', secretAccessKey.length);
+    
     const kDate = await sign(encoder.encode(`AWS4${secretAccessKey}`), date);
     const kRegion = await sign(kDate, region);
     const kService = await sign(kRegion, 's3');
@@ -87,11 +91,12 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // Para Contabo, use apenas o endpoint sem o bucket no URL
-    const uploadUrl = endpoint;
+    console.log('Signature created:', signatureHex.substring(0, 16) + '...');
+
+    // Para Contabo, construir URL completa com bucket
+    const uploadUrl = `${endpoint}/${bucketName}`;
     const formData = {
       key: fileKey,
-      bucket: bucketName,
       'Content-Type': contentType,
       'X-Amz-Algorithm': algorithm,
       'X-Amz-Credential': credential,
@@ -103,7 +108,8 @@ serve(async (req) => {
     console.log('Generated presigned upload URL successfully:', { 
       uploadUrl, 
       fileKey,
-      formData: Object.keys(formData)
+      formDataKeys: Object.keys(formData),
+      credentialUsed: credential
     });
 
     return new Response(JSON.stringify({ 

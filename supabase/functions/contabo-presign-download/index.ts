@@ -21,7 +21,6 @@ serve(async (req) => {
     const accessKeyId = Deno.env.get('CONTABO_S3_ACCESS_KEY_ID');
     const secretAccessKey = Deno.env.get('CONTABO_S3_SECRET_ACCESS_KEY');
     const bucketName = Deno.env.get('CONTABO_S3_BUCKET');
-    // Para Contabo, use sempre 'eu-central-1' como região
     const region = 'eu-central-1';
 
     if (!endpoint || !accessKeyId || !secretAccessKey || !bucketName) {
@@ -37,8 +36,9 @@ serve(async (req) => {
 
     // Create the presigned URL for download
     const host = new URL(endpoint).host;
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const datetime = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const datetime = now.toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
     const expires = '3600'; // 1 hour
     
     const credential = `${accessKeyId}/${date}/${region}/s3/aws4_request`;
@@ -64,6 +64,8 @@ serve(async (req) => {
       'host',
       'UNSIGNED-PAYLOAD'
     ].join('\n');
+
+    console.log('Canonical request created for download');
 
     // Create string to sign
     const hashedCanonicalRequest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonicalRequest));
@@ -106,7 +108,9 @@ serve(async (req) => {
     const downloadUrl = `${endpoint}/${bucketName}/${fileKey}?${query}&X-Amz-Signature=${signatureHex}`;
 
     console.log('Generated presigned download URL successfully:', {
-      downloadUrl: downloadUrl.substring(0, 100) + '...'
+      downloadUrl: downloadUrl.substring(0, 100) + '...',
+      method,
+      uri
     });
 
     return new Response(JSON.stringify({ 
