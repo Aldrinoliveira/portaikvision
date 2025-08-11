@@ -27,6 +27,8 @@ serve(async (req) => {
       throw new Error('Missing required Contabo S3 configuration');
     }
 
+    console.log('Using config:', { endpoint, bucketName, region, accessKeyId: accessKeyId.substring(0, 8) + '...' });
+
     // Create the presigned URL for download
     const host = new URL(endpoint).host;
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');

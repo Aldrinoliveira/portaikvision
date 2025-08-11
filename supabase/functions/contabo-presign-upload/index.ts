@@ -27,6 +27,8 @@ serve(async (req) => {
       throw new Error('Missing required Contabo S3 configuration');
     }
 
+    console.log('Using config:', { endpoint, bucketName, region, accessKeyId: accessKeyId.substring(0, 8) + '...' });
+
     // Generate unique file key
     const timestamp = Date.now();
     const fileKey = `uploads/${timestamp}-${fileName}`;
@@ -40,7 +42,7 @@ serve(async (req) => {
     const algorithm = 'AWS4-HMAC-SHA256';
     const expires = '3600'; // 1 hour
 
-    // Create policy
+    // Create policy for POST upload
     const policy = {
       expiration: new Date(Date.now() + 3600000).toISOString(),
       conditions: [
@@ -81,20 +83,19 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    const uploadUrl = endpoint;
+    // URL deve incluir o bucket no path
+    const uploadUrl = `${endpoint}/${bucketName}`;
     const formData = {
       key: fileKey,
       'Content-Type': contentType,
-      bucket: bucketName,
       'X-Amz-Algorithm': algorithm,
       'X-Amz-Credential': credential,
       'X-Amz-Date': datetime,
-      'X-Amz-Expires': expires,
       Policy: policyBase64,
       'X-Amz-Signature': signatureHex
     };
 
-    console.log('Generated presigned upload URL successfully');
+    console.log('Generated presigned upload URL successfully:', { uploadUrl, fileKey });
 
     return new Response(JSON.stringify({ 
       uploadUrl,
