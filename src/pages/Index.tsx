@@ -250,12 +250,16 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
       try {
         const to = localStorage.getItem('firmware_receiver_email') || '';
         if (to) {
-          await supabase.functions.invoke('send-firmware-request', {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke('send-firmware-request', {
             body: {
               to,
               ...payload,
             }
           });
+          if (fnError) {
+            console.warn('Email notification error:', fnError);
+            toast({ title: 'Aviso', description: 'Solicitação salva, mas o email não pôde ser enviado.' });
+          }
         }
       } catch (e) {
         console.warn('Falha ao notificar por email:', e);

@@ -53,18 +53,29 @@ serve(async (req) => {
     `;
 
     try {
-      const emailResponse = await resend.emails.send({
+      const result = await resend.emails.send({
         from: "Portal Firmware <onboarding@resend.dev>",
         to: [to],
         subject,
         html,
         reply_to: body.email || undefined,
       });
-      console.log("Resend response:", emailResponse);
+      if ((result as any)?.error) {
+        const err = (result as any).error;
+        console.error("Resend send error (result.error):", err);
+        return new Response(
+          JSON.stringify({ error: err?.message || "Resend error", details: err }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      console.log("Resend response:", result);
     } catch (e: any) {
-      console.error("Resend send error:", e);
+      console.error("Resend send exception:", e);
       return new Response(
-        JSON.stringify({ error: e?.message || "Resend error", details: e }),
+        JSON.stringify({ error: e?.message || "Resend exception", details: e }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
