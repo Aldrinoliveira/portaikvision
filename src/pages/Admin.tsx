@@ -180,6 +180,22 @@ const Admin = () => {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [solLoading, setSolLoading] = useState(false);
 
+  // Email de recebimento para solicitações
+  const [notifyEmail, setNotifyEmail] = useState<string>('');
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('firmware_receiver_email') || '';
+      setNotifyEmail(saved);
+    } catch {}
+  }, []);
+  const saveNotifyEmail = () => {
+    const v = (notifyEmail || '').trim();
+    try {
+      localStorage.setItem('firmware_receiver_email', v);
+    } catch {}
+    toast({ title: 'Email salvo', description: v ? `Solicitações serão enviadas para: ${v}` : 'Email removido' });
+  };
+
   // Dashboard – Downloads
   const [dailyDate, setDailyDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [monthSel, setMonthSel] = useState<string>(new Date().toISOString().slice(0, 7));
@@ -2456,6 +2472,25 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Notificações por Email */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notificações por Email</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+              <div>
+                <Label htmlFor="notifyemail">Email de recebimento das solicitações</Label>
+                <Input id="notifyemail" type="email" placeholder="exemplo@empresa.com" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                <p className="text-xs text-muted-foreground mt-1">Este email receberá as notificações do botão "Não encontrei".</p>
+              </div>
+              <Button onClick={saveNotifyEmail} className="sm:w-40">Salvar</Button>
+            </div>
           </CardContent>
         </Card>
       </section>

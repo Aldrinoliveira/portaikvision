@@ -246,6 +246,20 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
     if (error) {
       toast({ title: "Erro ao enviar", description: error.message });
     } else {
+      // Dispara notificação por email (se configurado no Admin)
+      try {
+        const to = localStorage.getItem('firmware_receiver_email') || '';
+        if (to) {
+          await supabase.functions.invoke('send-firmware-request', {
+            body: {
+              to,
+              ...payload,
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Falha ao notificar por email:', e);
+      }
       toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
       setOpenRequest(false);
       setReqDesc("");
