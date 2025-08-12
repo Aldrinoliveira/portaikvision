@@ -440,7 +440,7 @@ const Admin = () => {
     if (!file) return;
     setAFileUploading(true);
     try {
-      const fileName = `arquivo-${Date.now()}-${file.name}`;
+      const fileName = file.name;
       // 1) Tenta fluxo de pré-assinatura (PUT ou POST policy)
       const { data: presign, error: presignErr }: any = await supabase.functions.invoke('upload-contabo', {
         body: {

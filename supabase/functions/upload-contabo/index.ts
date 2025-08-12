@@ -99,9 +99,11 @@ async function extractPayload(req: Request) {
   }
 
   if (!key) {
-    // compute key from folder + fileName
+    // compute key from folder + original fileName (preserve original basename)
     const safeFolder = folder.replace(/^\/+|\/+$/g, "");
-    const safeName = (fileName || `upload-${Date.now()}`).replace(/[^a-zA-Z0-9._-]/g, "-");
+    let baseName = (fileName || `upload-${Date.now()}`).replace(/[\\]/g, "/");
+    baseName = baseName.split("/").pop() || `upload-${Date.now()}`;
+    const safeName = baseName.trim();
     key = safeFolder ? `${safeFolder}/${safeName}` : safeName;
   }
 
