@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { decode as b64decode } from "https://deno.land/std@0.224.0/encoding/base64.ts";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { AwsClient } from "https://esm.sh/aws4fetch@1.0.17";
 
 const corsHeaders = {
@@ -22,7 +22,7 @@ function parseDataUrl(dataUrl: string): { mime: string; bytes: Uint8Array } | nu
     if (!match) return null;
     const mime = match[1] || "application/octet-stream";
     const base64 = match[2] || "";
-    const bytes = b64decode(base64);
+    const bytes = decodeBase64(base64);
     return { mime, bytes };
   } catch (_e) {
     return null;
@@ -61,7 +61,7 @@ async function extractPayload(req: Request) {
           mime = parsed.mime;
         }
       } else if (base64) {
-        bytes = b64decode(base64.replace(/^data:.*;base64,/, ""));
+        bytes = decodeBase64(base64.replace(/^data:.*;base64,/, ""));
       }
       if (!fileName) fileName = `upload-${Date.now()}`;
     }
@@ -87,7 +87,7 @@ async function extractPayload(req: Request) {
         mime = parsed.mime;
       }
     } else if (base64) {
-      bytes = b64decode(String(base64).replace(/^data:.*;base64,/, ""));
+      bytes = decodeBase64(String(base64).replace(/^data:.*;base64,/, ""));
     }
   } else {
     // Fallback: attempt to read raw body as bytes (rare)
