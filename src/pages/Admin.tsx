@@ -191,11 +191,11 @@ const Admin = () => {
     count: number;
   }[]>([]);
   const [seriesLoading, setSeriesLoading] = useState(false);
-  
+
   // Primeiro card - mes selecionado para downloads mensais
   const [firstCardMonth, setFirstCardMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [firstCardMonthlyCount, setFirstCardMonthlyCount] = useState<number>(0);
-  
+
   // Contagens de arquivos, produtos, números de série e solicitações
   const [arquivosCount, setArquivosCount] = useState<number>(0);
   const [produtosCount, setProdutosCount] = useState<number>(0);
@@ -254,7 +254,6 @@ const Admin = () => {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-
 
   // Banners CRUD
   const loadBanners = async () => {
@@ -442,14 +441,17 @@ const Admin = () => {
     try {
       const fileName = file.name;
       // 1) Tenta fluxo de pré-assinatura (PUT ou POST policy)
-      const { data: presign, error: presignErr }: any = await supabase.functions.invoke('upload-contabo', {
+      const {
+        data: presign,
+        error: presignErr
+      }: any = await supabase.functions.invoke('upload-contabo', {
         body: {
           action: 'presign',
           fileName,
           fileType: file.type,
           folder: 'arquivos',
-          size: file.size,
-        },
+          size: file.size
+        }
       });
       if (!presignErr && presign) {
         const d: any = presign;
@@ -457,13 +459,18 @@ const Admin = () => {
         if (d.uploadUrl) {
           const putRes = await fetch(d.uploadUrl, {
             method: 'PUT',
-            headers: { 'Content-Type': file.type },
-            body: file,
+            headers: {
+              'Content-Type': file.type
+            },
+            body: file
           });
           if (!putRes.ok) throw new Error('Falha no upload (PUT presign).');
-          const publicUrl = d.publicUrl || d.url || d.fileUrl || d.Location || d.location || d.cdnUrl || d.baseUrl && d.key ? `${d.baseUrl}/${d.key}` : (d.uploadUrl.split('?')[0]);
+          const publicUrl = d.publicUrl || d.url || d.fileUrl || d.Location || d.location || d.cdnUrl || d.baseUrl && d.key ? `${d.baseUrl}/${d.key}` : d.uploadUrl.split('?')[0];
           setALink(publicUrl);
-          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+          toast({
+            title: 'Arquivo enviado',
+            description: 'Link preenchido automaticamente.'
+          });
           return;
         }
         // POST policy (campos + url)
@@ -471,41 +478,73 @@ const Admin = () => {
           const form = new FormData();
           Object.entries(d.fields).forEach(([k, v]: [string, any]) => form.append(k, String(v)));
           form.append('file', file);
-          const postRes = await fetch(d.url, { method: 'POST', body: form });
+          const postRes = await fetch(d.url, {
+            method: 'POST',
+            body: form
+          });
           if (!postRes.ok) throw new Error('Falha no upload (POST policy).');
           const publicUrl = d.publicUrl || `${d.url}${d.url.endsWith('/') ? '' : '/'}${d.fields.key}`;
           setALink(publicUrl);
-          toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+          toast({
+            title: 'Arquivo enviado',
+            description: 'Link preenchido automaticamente.'
+          });
           return;
         }
       }
 
       // 2) Fallbacks JSON: tentar diferentes formatos aceitos pela função existente
       const base64 = await fileToBase64(file);
-      const tryBodies: any[] = [
-        { fileName, mimeType: file.type, dataUrl: `data:${file.type};base64,${base64}`, folder: 'arquivos' },
-        { fileName, fileType: file.type, fileBase64: base64, folder: 'arquivos' },
-        { key: `arquivos/${fileName}`, contentType: file.type, base64 },
-        { filename: fileName, type: file.type, file: base64, folder: 'arquivos' },
-      ];
-
+      const tryBodies: any[] = [{
+        fileName,
+        mimeType: file.type,
+        dataUrl: `data:${file.type};base64,${base64}`,
+        folder: 'arquivos'
+      }, {
+        fileName,
+        fileType: file.type,
+        fileBase64: base64,
+        folder: 'arquivos'
+      }, {
+        key: `arquivos/${fileName}`,
+        contentType: file.type,
+        base64
+      }, {
+        filename: fileName,
+        type: file.type,
+        file: base64,
+        folder: 'arquivos'
+      }];
       let okUrl: string | undefined;
       for (const body of tryBodies) {
-        const { data, error } = await supabase.functions.invoke('upload-contabo', { body });
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('upload-contabo', {
+          body
+        });
         if (!error) {
           const d: any = data ?? {};
           const url = d.publicUrl || d.url || d.Location || d.location || d.fileUrl || (typeof d === 'string' ? d : undefined);
-          if (url) { okUrl = url; break; }
+          if (url) {
+            okUrl = url;
+            break;
+          }
         }
       }
       if (okUrl) {
         setALink(okUrl);
-        toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+        toast({
+          title: 'Arquivo enviado',
+          description: 'Link preenchido automaticamente.'
+        });
         return;
       }
 
       // 3) Fallback multipart (última tentativa)
-      const { data: sess } = await supabase.auth.getSession();
+      const {
+        data: sess
+      } = await supabase.auth.getSession();
       const token = sess?.session?.access_token ?? '';
       const form = new FormData();
       form.append('file', file);
@@ -514,19 +553,34 @@ const Admin = () => {
       form.append('folder', 'arquivos');
       const res = await fetch('https://vtafquzacrmemncgcjcc.supabase.co/functions/v1/upload-contabo', {
         method: 'POST',
-        headers: { authorization: `Bearer ${token}`, apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YWZxdXphY3JtZW1uY2djamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg0MzYsImV4cCI6MjA3MDA2NDQzNn0.JioCFooPIkpDYbYUUyHLmUH9N4CNBt-aWQh9IwGT1ys' },
-        body: form,
+        headers: {
+          authorization: `Bearer ${token}`,
+          apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0YWZxdXphY3JtZW1uY2djamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg0MzYsImV4cCI6MjA3MDA2NDQzNn0.JioCFooPIkpDYbYUUyHLmUH9N4CNBt-aWQh9IwGT1ys'
+        },
+        body: form
       });
       if (!res.ok) throw new Error(`Falha no upload (multipart): ${res.status}`);
       const text = await res.text();
       let parsed: any = {};
-      try { parsed = JSON.parse(text); } catch { parsed = { url: text }; }
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        parsed = {
+          url: text
+        };
+      }
       const finalUrl = parsed.publicUrl || parsed.url || parsed.Location || parsed.location || parsed.fileUrl || (typeof parsed === 'string' ? parsed : undefined);
       if (!finalUrl) throw new Error('Upload concluído, mas sem URL de retorno.');
       setALink(finalUrl);
-      toast({ title: 'Arquivo enviado', description: 'Link preenchido automaticamente.' });
+      toast({
+        title: 'Arquivo enviado',
+        description: 'Link preenchido automaticamente.'
+      });
     } catch (err: any) {
-      toast({ title: 'Erro ao enviar arquivo', description: String(err?.message || err) });
+      toast({
+        title: 'Erro ao enviar arquivo',
+        description: String(err?.message || err)
+      });
     } finally {
       setAFileUploading(false);
     }
@@ -569,17 +623,25 @@ const Admin = () => {
   // Subcategorias CRUD
   const createSubcategoria = async () => {
     if (!subCat || !subNome.trim()) {
-      toast({ title: 'Preencha os campos', description: 'Categoria e Nome são obrigatórios.' });
+      toast({
+        title: 'Preencha os campos',
+        description: 'Categoria e Nome são obrigatórios.'
+      });
       return;
     }
     setSubLoading(true);
-    const { error } = await supabase.from('subcategorias').insert({
+    const {
+      error
+    } = await supabase.from('subcategorias').insert({
       categoria_id: subCat,
       nome: subNome.trim(),
-      descricao: subDesc.trim() || null,
+      descricao: subDesc.trim() || null
     } as any);
     if (error) {
-      toast({ title: 'Erro ao criar subcategoria', description: error.message });
+      toast({
+        title: 'Erro ao criar subcategoria',
+        description: error.message
+      });
     } else {
       setSubCat('');
       setSubNome('');
@@ -588,59 +650,77 @@ const Admin = () => {
     }
     setSubLoading(false);
   };
-
   const startEditSubcategoria = (s: Subcategoria) => {
     setEditingSubId(s.id);
     setEditSubCat(s.categoria_id);
     setEditSubNome(s.nome);
     setEditSubDesc(s.descricao || '');
   };
-
   const cancelEditSubcategoria = () => {
     setEditingSubId(null);
     setEditSubCat('');
     setEditSubNome('');
     setEditSubDesc('');
   };
-
   const saveSubcategoria = async () => {
     if (!editingSubId) return;
     if (!editSubCat || !editSubNome.trim()) {
-      toast({ title: 'Preencha os campos', description: 'Categoria e Nome são obrigatórios.' });
+      toast({
+        title: 'Preencha os campos',
+        description: 'Categoria e Nome são obrigatórios.'
+      });
       return;
     }
     setSubLoading(true);
-    const { error } = await supabase.from('subcategorias').update({
+    const {
+      error
+    } = await supabase.from('subcategorias').update({
       categoria_id: editSubCat,
       nome: editSubNome.trim(),
-      descricao: editSubDesc.trim() || null,
+      descricao: editSubDesc.trim() || null
     }).eq('id', editingSubId);
     if (error) {
-      toast({ title: 'Erro ao salvar subcategoria', description: error.message });
+      toast({
+        title: 'Erro ao salvar subcategoria',
+        description: error.message
+      });
     } else {
       await loadSubcategorias();
       cancelEditSubcategoria();
     }
     setSubLoading(false);
   };
-
   const deleteSubcategoria = async (s: Subcategoria) => {
     if (!confirm('Excluir esta subcategoria?')) return;
-    const { count, error: cntErr } = await supabase
-      .from('produtos')
-      .select('id', { count: 'exact', head: true })
-      .eq('subcategoria_id', s.id);
+    const {
+      count,
+      error: cntErr
+    } = await supabase.from('produtos').select('id', {
+      count: 'exact',
+      head: true
+    }).eq('subcategoria_id', s.id);
     if (cntErr) {
-      toast({ title: 'Erro ao verificar vínculos', description: cntErr.message });
+      toast({
+        title: 'Erro ao verificar vínculos',
+        description: cntErr.message
+      });
       return;
     }
     if ((count || 0) > 0) {
-      toast({ title: 'Não é possível excluir', description: 'Existem produtos vinculados a esta subcategoria.' });
+      toast({
+        title: 'Não é possível excluir',
+        description: 'Existem produtos vinculados a esta subcategoria.'
+      });
       return;
     }
-    const { error } = await supabase.from('subcategorias').delete().eq('id', s.id);
+    const {
+      error
+    } = await supabase.from('subcategorias').delete().eq('id', s.id);
     if (error) {
-      toast({ title: 'Erro ao excluir subcategoria', description: error.message });
+      toast({
+        title: 'Erro ao excluir subcategoria',
+        description: error.message
+      });
     } else {
       setSubcategorias(prev => prev.filter(x => x.id !== s.id));
     }
@@ -869,12 +949,15 @@ const Admin = () => {
   // Atualiza contagem de arquivos por produto (na página atual)
   useEffect(() => {
     const ids = produtos.map(p => p.id);
-    if (ids.length === 0) { setProdFileCounts({}); return; }
+    if (ids.length === 0) {
+      setProdFileCounts({});
+      return;
+    }
     (async () => {
-      const { data, error } = await supabase
-        .from('arquivos')
-        .select('id, produto_id')
-        .in('produto_id', ids);
+      const {
+        data,
+        error
+      } = await supabase.from('arquivos').select('id, produto_id').in('produto_id', ids);
       if (!error) {
         const counts: Record<string, number> = {};
         (data as any[]).forEach((row: any) => {
@@ -884,15 +967,17 @@ const Admin = () => {
       }
     })();
   }, [produtos]);
-
   const loadFilesForProduct = async (prodId: string) => {
     if (prodFilesMap[prodId]) return;
-    const { data } = await supabase
-      .from('arquivos')
-      .select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, listado')
-      .eq('produto_id', prodId)
-      .order('created_at', { ascending: false });
-    setProdFilesMap(prev => ({ ...prev, [prodId]: (data as any) || [] }));
+    const {
+      data
+    } = await supabase.from('arquivos').select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, listado').eq('produto_id', prodId).order('created_at', {
+      ascending: false
+    });
+    setProdFilesMap(prev => ({
+      ...prev,
+      [prodId]: data as any || []
+    }));
   };
 
   // Produtos (lista para seleção em Arquivos)
@@ -917,32 +1002,37 @@ const Admin = () => {
   const loadArquivos = async () => {
     setArqListLoading(true);
     try {
-      let query = supabase
-        .from('arquivos')
-        .select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, created_at, listado', { count: 'exact' })
-        .order('created_at', { ascending: false });
-
+      let query = supabase.from('arquivos').select('id, produto_id, nome_arquivo, descricao, categoria_arquivo, link_url, downloads, created_at, listado', {
+        count: 'exact'
+      }).order('created_at', {
+        ascending: false
+      });
       if (faProd) query = query.eq('produto_id', faProd);
       if (faTipo) query = query.eq('categoria_arquivo', faTipo);
       if (faNome.trim()) query = query.ilike('nome_arquivo', `%${faNome.trim()}%`);
       if (faDesc.trim()) query = query.ilike('descricao', `%${faDesc.trim()}%`);
-
       const from = (arqPage - 1) * ARQ_PAGE_SIZE;
       const to = from + ARQ_PAGE_SIZE - 1;
-      const { data, count, error } = await query.range(from, to);
+      const {
+        data,
+        count,
+        error
+      } = await query.range(from, to);
       if (error) {
-        toast({ title: 'Erro ao carregar arquivos', description: error.message });
+        toast({
+          title: 'Erro ao carregar arquivos',
+          description: error.message
+        });
         setArquivos([]);
         setArqTotal(0);
         return;
       }
-      setArquivos((data as any) || []);
+      setArquivos(data as any || []);
       setArqTotal(count || 0);
     } finally {
       setArqListLoading(false);
     }
   };
-
   useEffect(() => {
     loadArquivos();
   }, [faNome, faDesc, faTipo, faProd, arqPage]);
@@ -1048,7 +1138,6 @@ const Admin = () => {
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.name.match(/\.(xlsx|xls)$/)) {
       toast({
         title: 'Formato inválido',
@@ -1056,19 +1145,19 @@ const Admin = () => {
       });
       return;
     }
-
     setUploadLoading(true);
-    
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1
+      });
 
       // Espera formato: primeira linha header, demais linhas: [partnumber, numero_serie]
       const rows = jsonData.slice(1) as any[][]; // Remove header
-      
+
       if (rows.length === 0) {
         toast({
           title: 'Arquivo vazio',
@@ -1077,29 +1166,27 @@ const Admin = () => {
         setUploadLoading(false);
         return;
       }
-
       const sucessos: string[] = [];
       const erros: string[] = [];
-
       for (const row of rows) {
         if (!row[0] || !row[1]) continue; // Pula linhas vazias
-        
+
         const partnumber = String(row[0]).trim();
         const numeroSerie = String(row[1]).trim();
-        
+
         // Encontra o produto pelo partnumber
         const produto = allProds.find(p => p.partnumber === partnumber);
         if (!produto) {
           erros.push(`Produto "${partnumber}" não encontrado`);
           continue;
         }
-
         try {
-          const { error } = await supabase.from('numeros_serie').insert({
+          const {
+            error
+          } = await supabase.from('numeros_serie').insert({
             produto_id: produto.id,
             numero_serie: numeroSerie
           });
-          
           if (error) {
             erros.push(`${partnumber} - ${numeroSerie}: ${error.message}`);
           } else {
@@ -1109,7 +1196,6 @@ const Admin = () => {
           erros.push(`${partnumber} - ${numeroSerie}: Erro interno`);
         }
       }
-
       if (sucessos.length > 0) {
         toast({
           title: `${sucessos.length} números importados com sucesso`,
@@ -1117,7 +1203,6 @@ const Admin = () => {
         });
         await Promise.all([loadNumerosSerie(), loadNumerosSerieCount()]);
       }
-
       if (erros.length > 0) {
         toast({
           title: `${erros.length} erros encontrados`,
@@ -1125,7 +1210,6 @@ const Admin = () => {
           variant: 'destructive'
         });
       }
-
     } catch (error) {
       toast({
         title: 'Erro ao processar arquivo',
@@ -1133,7 +1217,6 @@ const Admin = () => {
         variant: 'destructive'
       });
     }
-
     setUploadLoading(false);
     // Reset input
     e.target.value = '';
@@ -1269,22 +1352,26 @@ const Admin = () => {
       return;
     }
     setALoading(true);
-    const payloads = aProds.map((prodId) => ({
+    const payloads = aProds.map(prodId => ({
       produto_id: prodId,
       categoria_arquivo: aTipo,
       nome_arquivo: aNome.trim(),
       descricao: aDesc.trim() || null,
       link_url: aLink.trim(),
-      listado: !aNaoListado,
-    } as any));
-    const { error } = await supabase.from('arquivos').insert(payloads);
+      listado: !aNaoListado
+    }) as any);
+    const {
+      error
+    } = await supabase.from('arquivos').insert(payloads);
     if (error) {
       toast({
         title: 'Erro ao cadastrar arquivo',
         description: error.message
       });
     } else {
-      toast({ title: 'Arquivo(s) cadastrado(s)' });
+      toast({
+        title: 'Arquivo(s) cadastrado(s)'
+      });
       setAProd('');
       setAProds([]);
       setATipo('');
@@ -1320,12 +1407,15 @@ const Admin = () => {
     } catch {}
   };
 
-// Dashboard helpers and loaders
+  // Dashboard helpers and loaders
   const getDayRange = (dateStr: string) => {
     const start = new Date(dateStr + 'T00:00:00');
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
-    return { start: start.toISOString(), end: end.toISOString() };
+    return {
+      start: start.toISOString(),
+      end: end.toISOString()
+    };
   };
   const toYMD = (d: Date) => {
     const y = d.getFullYear();
@@ -1341,16 +1431,25 @@ const Admin = () => {
     const start = new Date(ym + '-01T00:00:00');
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
-    return { start: start.toISOString(), end: end.toISOString() };
+    return {
+      start: start.toISOString(),
+      end: end.toISOString()
+    };
   };
   const getRecentMonths = (n: number) => {
-    const months: { value: string; label: string }[] = [];
+    const months: {
+      value: string;
+      label: string;
+    }[] = [];
     const d = new Date();
     d.setDate(1);
     for (let i = 0; i < n; i++) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
-      months.push({ value: `${y}-${m}`, label: `${m}/${y}` });
+      months.push({
+        value: `${y}-${m}`,
+        label: `${m}/${y}`
+      });
       d.setMonth(d.getMonth() - 1);
     }
     return months;
@@ -1446,47 +1545,64 @@ const Admin = () => {
       setSeriesLoading(false);
     }
   };
-  
+
   // Carregar contagens de arquivos e produtos
   const loadArquivosCount = async () => {
-    const { count, error } = await supabase
-      .from('arquivos')
-      .select('id', { count: 'exact', head: true });
+    const {
+      count,
+      error
+    } = await supabase.from('arquivos').select('id', {
+      count: 'exact',
+      head: true
+    });
     if (!error) setArquivosCount(count || 0);
   };
-
   const loadProdutosCount = async () => {
-    const { count, error } = await supabase
-      .from('produtos')
-      .select('id', { count: 'exact', head: true });
+    const {
+      count,
+      error
+    } = await supabase.from('produtos').select('id', {
+      count: 'exact',
+      head: true
+    });
     if (!error) setProdutosCount(count || 0);
   };
-
   const loadNumerosSerieCount = async () => {
-    const { count, error } = await supabase
-      .from('numeros_serie')
-      .select('id', { count: 'exact', head: true });
+    const {
+      count,
+      error
+    } = await supabase.from('numeros_serie').select('id', {
+      count: 'exact',
+      head: true
+    });
     if (!error) setNumerosSerieCount(count || 0);
   };
-
   const loadSolicitacoesCount = async () => {
-    const { count, error } = await supabase
-      .from('solicitacoes_firmware')
-      .select('id', { count: 'exact', head: true });
+    const {
+      count,
+      error
+    } = await supabase.from('solicitacoes_firmware').select('id', {
+      count: 'exact',
+      head: true
+    });
     if (!error) setSolicitacoesCount(count || 0);
   };
 
   // Carregar contagem mensal para o primeiro card
   const loadFirstCardMonthlyCount = async () => {
-    const { start, end } = getMonthRange(firstCardMonth);
-    const { count, error } = await supabase
-      .from('download_logs')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', start)
-      .lt('created_at', end);
+    const {
+      start,
+      end
+    } = getMonthRange(firstCardMonth);
+    const {
+      count,
+      error
+    } = await supabase.from('download_logs').select('id', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', start).lt('created_at', end);
     if (!error) setFirstCardMonthlyCount(count || 0);
   };
-
   useEffect(() => {
     loadDailyCount();
   }, [dailyDate]);
@@ -1536,13 +1652,7 @@ const Admin = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={new Date(dailyDate)}
-                      onSelect={(d: Date | undefined) => d && setDailyDate(toYMD(d))}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
+                    <Calendar mode="single" selected={new Date(dailyDate)} onSelect={(d: Date | undefined) => d && setDailyDate(toYMD(d))} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -1553,17 +1663,15 @@ const Admin = () => {
                     <SelectValue placeholder="Selecione o mês" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getRecentMonths(12).map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
+                    {getRecentMonths(12).map(m => <SelectItem key={m.value} value={m.value}>
                         {m.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-3">
+          <CardContent className="py-[34px] my-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Do dia</p>
@@ -1575,9 +1683,7 @@ const Admin = () => {
                   {firstCardMonthlyCount}
                   <span className="ml-1 text-xl font-bold opacity-80">/3000</span>
                 </div>
-                {firstCardMonthlyCount > 3000 && (
-                  <p className="text-xs text-destructive font-medium mt-1">Limite mensal ultrapassado</p>
-                )}
+                {firstCardMonthlyCount > 3000 && <p className="text-xs text-destructive font-medium mt-1">Limite mensal ultrapassado</p>}
               </div>
             </div>
           </CardContent>
@@ -1594,41 +1700,38 @@ const Admin = () => {
                   <SelectValue placeholder="Selecione o mês" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getRecentMonths(12).map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
+                  {getRecentMonths(12).map(m => <SelectItem key={m.value} value={m.value}>
                       {m.label}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
           <CardContent className="px-3 pt-2 overflow-hidden">
-            {dailySeries.length > 0 ? (
-              <ChartContainer
-                config={{
-                  count: { label: 'Downloads', color: 'hsl(var(--primary))' },
-                }}
-                className="h-40 sm:h-44 w-full"
-              >
-                <LineChart data={dailySeries} margin={{ left: 8, right: 8 }}>
+            {dailySeries.length > 0 ? <ChartContainer config={{
+            count: {
+              label: 'Downloads',
+              color: 'hsl(var(--primary))'
+            }
+          }} className="h-40 sm:h-44 w-full">
+                <LineChart data={dailySeries} margin={{
+              left: 8,
+              right: 8
+            }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} fontSize={11} />
                   <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={28} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                 </LineChart>
-              </ChartContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground">Sem dados no período.</p>
-            )}
+              </ChartContainer> : <p className="text-sm text-muted-foreground">Sem dados no período.</p>}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="items-center text-center gap-1 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Registros</CardTitle>
           </CardHeader>
-          <CardContent className="py-3">
+          <CardContent className="mx-0 py-0 my-[40px]">
             <div className="grid grid-cols-2 gap-4 justify-items-center w-fit mx-auto text-center">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Arquivos cadastrados</p>
@@ -1792,9 +1895,7 @@ const Admin = () => {
                 <Select value={subCat} onValueChange={setSubCat}>
                   <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                   <SelectContent>
-                    {categorias.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                    ))}
+                    {categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -1822,58 +1923,36 @@ const Admin = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subcategorias.map(s => (
-                    <TableRow key={s.id}>
+                  {subcategorias.map(s => <TableRow key={s.id}>
                       <TableCell>
-                        {editingSubId === s.id ? (
-                          <Input value={editSubNome} onChange={e => setEditSubNome(e.target.value)} placeholder="Nome" />
-                        ) : (
-                          <span className="font-medium">{s.nome}</span>
-                        )}
+                        {editingSubId === s.id ? <Input value={editSubNome} onChange={e => setEditSubNome(e.target.value)} placeholder="Nome" /> : <span className="font-medium">{s.nome}</span>}
                       </TableCell>
                       <TableCell className="min-w-[220px]">
-                        {editingSubId === s.id ? (
-                          <Input value={editSubDesc} onChange={e => setEditSubDesc(e.target.value)} placeholder="Descrição (opcional)" />
-                        ) : (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{s.descricao}</p>
-                        )}
+                        {editingSubId === s.id ? <Input value={editSubDesc} onChange={e => setEditSubDesc(e.target.value)} placeholder="Descrição (opcional)" /> : <p className="text-sm text-muted-foreground line-clamp-2">{s.descricao}</p>}
                       </TableCell>
                       <TableCell className="min-w-[200px]">
-                        {editingSubId === s.id ? (
-                          <Select value={editSubCat} onValueChange={setEditSubCat}>
+                        {editingSubId === s.id ? <Select value={editSubCat} onValueChange={setEditSubCat}>
                             <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
                             <SelectContent>
-                              {categorias.map(c => (
-                                <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                              ))}
+                              {categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                             </SelectContent>
-                          </Select>
-                        ) : (
-                          categorias.find(c => c.id === s.categoria_id)?.nome || '-'
-                        )}
+                          </Select> : categorias.find(c => c.id === s.categoria_id)?.nome || '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-2">
-                          {editingSubId === s.id ? (
-                            <>
+                          {editingSubId === s.id ? <>
                               <Button size="sm" onClick={saveSubcategoria} disabled={subLoading || !editSubCat || !editSubNome.trim()}>Salvar</Button>
                               <Button size="sm" variant="outline" onClick={cancelEditSubcategoria}>Cancelar</Button>
-                            </>
-                          ) : (
-                            <>
+                            </> : <>
                               <Button size="sm" variant="secondary" onClick={() => startEditSubcategoria(s)}>Editar</Button>
                               <Button size="sm" variant="destructive" onClick={() => deleteSubcategoria(s)}>Excluir</Button>
-                            </>
-                          )}
+                            </>}
                         </div>
                       </TableCell>
-                    </TableRow>
-                  ))}
-                  {subcategorias.length === 0 && (
-                    <TableRow>
+                    </TableRow>)}
+                  {subcategorias.length === 0 && <TableRow>
                       <TableCell colSpan={4} className="text-sm text-muted-foreground">Nenhuma subcategoria cadastrada.</TableCell>
-                    </TableRow>
-                  )}
+                    </TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -1938,15 +2017,25 @@ const Admin = () => {
               <div className="grid md:grid-cols-5 gap-2">
                 <div>
                   <Label htmlFor="fpart" className="text-sm">Modelo</Label>
-                  <Input id="fpart" value={fPart} onChange={e => { setFPart(e.target.value); setProdPage(1); }} placeholder="Ex: ABC-123" className="h-8 text-sm" />
+                  <Input id="fpart" value={fPart} onChange={e => {
+                  setFPart(e.target.value);
+                  setProdPage(1);
+                }} placeholder="Ex: ABC-123" className="h-8 text-sm" />
                 </div>
                 <div>
                   <Label htmlFor="fdesc" className="text-sm">Descrição</Label>
-                  <Input id="fdesc" value={fDesc} onChange={e => { setFDesc(e.target.value); setProdPage(1); }} placeholder="Texto na descrição" className="h-8 text-sm" />
+                  <Input id="fdesc" value={fDesc} onChange={e => {
+                  setFDesc(e.target.value);
+                  setProdPage(1);
+                }} placeholder="Texto na descrição" className="h-8 text-sm" />
                 </div>
                 <div>
                   <Label className="text-sm">Categoria</Label>
-                  <Select value={fCat || 'all'} onValueChange={v => { setFCat(v === 'all' ? '' : v); setFSub(''); setProdPage(1); }}>
+                  <Select value={fCat || 'all'} onValueChange={v => {
+                  setFCat(v === 'all' ? '' : v);
+                  setFSub('');
+                  setProdPage(1);
+                }}>
                     <SelectTrigger className="h-8"><SelectValue placeholder="Todas" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
@@ -1956,7 +2045,10 @@ const Admin = () => {
                 </div>
                 <div>
                   <Label className="text-sm">Subcategoria</Label>
-                  <Select value={fSub || 'all'} onValueChange={v => { setFSub(v === 'all' ? '' : v); setProdPage(1); }} disabled={!fCat}>
+                  <Select value={fSub || 'all'} onValueChange={v => {
+                  setFSub(v === 'all' ? '' : v);
+                  setProdPage(1);
+                }} disabled={!fCat}>
                     <SelectTrigger className="h-8"><SelectValue placeholder={!fCat ? 'Selecione a categoria' : 'Todas'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
@@ -1965,7 +2057,13 @@ const Admin = () => {
                   </Select>
                 </div>
                 <div className="flex items-end justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => { setFPart(''); setFDesc(''); setFCat(''); setFSub(''); setProdPage(1); }}>Limpar</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                  setFPart('');
+                  setFDesc('');
+                  setFCat('');
+                  setFSub('');
+                  setProdPage(1);
+                }}>Limpar</Button>
                 </div>
               </div>
             </div>
@@ -2002,40 +2100,31 @@ const Admin = () => {
                           {isEditing ? <Textarea rows={1} className="h-10 resize-none" value={editPDesc} onChange={e => setEditPDesc(e.target.value)} placeholder="Descrição" /> : <p className="text-sm text-muted-foreground line-clamp-3">{p.descricao}</p>}
                         </TableCell>
                         <TableCell className="align-top min-w-[180px]">
-                          {isEditing ? (
-                            <Select value={editPCat} onValueChange={(v) => { setEditPCat(v); setEditPSub(''); }}>
+                          {isEditing ? <Select value={editPCat} onValueChange={v => {
+                        setEditPCat(v);
+                        setEditPSub('');
+                      }}>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                               <SelectContent>
-                                {categorias.map(c => (
-                                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                                ))}
+                                {categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                               </SelectContent>
-                            </Select>
-                          ) : (
-                            categorias.find(c => c.id === p.categoria_id)?.nome || '-'
-                          )}
+                            </Select> : categorias.find(c => c.id === p.categoria_id)?.nome || '-'}
                         </TableCell>
 
                         <TableCell className="align-top min-w-[180px]">
-                          {isEditing ? (
-                            <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
+                          {isEditing ? <Select value={editPSub} onValueChange={setEditPSub} disabled={!editPCat}>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                               <SelectContent>
-                                {subcategorias
-                                  .filter(s => s.categoria_id === editPCat)
-                                  .map(s => (
-                                    <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
-                                  ))}
+                                {subcategorias.filter(s => s.categoria_id === editPCat).map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
                               </SelectContent>
-                            </Select>
-                          ) : (
-                            subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'
-                          )}
+                            </Select> : subcategorias.find(s => s.id === p.subcategoria_id)?.nome || '-'}
                         </TableCell>
 
                         {/* Arquivos vinculados */}
                         <TableCell className="text-center align-top">
-                          <Popover onOpenChange={(open) => { if (open) loadFilesForProduct(p.id); }}>
+                          <Popover onOpenChange={open => {
+                        if (open) loadFilesForProduct(p.id);
+                      }}>
                             <PopoverTrigger asChild>
                               <Button variant="ghost" size="sm" className="font-medium">
                                 {prodFileCounts[p.id] || 0}
@@ -2045,10 +2134,8 @@ const Admin = () => {
                               <div className="space-y-2">
                                 <h4 className="text-sm font-medium">Arquivos vinculados</h4>
                                 <div className="max-h-60 overflow-y-auto">
-                                  {(prodFilesMap[p.id] || []).length > 0 ? (
-                                    <ul className="space-y-1">
-                                      {(prodFilesMap[p.id] || []).map((f) => (
-                                        <li key={f.id} className="text-sm flex items-center justify-between">
+                                  {(prodFilesMap[p.id] || []).length > 0 ? <ul className="space-y-1">
+                                      {(prodFilesMap[p.id] || []).map(f => <li key={f.id} className="text-sm flex items-center justify-between">
                                           <span className="truncate pr-2">{f.nome_arquivo}</span>
                                           <div className="flex items-center gap-1">
                                             <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs">
@@ -2056,12 +2143,8 @@ const Admin = () => {
                                             </Button>
                                             <Button variant="destructive" size="sm" className="h-7 px-2 text-xs" onClick={() => deleteArquivo(f)}>Excluir</Button>
                                           </div>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">{prodFilesMap[p.id] ? 'Nenhum arquivo.' : 'Carregando...'}</p>
-                                  )}
+                                        </li>)}
+                                    </ul> : <p className="text-sm text-muted-foreground">{prodFilesMap[p.id] ? 'Nenhum arquivo.' : 'Carregando...'}</p>}
                                 </div>
                               </div>
                             </PopoverContent>
@@ -2132,13 +2215,7 @@ const Admin = () => {
                   Formato esperado: Coluna A = Part Number, Coluna B = Número de Série. A primeira linha será ignorada (cabeçalho).
                 </p>
                 <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleExcelUpload}
-                    disabled={uploadLoading}
-                    className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
-                  />
+                  <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} disabled={uploadLoading} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50" />
                   {uploadLoading && <span className="text-sm text-muted-foreground">Processando arquivo...</span>}
                 </div>
               </div>
@@ -2191,19 +2268,13 @@ const Admin = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-2 max-h-64 overflow-auto">
                     <div className="space-y-1">
-                      {allProds.map(p => (
-                        <label key={p.id} className="flex items-center gap-2 p-1 rounded hover:bg-accent cursor-pointer">
-                          <Checkbox
-                            checked={aProds.includes(p.id)}
-                            onCheckedChange={(checked) => {
-                              const isChecked = Boolean(checked);
-                              setAProds(prev => isChecked ? Array.from(new Set([...prev, p.id])) : prev.filter(id => id !== p.id));
-                            }}
-                            aria-label={`Selecionar ${p.partnumber}`}
-                          />
+                      {allProds.map(p => <label key={p.id} className="flex items-center gap-2 p-1 rounded hover:bg-accent cursor-pointer">
+                          <Checkbox checked={aProds.includes(p.id)} onCheckedChange={checked => {
+                        const isChecked = Boolean(checked);
+                        setAProds(prev => isChecked ? Array.from(new Set([...prev, p.id])) : prev.filter(id => id !== p.id));
+                      }} aria-label={`Selecionar ${p.partnumber}`} />
                           <span className="text-sm">{p.partnumber}</span>
-                        </label>
-                      ))}
+                        </label>)}
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -2249,15 +2320,24 @@ const Admin = () => {
               <div className="grid md:grid-cols-5 gap-2">
                 <div>
                   <Label htmlFor="fanome" className="text-sm">Nome</Label>
-                  <Input id="fanome" value={faNome} onChange={e => { setFaNome(e.target.value); setArqPage(1); }} placeholder="Nome do arquivo" className="h-8 text-sm" />
+                  <Input id="fanome" value={faNome} onChange={e => {
+                  setFaNome(e.target.value);
+                  setArqPage(1);
+                }} placeholder="Nome do arquivo" className="h-8 text-sm" />
                 </div>
                 <div>
                   <Label htmlFor="fadesc" className="text-sm">Descrição</Label>
-                  <Input id="fadesc" value={faDesc} onChange={e => { setFaDesc(e.target.value); setArqPage(1); }} placeholder="Texto na descrição" className="h-8 text-sm" />
+                  <Input id="fadesc" value={faDesc} onChange={e => {
+                  setFaDesc(e.target.value);
+                  setArqPage(1);
+                }} placeholder="Texto na descrição" className="h-8 text-sm" />
                 </div>
                 <div>
                   <Label className="text-sm">Tipo</Label>
-                  <Select value={faTipo || 'all'} onValueChange={v => { setFaTipo(v === 'all' ? '' : v); setArqPage(1); }}>
+                  <Select value={faTipo || 'all'} onValueChange={v => {
+                  setFaTipo(v === 'all' ? '' : v);
+                  setArqPage(1);
+                }}>
                     <SelectTrigger className="h-8"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
@@ -2269,7 +2349,10 @@ const Admin = () => {
                 </div>
                 <div>
                   <Label className="text-sm">Produto</Label>
-                  <Select value={faProd || 'all'} onValueChange={v => { setFaProd(v === 'all' ? '' : v); setArqPage(1); }}>
+                  <Select value={faProd || 'all'} onValueChange={v => {
+                  setFaProd(v === 'all' ? '' : v);
+                  setArqPage(1);
+                }}>
                     <SelectTrigger className="h-8"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
@@ -2278,7 +2361,13 @@ const Admin = () => {
                   </Select>
                 </div>
                 <div className="flex items-end justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => { setFaNome(''); setFaDesc(''); setFaTipo(''); setFaProd(''); setArqPage(1); }}>Limpar</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                  setFaNome('');
+                  setFaDesc('');
+                  setFaTipo('');
+                  setFaProd('');
+                  setArqPage(1);
+                }}>Limpar</Button>
                 </div>
               </div>
             </div>
