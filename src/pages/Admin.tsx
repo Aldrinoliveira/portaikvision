@@ -1634,7 +1634,8 @@ const Admin = () => {
         </div>
       </div>
 
-      <section aria-label="Dashboard downloads" className="grid auto-rows-min items-start gap-3 sm:grid-cols-3 xl:grid-cols-3">
+      {/* Dashboard downloads */}
+      <section aria-label="Dashboard downloads" className="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
         <Card>
           <CardHeader className="gap-2 px-3 py-2">
             <div className="flex items-center justify-between">
@@ -1670,7 +1671,7 @@ const Admin = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2 my-0">
+          <CardContent className="py-[34px] my-0">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Do dia</p>
@@ -1712,7 +1713,7 @@ const Admin = () => {
               label: 'Downloads',
               color: 'hsl(var(--primary))'
             }
-          }} className="h-32 sm:h-36 w-full">
+          }} className="h-40 sm:h-44 w-full">
                 <LineChart data={dailySeries} margin={{
               left: 8,
               right: 8
@@ -1730,7 +1731,7 @@ const Admin = () => {
           <CardHeader className="items-center text-center gap-1 px-3 py-2">
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Registros</CardTitle>
           </CardHeader>
-          <CardContent className="mx-0 py-2 my-0">
+          <CardContent className="mx-0 py-0 my-[40px]">
             <div className="grid grid-cols-2 gap-4 justify-items-center w-fit mx-auto text-center">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Arquivos cadastrados</p>
