@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,19 +52,24 @@ serve(async (req) => {
       </div>
     `;
 
-    const { error } = await resend.emails.send({
-      from: "Portal Firmware <onboarding@resend.dev>",
-      to: [to],
-      subject,
-      html,
-    });
-
-    if (error) {
-      console.error("Resend error:", error);
-      return new Response(JSON.stringify({ error: String(error) }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Portal Firmware <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html,
+        reply_to: body.email || undefined,
       });
+      console.log("Resend response:", emailResponse);
+    } catch (e: any) {
+      console.error("Resend send error:", e);
+      return new Response(
+        JSON.stringify({ error: e?.message || "Resend error", details: e }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     return new Response(JSON.stringify({ ok: true }), {
