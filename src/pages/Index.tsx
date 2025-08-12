@@ -537,18 +537,16 @@ const visibleResults = useMemo(() => {
               <Input id="reqprod" value={reqProduto} onChange={(e) => setReqProduto(e.target.value)} placeholder="ex. DS-2CD2043G2-LIS" />
             </div>
             <div className="grid gap-1">
-              <Label htmlFor="reqserie">Número de série (9 dígitos)</Label>
+              <Label htmlFor="reqserie">Número de série (9 caracteres alfanuméricos)</Label>
               <Input
                 id="reqserie"
                 value={reqSerie}
                 onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 9);
+                  const v = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 9);
                   setReqSerie(v);
                 }}
-                inputMode="numeric"
-                pattern="[0-9]*"
                 maxLength={9}
-                placeholder="123456789"
+                placeholder="ABC123456"
               />
             </div>
             <div className="grid gap-1">
