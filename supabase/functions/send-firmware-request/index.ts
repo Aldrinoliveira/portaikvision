@@ -54,7 +54,7 @@ serve(async (req) => {
 
     try {
       const result = await resend.emails.send({
-        from: "Portal Firmware <onboarding@resend.dev>",
+        from: "Portal Hikvision <no-reply@portalhikvision.com.br>",
         to: [to],
         subject,
         html,
