@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -233,47 +234,67 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
     countsCache.current[produtoId] = c;
     return c;
   };
-  const submitRequest = async () => {
-    const payload = {
-      numero_serie: reqSerie || null,
-      produto_nome: reqProduto || null,
-      descricao: reqDesc || null,
-      nome: reqNome || null,
-      telefone: reqTelefone || null,
-      email: reqEmail || null,
-    };
-    const { error } = await supabase.from("solicitacoes_firmware").insert(payload as any);
-    if (error) {
-      toast({ title: "Erro ao enviar", description: error.message });
-    } else {
-      // Dispara notificação por email (se configurado no Admin)
-      try {
-        const to = localStorage.getItem('firmware_receiver_email') || '';
-        if (to) {
-          const { data: fnData, error: fnError } = await supabase.functions.invoke('send-firmware-request', {
-            body: {
-              to,
-              ...payload,
-            }
-          });
-          if (fnError) {
-            console.warn('Email notification error:', fnError);
-            toast({ title: 'Aviso', description: 'Solicitação salva, mas o email não pôde ser enviado.' });
-          }
-        }
-      } catch (e) {
-        console.warn('Falha ao notificar por email:', e);
-      }
-      toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
-      setOpenRequest(false);
-      setReqDesc("");
-      setReqProduto("");
-      setReqSerie("");
-      setReqNome("");
-      setReqTelefone("");
-      setReqEmail("");
-    }
+const submitRequest = async () => {
+  const nome = (reqNome || "").trim();
+  const email = (reqEmail || "").trim();
+  const telDigits = (reqTelefone || "").replace(/\D/g, "").slice(0, 11);
+  const serieDigits = (reqSerie || "").replace(/\D/g, "").slice(0, 9);
+
+  if (!nome) {
+    toast({ title: "Nome obrigatório", description: "Informe seu nome." });
+    return;
+  }
+  if (telDigits.length !== 11) {
+    toast({ title: "Telefone inválido", description: "Digite DDD (2) + número (9). Total de 11 dígitos." });
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast({ title: "Email inválido", description: "Informe um email válido." });
+    return;
+  }
+  if (reqSerie && serieDigits.length !== 9) {
+    toast({ title: "Número de série inválido", description: "O número de série deve conter 9 dígitos." });
+    return;
+  }
+
+  const payload = {
+    numero_serie: serieDigits || null,
+    produto_nome: (reqProduto || "").trim() || null,
+    descricao: (reqDesc || "").trim() || null,
+    nome,
+    telefone: telDigits,
+    email,
   };
+
+  const { error } = await supabase.from("solicitacoes_firmware").insert(payload as any);
+  if (error) {
+    toast({ title: "Erro ao enviar", description: error.message });
+  } else {
+    // Dispara notificação por email (se configurado no Admin)
+    try {
+      const to = localStorage.getItem('firmware_receiver_email') || '';
+      if (to) {
+        const { error: fnError } = await supabase.functions.invoke('send-firmware-request', {
+          body: { to, ...payload }
+        });
+        if (fnError) {
+          console.warn('Email notification error:', fnError);
+          toast({ title: 'Aviso', description: 'Solicitação salva, mas o email não pôde ser enviado.' });
+        }
+      }
+    } catch (e) {
+      console.warn('Falha ao notificar por email:', e);
+    }
+    toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
+    setOpenRequest(false);
+    setReqDesc("");
+    setReqProduto("");
+    setReqSerie("");
+    setReqNome("");
+    setReqTelefone("");
+    setReqEmail("");
+  }
+};
   useEffect(() => {
     if (!embla) return;
     const onSelect = () => setSelected(embla.selectedScrollSnap());
@@ -487,30 +508,52 @@ const visibleResults = useMemo(() => {
           <DialogHeader>
             <DialogTitle>Não encontrei um firmware</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 py-2">
+<div className="grid gap-3 py-2">
             <div className="grid gap-1">
-              <Label htmlFor="reqserie">Número de Série (opcional)</Label>
-              <Input id="reqserie" value={reqSerie} onChange={(e) => setReqSerie(e.target.value)} maxLength={9} />
+              <Label htmlFor="reqnome">Nome</Label>
+              <Input id="reqnome" value={reqNome} onChange={(e) => setReqNome(e.target.value)} placeholder="Seu nome completo" />
             </div>
             <div className="grid gap-1">
-              <Label htmlFor="reqprod">Nome do Produto (opcional)</Label>
-              <Input id="reqprod" value={reqProduto} onChange={(e) => setReqProduto(e.target.value)} />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="reqnome">Seu nome</Label>
-              <Input id="reqnome" value={reqNome} onChange={(e) => setReqNome(e.target.value)} />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="reqtel">Telefone</Label>
-              <Input id="reqtel" value={reqTelefone} onChange={(e) => setReqTelefone(e.target.value)} />
+              <Label htmlFor="reqtel">Telefone (DDD + número, 11 dígitos)</Label>
+              <Input
+                id="reqtel"
+                value={reqTelefone}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setReqTelefone(v);
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={11}
+                placeholder="11987654321"
+              />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="reqemail">Email</Label>
-              <Input id="reqemail" type="email" value={reqEmail} onChange={(e) => setReqEmail(e.target.value)} />
+              <Input id="reqemail" type="email" value={reqEmail} onChange={(e) => setReqEmail(e.target.value)} placeholder="voce@exemplo.com" />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="reqprod">Nome do dispositivo</Label>
+              <Input id="reqprod" value={reqProduto} onChange={(e) => setReqProduto(e.target.value)} placeholder="ex. DS-2CD2043G2-LIS" />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="reqserie">Número de série (9 dígitos)</Label>
+              <Input
+                id="reqserie"
+                value={reqSerie}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 9);
+                  setReqSerie(v);
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={9}
+                placeholder="123456789"
+              />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="reqdesc">Descrição</Label>
-              <Input id="reqdesc" value={reqDesc} onChange={(e) => setReqDesc(e.target.value)} />
+              <Textarea id="reqdesc" value={reqDesc} onChange={(e) => setReqDesc(e.target.value)} placeholder="Descreva a necessidade do arquivo pesquisado" />
             </div>
           </div>
           <DialogFooter>
