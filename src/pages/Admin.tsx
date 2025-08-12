@@ -1629,7 +1629,7 @@ const Admin = () => {
             <CardTitle className="text-base font-medium tracking-tight min-w-0 truncate">Registros</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 justify-items-center w-fit mx-auto text-center">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Arquivos cadastrados</p>
                 <div className="text-2xl font-semibold">{arquivosCount}</div>
