@@ -238,7 +238,7 @@ const submitRequest = async () => {
   const nome = (reqNome || "").trim();
   const email = (reqEmail || "").trim();
   const telDigits = (reqTelefone || "").replace(/\D/g, "").slice(0, 11);
-  const serieDigits = (reqSerie || "").replace(/\D/g, "").slice(0, 9);
+  const serieChars = (reqSerie || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 9);
 
   if (!nome) {
     toast({ title: "Nome obrigatório", description: "Informe seu nome." });
@@ -252,13 +252,13 @@ const submitRequest = async () => {
     toast({ title: "Email inválido", description: "Informe um email válido." });
     return;
   }
-  if (reqSerie && serieDigits.length !== 9) {
-    toast({ title: "Número de série inválido", description: "O número de série deve conter 9 dígitos." });
+  if (reqSerie && serieChars.length !== 9) {
+    toast({ title: "Número de série inválido", description: "O número de série deve conter 9 caracteres alfanuméricos." });
     return;
   }
 
   const payload = {
-    numero_serie: serieDigits || null,
+    numero_serie: serieChars || null,
     produto_nome: (reqProduto || "").trim() || null,
     descricao: (reqDesc || "").trim() || null,
     nome,
