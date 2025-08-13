@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import HelpDialog from "@/components/HelpDialog";
+
 // Home SEO
 const useSEO = () => {
   useEffect(() => {
@@ -26,6 +27,7 @@ const useSEO = () => {
     if (meta) meta.setAttribute("content", "Busque por número de série ou part number e baixe firmwares, documentos e vídeos de produtos Hikvision.");
   }, []);
 };
+
 interface Banner {
   id: string;
   imagem_url: string;
@@ -35,6 +37,7 @@ interface Banner {
   titulo?: string | null;
   descricao?: string | null;
 }
+
 interface Produto {
   id: string;
   partnumber: string;
@@ -43,17 +46,20 @@ interface Produto {
   categoria_id?: string | null;
   subcategoria_id?: string | null;
 }
+
 interface Categoria {
   id: string;
   nome: string;
   descricao: string | null;
 }
+
 interface Subcategoria {
   id: string;
   nome: string;
   descricao: string | null;
   categoria_id: string;
 }
+
 const Index = () => {
   useSEO();
   const navigate = useNavigate();
@@ -65,11 +71,11 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const RESULTS_PAGE_SIZE = 6;
   const [page, setPage] = useState(1);
-const [categorias, setCategorias] = useState<Categoria[]>([]);
-const [catFilter, setCatFilter] = useState("");
-const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
-const [subFilter, setSubFilter] = useState("");
-const [embla, setEmbla] = useState<CarouselApi | null>(null);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [catFilter, setCatFilter] = useState("");
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+  const [subFilter, setSubFilter] = useState("");
+  const [embla, setEmbla] = useState<CarouselApi | null>(null);
   const [selected, setSelected] = useState(0);
   const [snapCount, setSnapCount] = useState(0);
   const [searched, setSearched] = useState(false);
@@ -91,6 +97,7 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
   const [openQR, setOpenQR] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+
   useEffect(() => {
     const load = async () => {
       const [bRes, cRes, sRes, pRes] = await Promise.all([
@@ -107,6 +114,7 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
     };
     load();
   }, []);
+
   useEffect(() => {
     if (!openQR) return;
     let unsub: (() => void) | null = null;
@@ -175,6 +183,7 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
       codeReaderRef.current = null;
     };
   }, [openQR]);
+
   const onSearch = async () => {
     if (!query.trim()) {
       setSearched(false);
@@ -213,6 +222,7 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
       setLoading(false);
     }
   };
+
   const countsCache = useRef<Record<string, {
     firmware: number;
     documento: number;
@@ -234,67 +244,69 @@ const [embla, setEmbla] = useState<CarouselApi | null>(null);
     countsCache.current[produtoId] = c;
     return c;
   };
-const submitRequest = async () => {
-  const nome = (reqNome || "").trim();
-  const email = (reqEmail || "").trim();
-  const telDigits = (reqTelefone || "").replace(/\D/g, "").slice(0, 11);
-  const serieChars = (reqSerie || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 9);
 
-  if (!nome) {
-    toast({ title: "Nome obrigatório", description: "Informe seu nome." });
-    return;
-  }
-  if (telDigits.length !== 11) {
-    toast({ title: "Telefone inválido", description: "Digite DDD (2) + número (9). Total de 11 dígitos." });
-    return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    toast({ title: "Email inválido", description: "Informe um email válido." });
-    return;
-  }
-  if (reqSerie && serieChars.length !== 9) {
-    toast({ title: "Número de série inválido", description: "O número de série deve conter 9 caracteres alfanuméricos." });
-    return;
-  }
+  const submitRequest = async () => {
+    const nome = (reqNome || "").trim();
+    const email = (reqEmail || "").trim();
+    const telDigits = (reqTelefone || "").replace(/\D/g, "").slice(0, 11);
+    const serieChars = (reqSerie || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 9);
 
-  const payload = {
-    numero_serie: serieChars || null,
-    produto_nome: (reqProduto || "").trim() || null,
-    descricao: (reqDesc || "").trim() || null,
-    nome,
-    telefone: telDigits,
-    email,
+    if (!nome) {
+      toast({ title: "Nome obrigatório", description: "Informe seu nome." });
+      return;
+    }
+    if (telDigits.length !== 11) {
+      toast({ title: "Telefone inválido", description: "Digite DDD (2) + número (9). Total de 11 dígitos." });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: "Email inválido", description: "Informe um email válido." });
+      return;
+    }
+    if (reqSerie && serieChars.length !== 9) {
+      toast({ title: "Número de série inválido", description: "O número de série deve conter 9 caracteres alfanuméricos." });
+      return;
+    }
+
+    const payload = {
+      numero_serie: serieChars || null,
+      produto_nome: (reqProduto || "").trim() || null,
+      descricao: (reqDesc || "").trim() || null,
+      nome,
+      telefone: telDigits,
+      email,
+    };
+
+    const { error } = await supabase.from("solicitacoes_firmware").insert(payload as any);
+    if (error) {
+      toast({ title: "Erro ao enviar", description: error.message });
+    } else {
+      // Dispara notificação por email (se configurado no Admin)
+      try {
+        const to = localStorage.getItem('firmware_receiver_email') || '';
+        if (to) {
+          const { error: fnError } = await supabase.functions.invoke('send-firmware-request', {
+            body: { to, ...payload }
+          });
+          if (fnError) {
+            console.warn('Email notification error:', fnError);
+            toast({ title: 'Aviso', description: 'Solicitação salva, mas o email não pôde ser enviado.' });
+          }
+        }
+      } catch (e) {
+        console.warn('Falha ao notificar por email:', e);
+      }
+      toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
+      setOpenRequest(false);
+      setReqDesc("");
+      setReqProduto("");
+      setReqSerie("");
+      setReqNome("");
+      setReqTelefone("");
+      setReqEmail("");
+    }
   };
 
-  const { error } = await supabase.from("solicitacoes_firmware").insert(payload as any);
-  if (error) {
-    toast({ title: "Erro ao enviar", description: error.message });
-  } else {
-    // Dispara notificação por email (se configurado no Admin)
-    try {
-      const to = localStorage.getItem('firmware_receiver_email') || '';
-      if (to) {
-        const { error: fnError } = await supabase.functions.invoke('send-firmware-request', {
-          body: { to, ...payload }
-        });
-        if (fnError) {
-          console.warn('Email notification error:', fnError);
-          toast({ title: 'Aviso', description: 'Solicitação salva, mas o email não pôde ser enviado.' });
-        }
-      }
-    } catch (e) {
-      console.warn('Falha ao notificar por email:', e);
-    }
-    toast({ title: "Solicitação enviada", description: "Obrigado! Entraremos em contato." });
-    setOpenRequest(false);
-    setReqDesc("");
-    setReqProduto("");
-    setReqSerie("");
-    setReqNome("");
-    setReqTelefone("");
-    setReqEmail("");
-  }
-};
   useEffect(() => {
     if (!embla) return;
     const onSelect = () => setSelected(embla.selectedScrollSnap());
@@ -311,63 +323,80 @@ const submitRequest = async () => {
       embla.off('reInit', onReInit);
     };
   }, [embla]);
-useEffect(() => {
-  if (query.trim() === '') {
-    setResults(allProducts);
-    setSearched(false);
+
+  useEffect(() => {
+    if (query.trim() === '') {
+      setResults(allProducts);
+      setSearched(false);
+      setPage(1);
+    }
+  }, [query, allProducts]);
+
+  // Reset subcategoria quando categoria mudar
+  useEffect(() => {
+    setSubFilter("");
     setPage(1);
-  }
-}, [query, allProducts]);
+  }, [catFilter]);
 
-// Reset subcategoria quando categoria mudar
-useEffect(() => {
-  setSubFilter("");
-  setPage(1);
-}, [catFilter]);
+  const excludedCategoryIds = useMemo(() => categorias.filter(c => /^(software|ferramentas)$/i.test((c.nome || '').trim())).map(c => c.id), [categorias]);
+  const baseResults = useMemo(() => results.filter(p => !excludedCategoryIds.includes((p.categoria_id || '') as string)), [results, excludedCategoryIds]);
+  const filtered = useMemo(() => {
+    const byCat = catFilter ? baseResults.filter(p => p.categoria_id === catFilter) : baseResults;
+    return subFilter ? byCat.filter(p => p.subcategoria_id === subFilter) : byCat;
+  }, [baseResults, catFilter, subFilter]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
+  const visibleResults = useMemo(() => {
+    const start = (page - 1) * RESULTS_PAGE_SIZE;
+    return filtered.slice(start, start + RESULTS_PAGE_SIZE);
+  }, [filtered, page]);
 
-const excludedCategoryIds = useMemo(() => categorias.filter(c => /^(software|ferramentas)$/i.test((c.nome || '').trim())).map(c => c.id), [categorias]);
-const baseResults = useMemo(() => results.filter(p => !excludedCategoryIds.includes((p.categoria_id || '') as string)), [results, excludedCategoryIds]);
-const filtered = useMemo(() => {
-  const byCat = catFilter ? baseResults.filter(p => p.categoria_id === catFilter) : baseResults;
-  return subFilter ? byCat.filter(p => p.subcategoria_id === subFilter) : byCat;
-}, [baseResults, catFilter, subFilter]);
-const totalPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
-const visibleResults = useMemo(() => {
-  const start = (page - 1) * RESULTS_PAGE_SIZE;
-  return filtered.slice(start, start + RESULTS_PAGE_SIZE);
-}, [filtered, page]);
   return <div className="min-h-screen bg-background text-foreground">
       <TopBar />
 
       <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Banner Carousel */}
-        {banners.length > 0 && <section aria-label="Banner" className="animate-fade-in">
+        {banners.length > 0 && (
+          <section aria-label="Banner" className="animate-fade-in">
             <Carousel className="w-full" plugins={[Autoplay({
-          delay: 4000,
-          stopOnInteraction: true
-        })]} setApi={setEmbla}>
+              delay: 4000,
+              stopOnInteraction: true
+            })]} setApi={setEmbla}>
               <CarouselContent>
-                {banners.map(b => <CarouselItem key={b.id}>
-                    {b.link_redirecionamento?.startsWith('/') ? <Link to={b.link_redirecionamento}>
+                {banners.map(b => (
+                  <CarouselItem key={b.id}>
+                    {b.link_redirecionamento?.startsWith('/') ? (
+                      <Link to={b.link_redirecionamento}>
                         <div className="relative">
                           <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-contain md:object-cover rounded-md" />
                         </div>
-                      </Link> : <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
+                      </Link>
+                    ) : (
+                      <a href={b.link_redirecionamento || "#"} target={b.link_redirecionamento ? "_blank" : "_self"} rel="noreferrer">
                         <div className="relative">
                           <img src={b.imagem_url} alt={`Banner: ${b.titulo || b.tamanho || "padrão"}`} loading="lazy" className="w-full h-56 md:h-72 lg:h-96 object-contain md:object-cover rounded-md" />
                         </div>
-                      </a>}
-                  </CarouselItem>)}
+                      </a>
+                    )}
+                  </CarouselItem>
+                ))}
               </CarouselContent>
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
             <div className="mt-3 flex justify-center gap-2">
-              {Array.from({
-            length: snapCount
-          }).map((_, i) => <button key={i} type="button" aria-label={`Ir para banner ${i + 1}`} data-active={selected === i} onClick={() => embla?.scrollTo(i)} className="h-2.5 w-2.5 rounded-full bg-foreground/30 data-[active=true]:bg-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" />)}
+              {Array.from({ length: snapCount }).map((_, i) => (
+                <button 
+                  key={i} 
+                  type="button" 
+                  aria-label={`Ir para banner ${i + 1}`} 
+                  data-active={selected === i} 
+                  onClick={() => embla?.scrollTo(i)} 
+                  className="h-2.5 w-2.5 rounded-full bg-foreground/30 data-[active=true]:bg-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
+                />
+              ))}
             </div>
-          </section>}
+          </section>
+        )}
 
         {/* Busca */}
         <section aria-label="Busca">
@@ -409,7 +438,8 @@ const visibleResults = useMemo(() => {
         </section>
 
         {/* Filtros por categoria */}
-        {categorias.length > 0 && <section aria-label="Filtros" className="animate-fade-in space-y-2">
+        {categorias.length > 0 && (
+          <section aria-label="Filtros" className="animate-fade-in space-y-2">
             <div className="flex flex-wrap gap-2">
               <Button variant={catFilter === "" ? "default" : "outline"} size="sm" onClick={() => {
             setCatFilter("");
@@ -432,42 +462,67 @@ const visibleResults = useMemo(() => {
                 ))}
               </div>
             )}
-          </section>}
-
+          </section>
+        )}
 
         {/* Resultados */}
-        {loading && <section aria-label="Resultados" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({
-          length: RESULTS_PAGE_SIZE
-        }).map((_, i) => <Card key={`s-${i}`} className="overflow-hidden">
+        {loading && (
+          <section aria-label="Resultados" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: RESULTS_PAGE_SIZE }).map((_, i) => (
+              <Card key={`s-${i}`} className="overflow-hidden">
                 <Skeleton className="w-full h-40" />
                 <CardContent className="space-y-2 p-4">
                   <Skeleton className="h-4 w-2/3" />
                   <Skeleton className="h-8 w-24" />
                 </CardContent>
-              </Card>)}
-          </section>}
+              </Card>
+            ))}
+          </section>
+        )}
 
-        {!loading && results.length > 0 && <section aria-label="Resultados" className="space-y-4">
+        {!loading && results.length > 0 && (
+          <section aria-label="Resultados" className="space-y-4">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visibleResults.map(p => <Card key={p.id} className="hover:shadow-md transition animate-fade-in p-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => navigate(`/produto/${p.id}`)} role="button" tabIndex={0} onKeyDown={e => {
-            if (e.key === 'Enter' || e.key === ' ') navigate(`/produto/${p.id}`);
-          }}>
-                  <div className="flex items-center gap-3">
-                    {p.imagem_url ? <img src={p.imagem_url} alt={`Produto ${p.partnumber}`} loading="lazy" className="w-20 h-20 rounded-md object-cover" /> : <div className="w-20 h-20 rounded-md bg-muted" aria-hidden="true" />}
-                    <div className="flex-1 space-y-2">
-                      <div>
-                        <h3 className="text-sm font-medium leading-none">{p.partnumber}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{p.descricao || ""}</p>
+              {visibleResults.map(p => (
+                <Card 
+                  key={p.id} 
+                  className="hover:shadow-md transition animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
+                  onClick={() => navigate(`/produto/${p.id}`)} 
+                  role="button" 
+                  tabIndex={0} 
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') navigate(`/produto/${p.id}`);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-20 flex-shrink-0">
+                        {p.imagem_url ? (
+                          <img 
+                            src={p.imagem_url} 
+                            alt={`Produto ${p.partnumber}`} 
+                            loading="lazy" 
+                            className="w-full h-full rounded-md object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-md bg-muted" aria-hidden="true" />
+                        )}
                       </div>
-                      <div className="flex items-center justify-start">
-                        <div className="text-[11px] text-muted-foreground">
-                          <AsyncCounts produtoId={p.id} getCounts={getCounts} />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <h3 className="text-sm font-medium leading-none truncate">{p.partnumber}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.descricao || ""}</p>
+                        </div>
+                        <div className="flex items-center justify-start">
+                          <div className="text-[11px] text-muted-foreground">
+                            <AsyncCounts produtoId={p.id} getCounts={getCounts} />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Card>)}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
@@ -476,11 +531,14 @@ const visibleResults = useMemo(() => {
                 <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Próxima</Button>
               </div>
             </div>
-          </section>}
+          </section>
+        )}
 
-        {!loading && searched && filtered.length === 0 && <section aria-label="Sem resultados" className="py-10 text-center">
+        {!loading && searched && filtered.length === 0 && (
+          <section aria-label="Sem resultados" className="py-10 text-center">
             <p className="text-sm text-muted-foreground">Sem resultados para essa pesquisa.</p>
-          </section>}
+          </section>
+        )}
 
         {/* Top Downloads - agora dinâmico */}
         <TopDownloads />
@@ -563,6 +621,7 @@ const visibleResults = useMemo(() => {
       <Footer />
     </div>;
 };
+
 const AsyncCounts = ({
   produtoId,
   getCounts
@@ -583,18 +642,21 @@ const AsyncCounts = ({
     getCounts(produtoId).then(setCounts);
   }, [produtoId]);
   if (!counts) return <div className="text-sm text-muted-foreground">Carregando...</div>;
-  return <div className="flex items-center gap-3 text-sm text-muted-foreground leading-none">
-      <span className="inline-flex items-center gap-1.5" aria-label={`${counts.firmware} firmware`}>
-        <Cpu className="h-6 w-6" /> <span className="font-semibold">{counts.firmware}</span>
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground leading-none">
+      <span className="inline-flex items-center gap-1" aria-label={`${counts.firmware} firmware`}>
+        <Cpu className="h-4 w-4" /> <span className="font-semibold">{counts.firmware}</span>
       </span>
-      <span className="inline-flex items-center gap-1.5" aria-label={`${counts.documento} documentos`}>
-        <FileText className="h-6 w-6" /> <span className="font-semibold">{counts.documento}</span>
+      <span className="inline-flex items-center gap-1" aria-label={`${counts.documento} documentos`}>
+        <FileText className="h-4 w-4" /> <span className="font-semibold">{counts.documento}</span>
       </span>
-      <span className="inline-flex items-center gap-1.5" aria-label={`${counts.video} vídeos`}>
-        <Video className="h-6 w-6" /> <span className="font-semibold">{counts.video}</span>
+      <span className="inline-flex items-center gap-1" aria-label={`${counts.video} vídeos`}>
+        <Video className="h-4 w-4" /> <span className="font-semibold">{counts.video}</span>
       </span>
-    </div>;
+    </div>
+  );
 };
+
 const TopDownloads = () => {
   type FileInfo = {
     id: string;
@@ -605,6 +667,7 @@ const TopDownloads = () => {
     categoria_arquivo: string;
     downloads: number;
   };
+
   type Item = {
     produto_id: string;
     total_downloads: number;
@@ -613,7 +676,9 @@ const TopDownloads = () => {
     imagem_url?: string | null;
     file?: FileInfo;
   };
+
   const [items, setItems] = useState<Item[]>([]);
+
   useEffect(() => {
     const run = async () => {
       // Top por arquivo listado (permite duplicar produtos se houver múltiplos arquivos no top)
@@ -648,7 +713,9 @@ const TopDownloads = () => {
     };
     run();
   }, []);
+
   if (!items.length) return null;
+
   const openFile = (url?: string) => {
     if (!url) {
       toast({
@@ -659,12 +726,14 @@ const TopDownloads = () => {
     }
     window.open(url, '_blank', 'noopener');
   };
+
   return <section aria-label="Top Downloads" className="space-y-3">
       <h2 className="text-xl font-semibold">Top Downloads</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map(it => <Card key={it.file?.id || it.produto_id} className="relative hover:shadow-md transition hover-scale animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => openFile(it.file?.link_url)} role="button" tabIndex={0} onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url);
-      }}>
+        {items.map(it => (
+          <Card key={it.file?.id || it.produto_id} className="relative hover:shadow-md transition hover-scale animate-fade-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => openFile(it.file?.link_url)} role="button" tabIndex={0} onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') openFile(it.file?.link_url);
+          }}>
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
                 {it.imagem_url && <img src={it.imagem_url} alt={`Produto ${it.partnumber}`} className="w-16 h-16 object-cover rounded" loading="lazy" />}
@@ -689,8 +758,10 @@ const TopDownloads = () => {
                   <span aria-label={`${it.total_downloads} downloads`} className="text-xs text-muted-foreground">{it.total_downloads} downloads</span>
                 </div>
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
     </section>;
 };
+
 export default Index;
